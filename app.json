@@ -4,12 +4,13 @@
     "slug": "quran-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "https://img.icons8.com/external-flatart-icons-outline-flatarticons/64/000000/external-quran-ramadan-flatart-icons-outline-flatarticons-1.png",
+    "icon": "./assets/icon.png",
     "splash": {
-      "image": "https://img.icons8.com/external-flatart-icons-outline-flatarticons/96/4F8A10/external-quran-ramadan-flatart-icons-outline-flatarticons-1.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#FAF3E7"
     },
+    "newArchEnabled": true,
     "userInterfaceStyle": "automatic",
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -25,15 +26,22 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "https://img.icons8.com/external-flatart-icons-outline-flatarticons/64/000000/external-quran-ramadan-flatart-icons-outline-flatarticons-1.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#FAF3E7"
       },
       "permissions": [
         "READ_CONTACTS"
-      ]
+      ],
+      "package": "com.bayees2003.quranapp"
     },
     "web": {
-      "favicon": "https://img.icons8.com/external-flatart-icons-outline-flatarticons/64/000000/external-quran-ramadan-flatart-icons-outline-flatarticons-1.png"
-    }
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1607f79d-b140-4b17-9f12-a91de51d7e88"
+      }
+    },
+    "owner": "bayees2003"
   }
 }

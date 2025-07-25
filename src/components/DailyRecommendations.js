@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Animatable from 'react-native-animatable';
 import tw from 'twrnc';
 
 // Surah name to number mapping
@@ -197,254 +199,273 @@ const DAILY_SCHEDULE = {
   }
 };
 
-function getCurrentTimeSlot() {
-  const now = new Date();
-  const currentHour = now.getHours();
-  const currentMinute = now.getMinutes();
-  const currentTime = currentHour * 100 + currentMinute;
-
-  // Convert time ranges to numbers for comparison
-  if (currentTime >= 430 && currentTime <= 630) return 'fajr';
-  if (currentTime >= 630 && currentTime <= 800) return 'morning_extra';
-  if (currentTime >= 1230 && currentTime <= 1400) return 'dhuhr';
-  if (currentTime >= 1630 && currentTime <= 1800) return 'asr';
-  if (currentTime >= 1830 && currentTime <= 2130) return 'maghrib_isha';
-  if (currentTime >= 2130 || currentTime <= 359) return 'before_sleep';
+const getTimeBasedRecommendations = () => {
+  const hour = new Date().getHours();
+  const currentDay = new Date().getDay(); // 0-6, where 0 is Sunday
   
-  // Default fallback based on time of day
-  if (currentTime >= 400 && currentTime < 1200) return 'fajr';
-  if (currentTime >= 1200 && currentTime < 1600) return 'dhuhr';
-  if (currentTime >= 1600 && currentTime < 1900) return 'asr';
-  if (currentTime >= 1900) return 'before_sleep';
-  
-  return 'fajr';
-}
+  if (hour >= 4 && hour < 12) { // Morning (Fajr - Dhuhr)
+    return {
+      title: 'Morning Blessings',
+      gradient: ['#fef3c7', '#fde68a'],
+      iconColor: '#d97706',
+      items: [
+        { 
+          type: 'surah', 
+          name: 'Surah Yaseen', 
+          description: 'Heart of the Quran', 
+          icon: 'book-open-page-variant',
+          pageNumber: 440 // Direct page number for Yaseen
+        },
+        { 
+          type: 'dhikr', 
+          name: 'Morning Adhkar', 
+          description: '🌅 Start your day with remembrance', 
+          icon: 'sun',
+          content: DAILY_SCHEDULE.fajr.adhkar 
+        },
+        { 
+          type: 'dua', 
+          name: 'Morning Duas', 
+          description: 'Prophetic morning supplications', 
+          icon: 'hands-pray',
+          content: DAILY_SCHEDULE.fajr.duas 
+        }
+      ]
+    };
+  } else if (hour >= 12 && hour < 16) { // Afternoon
+    return {
+      title: 'Afternoon Reflection',
+      gradient: ['#e0f2fe', '#bae6fd'],
+      iconColor: '#0284c7',
+      items: [
+        { 
+          type: 'surah', 
+          name: 'Surah Rahman', 
+          description: 'Discover Divine mercy', 
+          icon: 'book-open-page-variant',
+          pageNumber: 531 // Direct page number for Rahman
+        },
+        { 
+          type: 'dhikr', 
+          name: 'Tasbeeh', 
+          description: '💫 Remember Allah in prosperity', 
+          icon: 'prayer-beads',
+          content: DAILY_SCHEDULE.dhuhr.adhkar
+        },
+        { 
+          type: 'dua', 
+          name: 'Dhuhr Prayers', 
+          description: 'Midday remembrance', 
+          icon: 'hands-pray',
+          content: []
+        }
+      ]
+    };
+  } else if (hour >= 16 && hour < 19) { // Evening
+    return {
+      title: 'Evening Light',
+      gradient: ['#ede9fe', '#ddd6fe'],
+      iconColor: '#7c3aed',
+      items: [
+        { 
+          type: 'surah', 
+          name: currentDay === 5 ? 'Surah Kahf' : 'Surah Mulk',
+          description: currentDay === 5 ? 'Friday special: Surah Kahf' : 'The Sovereignty',
+          icon: 'book-open-page-variant',
+          pageNumber: currentDay === 5 ? 293 : 562 // Direct page numbers for Kahf (18) and Mulk (67)
+        },
+        { 
+          type: 'dhikr', 
+          name: 'Evening Adhkar', 
+          description: '🌅 Protection & peace', 
+          icon: 'weather-sunset',
+          content: DAILY_SCHEDULE.asr.adhkar
+        },
+        { 
+          type: 'dua', 
+          name: 'Evening Duas', 
+          description: 'End your day with barakah', 
+          icon: 'hands-pray',
+          content: DAILY_SCHEDULE.asr.duas
+        }
+      ]
+    };
+  } else { // Night
+    return {
+      title: 'Night Blessings',
+      gradient: ['#e0e7ff', '#c7d2fe'],
+      iconColor: '#4f46e5',
+      items: [
+        {
+          type: 'surah',
+          name: 'The Three Quls',
+          description: 'Protection before sleep',
+          icon: 'book-open-page-variant',
+          surahs: [
+            { name: 'Al-Ikhlas', arabic: 'سُورَةُ الْإِخْلَاصِ', pageNumber: 604, count: 3 },
+            { name: 'Al-Falaq', arabic: 'سُورَةُ الْفَلَقِ', pageNumber: 604, count: 3 },
+            { name: 'An-Naas', arabic: 'سُورَةُ النَّاسِ', pageNumber: 604, count: 3 }
+          ],
+          pageNumber: 604
+        },
+        { 
+          type: 'dhikr', 
+          name: 'Tasbeeh Fatima', 
+          description: '🌙 The blessed dhikr', 
+          icon: 'star-crescent',
+          content: DAILY_SCHEDULE.before_sleep.adhkar
+        },
+        { 
+          type: 'dua', 
+          name: 'Before Sleep', 
+          description: 'Peaceful rest & protection', 
+          icon: 'hands-pray',
+          content: DAILY_SCHEDULE.before_sleep.duas
+        }
+      ]
+    };
+  }
+};
 
 export default function DailyRecommendations({ navigation }) {
-  const [currentSlot, setCurrentSlot] = useState(getCurrentTimeSlot());
-  const [expandedSections, setExpandedSections] = useState({});
-  const [smartRecommendationExpanded, setSmartRecommendationExpanded] = useState(true); // Default expanded
+  const [recommendations, setRecommendations] = useState(getTimeBasedRecommendations());
 
+  // Update recommendations every minute
   useEffect(() => {
-    // Update current slot every minute
     const interval = setInterval(() => {
-      setCurrentSlot(getCurrentTimeSlot());
+      setRecommendations(getTimeBasedRecommendations());
     }, 60000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const toggleSection = (section) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
+  const navigateToQuranPage = (pageNumber) => {
+    const page = parseInt(pageNumber, 10);
+    console.log('Navigating to page:', page);
+    navigation.navigate('Quran', {
+      screen: 'QuranPage',
+      params: {
+        initialPage: page
+      }
+    });
   };
 
-  const handleSurahPress = (surah) => {
-    let pageNumber;
-    
-    // Check if it's a special verse with specific page
-    if (SPECIAL_VERSE_PAGES[surah.name]) {
-      pageNumber = SPECIAL_VERSE_PAGES[surah.name];
-    } else {
-      // Use regular surah starting page
-      const surahNumber = SURAH_NAME_TO_NUMBER[surah.name];
-      pageNumber = surahToPageMapping[surahNumber] || 1;
-    }
-    
-    if (navigation) {
-      console.log(`[DAILY RECOMMENDATIONS] Navigating to ${surah.name} at page ${pageNumber}`);
-      navigation.navigate('Quran', {
-        screen: 'QuranPage',
-        params: { initialPage: pageNumber }
-      });
+  const handlePress = (item) => {
+    if (item.type === 'surah') {
+      navigateToQuranPage(item.pageNumber);
     }
   };
-
-  const currentRecommendation = DAILY_SCHEDULE[currentSlot];
-
-  const renderSurahItem = (surah) => (
-    <TouchableOpacity
-      key={surah.name}
-      style={tw`mb-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700 shadow-sm`}
-      onPress={() => handleSurahPress(surah)}
-      activeOpacity={0.7}
-    >
-      <View style={tw`flex-row justify-between items-center mb-2`}>
-        <Text style={tw`text-sm font-semibold text-green-800 dark:text-green-200`}>
-          {surah.name}
-        </Text>
-        <View style={tw`flex-row items-center`}>
-          <Text style={tw`text-xs text-green-600 dark:text-green-300 bg-green-100 dark:bg-green-800 px-2 py-1 rounded mr-2`}>
-            {surah.count}x
-          </Text>
-          <View style={tw`bg-green-100 dark:bg-green-800 p-1 rounded-full`}>
-            <Ionicons name="book-outline" size={14} color="#16a34a" />
-          </View>
-        </View>
-      </View>
-      <Text style={[tw`text-right text-lg text-green-900 dark:text-green-100 mb-1`, {fontFamily: 'System', fontSize: 18, lineHeight: 28}]}>
-        {surah.arabic}
-      </Text>
-      <Text style={tw`text-xs text-green-600 dark:text-green-400 text-center mt-2 opacity-75`}>
-        Tap to read in Quran
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const renderAdhkarItem = (adhkar) => (
-    <View key={adhkar.text.slice(0, 20)} style={tw`mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg`}>
-      <View style={tw`flex-row justify-between items-center mb-3`}>
-        <Text style={tw`text-xs text-blue-600 dark:text-blue-300 bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded`}>
-          {adhkar.count}x
-        </Text>
-      </View>
-      <Text style={[tw`text-right text-lg text-blue-900 dark:text-blue-100 mb-3 leading-8`, {fontFamily: 'System', fontSize: 18}]}>
-        {adhkar.arabic}
-      </Text>
-      <Text style={tw`text-sm text-blue-700 dark:text-blue-300 mb-2 leading-6`}>
-        {adhkar.text}
-      </Text>
-      {adhkar.english && (
-        <Text style={tw`text-xs text-blue-600 dark:text-blue-400 italic leading-5`}>
-          {adhkar.english}
-        </Text>
-      )}
-    </View>
-  );
-
-  const renderDuaItem = (dua) => (
-    <View key={dua.text.slice(0, 20)} style={tw`mb-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg`}>
-      <Text style={[tw`text-right text-lg text-purple-900 dark:text-purple-100 mb-3 leading-8`, {fontFamily: 'System', fontSize: 18}]}>
-        {dua.arabic}
-      </Text>
-      <Text style={tw`text-sm text-purple-700 dark:text-purple-300 mb-2 leading-6`}>
-        {dua.text}
-      </Text>
-      <Text style={tw`text-xs text-purple-600 dark:text-purple-400 italic leading-5`}>
-        {dua.english}
-      </Text>
-    </View>
-  );
 
   return (
-    <View style={tw`bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm`}>
-      <View style={tw`flex-row items-center mb-4`}>
-        <View style={tw`w-3 h-3 bg-amber-500 rounded-full mr-3`} />
-        <View style={tw`flex-1`}>
-          <Text style={tw`text-lg font-bold text-gray-900 dark:text-gray-100`}>
-            {currentRecommendation.title}
-          </Text>
-          <Text style={tw`text-sm text-gray-600 dark:text-gray-400`}>
-            {currentRecommendation.time}
+    <View>
+      <Text style={tw`text-lg font-bold text-black dark:text-white mb-3`}>Smart Recommendations</Text>
+      <LinearGradient
+        colors={recommendations.gradient}
+        style={tw`rounded-xl p-4 shadow-lg`}
+      >
+        <View style={tw`flex-row items-center mb-4`}>
+          <MaterialCommunityIcons 
+            name="clock-time-four" 
+            size={24} 
+            color={recommendations.iconColor} 
+          />
+          <Text style={tw`ml-2 text-base font-semibold text-gray-800`}>
+            {recommendations.title}
           </Text>
         </View>
-        <Ionicons name="time" size={20} color="#92400e" />
-      </View>
 
-      {/* Smart Recommendation Header - Controls all content */}
-      <View style={tw`mb-4`}>
-        <TouchableOpacity
-          onPress={() => setSmartRecommendationExpanded(!smartRecommendationExpanded)}
-          style={tw`flex-row items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-700`}
-        >
-          <View style={tw`flex-row items-center flex-1`}>
-            <Ionicons name="bulb" size={20} color="#6366f1" style={tw`mr-3`} />
-            <Text style={tw`text-base font-bold text-indigo-800 dark:text-indigo-200`}>
-              Smart Recommendation
-            </Text>
-          </View>
-          <Ionicons
-            name={smartRecommendationExpanded ? "chevron-up" : "chevron-down"}
-            size={20}
-            color="#6366f1"
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* All Content - controlled by Smart Recommendation */}
-      {smartRecommendationExpanded && (
-        <ScrollView style={tw`max-h-96`} showsVerticalScrollIndicator={false}>
-          {/* Surahs Section */}
-          {currentRecommendation.surahs.length > 0 && (
-            <View style={tw`mb-4`}>
-              <TouchableOpacity
-                onPress={() => toggleSection('surahs')}
-                style={tw`flex-row items-center justify-between mb-3`}
-              >
-                <Text style={tw`text-base font-semibold text-gray-800 dark:text-gray-200`}>
-                  📖 Recommended Surahs ({currentRecommendation.surahs.length})
-                </Text>
-                <Ionicons
-                  name={expandedSections.surahs ? "chevron-up" : "chevron-down"}
-                  size={20}
-                  color="#6B7280"
-                />
-              </TouchableOpacity>
-              {expandedSections.surahs && (
-                <View>
-                  {currentRecommendation.surahs.map(renderSurahItem)}
-                </View>
-              )}
-            </View>
-          )}
-
-          {/* Adhkar Section */}
-          {currentRecommendation.adhkar.length > 0 && (
-            <View style={tw`mb-4`}>
-              <TouchableOpacity
-                onPress={() => toggleSection('adhkar')}
-                style={tw`flex-row items-center justify-between mb-3`}
-              >
-                <Text style={tw`text-base font-semibold text-gray-800 dark:text-gray-200`}>
-                  📿 Dhikr & Adhkar ({currentRecommendation.adhkar.length})
-                </Text>
-                <Ionicons
-                  name={expandedSections.adhkar ? "chevron-up" : "chevron-down"}
-                  size={20}
-                  color="#6B7280"
-                />
-              </TouchableOpacity>
-              {expandedSections.adhkar && (
-                <View>
-                  {currentRecommendation.adhkar.map(renderAdhkarItem)}
-                </View>
-              )}
-            </View>
-          )}
-
-          {/* Duas Section */}
-          {currentRecommendation.duas.length > 0 && (
-            <View style={tw`mb-4`}>
-              <TouchableOpacity
-                onPress={() => toggleSection('duas')}
-                style={tw`flex-row items-center justify-between mb-3`}
-              >
-                <Text style={tw`text-base font-semibold text-gray-800 dark:text-gray-200`}>
-                  🤲 Du'as ({currentRecommendation.duas.length})
-                </Text>
-                <Ionicons
-                  name={expandedSections.duas ? "chevron-up" : "chevron-down"}
-                  size={20}
-                  color="#6B7280"
-                />
-              </TouchableOpacity>
-              {expandedSections.duas && (
-                <View>
-                  {currentRecommendation.duas.map(renderDuaItem)}
-                </View>
-              )}
-            </View>
-          )}
+        <ScrollView style={tw`gap-3`}>
+          {recommendations.items.map((item, index) => (
+            <Animatable.View
+              key={item.name}
+              animation="fadeIn"
+              delay={index * 100}
+              style={tw`mb-3`}
+            >
+              <View style={tw`bg-white/80 rounded-lg p-3 shadow-sm`}>
+                <TouchableOpacity
+                  onPress={() => item.type === 'surah' ? handlePress(item) : null}
+                  style={tw`flex-row items-center`}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons
+                    name={item.icon}
+                    size={28}
+                    color={recommendations.iconColor}
+                    style={tw`mr-3`}
+                  />
+                  <View style={tw`flex-1`}>
+                    <Text style={tw`text-base font-semibold text-gray-800`}>
+                      {item.name}
+                    </Text>
+                    <Text style={tw`text-sm text-gray-600`}>
+                      {item.description}
+                    </Text>
+                    {item.surahs && (
+                      <View style={tw`mt-2`}>
+                        {item.surahs.map((surah, idx) => (
+                          <TouchableOpacity 
+                            key={surah.name}
+                            onPress={() => navigateToQuranPage(surah.pageNumber)}
+                            style={tw`flex-row items-center mt-2`}
+                          >
+                            <Text style={tw`text-sm font-medium text-gray-800`}>
+                              {surah.arabic}
+                            </Text>
+                            <Text style={tw`text-sm text-gray-600 ml-2`}>
+                              ({surah.name}) {surah.count && `${surah.count}x`}
+                            </Text>
+                            <MaterialCommunityIcons
+                              name="chevron-right"
+                              size={16}
+                              color={recommendations.iconColor}
+                              style={tw`ml-auto`}
+                            />
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                  {item.type === 'surah' && !item.surahs && (
+                    <MaterialCommunityIcons
+                      name="chevron-right"
+                      size={24}
+                      color={recommendations.iconColor}
+                    />
+                  )}
+                </TouchableOpacity>
+                
+                {(item.type === 'dhikr' || item.type === 'dua') && item.content && item.content.length > 0 && (
+                  <View style={tw`mt-3 border-t border-gray-200 pt-3`}>
+                    {item.content.map((content, idx) => (
+                      <View key={idx} style={tw`mb-4 last:mb-0`}>
+                        <Text style={tw`text-base font-medium text-gray-800 mb-1`}>
+                          {content.arabic}
+                        </Text>
+                        <Text style={tw`text-sm text-gray-600 mb-1`}>
+                          {content.text}
+                        </Text>
+                        <Text style={tw`text-sm text-gray-600 mb-1`}>
+                          {content.english}
+                        </Text>
+                        {content.count && (
+                          <Text style={tw`text-sm font-medium text-gray-800`}>
+                            Repeat: {content.count}x
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </Animatable.View>
+          ))}
         </ScrollView>
-      )}
-
-      <View style={tw`mt-4 pt-3 border-t border-gray-200 dark:border-gray-600`}>
-        <Text style={tw`text-xs text-gray-500 dark:text-gray-400 text-center`}>
-          Recommendations update automatically based on time
-        </Text>
-      </View>
+      </LinearGradient>
     </View>
   );
+         
+
 }
+
+

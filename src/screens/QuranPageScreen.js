@@ -38,13 +38,13 @@ export default function QuranPageScreen({ route }) {
     
     if (Math.abs(translationX) > minSwipeDistance || Math.abs(velocityX) > minVelocity) {
       if (translationX > 0 && velocityX >= 0) {
-        // Swipe right - go to previous page
-        console.log('[QURAN SCREEN] Swipe right detected - going to previous page');
-        prevPage();
-      } else if (translationX < 0 && velocityX <= 0) {
-        // Swipe left - go to next page
-        console.log('[QURAN SCREEN] Swipe left detected - going to next page');
+        // Swipe right - go to next page
+        console.log('[QURAN SCREEN] Swipe right detected - going to next page');
         nextPage();
+      } else if (translationX < 0 && velocityX <= 0) {
+        // Swipe left - go to previous page
+        console.log('[QURAN SCREEN] Swipe left detected - going to previous page');
+        prevPage();
       }
     }
   };
@@ -64,6 +64,9 @@ export default function QuranPageScreen({ route }) {
     slideAnim.setValue(0);
     fadeAnim.setValue(1);
     scaleAnim.setValue(1);
+
+    // Update streak when component mounts
+    dispatch(updateStreak());
     
     return () => {
       console.log('[QURAN SCREEN] Component unmounting');
@@ -174,7 +177,7 @@ export default function QuranPageScreen({ route }) {
     const animationDuration = preloadedPages.has(newPage) ? 300 : 600;
     
     // Start exit animation - slide current page out
-    const slideDirection = isNext ? -width : width;
+    const slideDirection = isNext ? width : -width; // Reversed direction
     
     Animated.parallel([
       // Slide out current page
@@ -203,7 +206,7 @@ export default function QuranPageScreen({ route }) {
       setCurrentPage(newPage);
       
       // Reset animation values for entrance
-      slideAnim.setValue(isNext ? width : -width);
+      slideAnim.setValue(isNext ? -width : width); // Reversed direction
       
       // Animate new page entrance
       Animated.parallel([
@@ -287,16 +290,25 @@ export default function QuranPageScreen({ route }) {
       <View style={tw`px-4 py-3 bg-amber-50 dark:bg-gray-900 border-b border-amber-200 dark:border-gray-700`}>
         <View style={tw`flex-row items-center justify-between`}>
           <View style={tw`flex-row items-center flex-1`}>
-            <TouchableOpacity
-              onPress={handleBackPress}
-              style={tw`p-2 rounded-lg bg-amber-100 dark:bg-amber-900/50 mr-3 flex-row items-center`}
-              accessibilityLabel="Browse Surahs and Juz"
-            >
-              <Ionicons name="library-outline" size={18} color="#92400e" />
-              <Text style={tw`text-xs text-amber-700 dark:text-amber-300 ml-1 font-medium`}>
-                Browse
-              </Text>
-            </TouchableOpacity>
+            <View style={tw`flex-row`}>
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={tw`p-3 rounded-lg bg-amber-200 dark:bg-amber-800 mr-2 flex-row items-center shadow-sm`}
+                accessibilityLabel="Go Back"
+              >
+                <Ionicons name="arrow-back" size={20} color="#92400e" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleBackPress}
+                style={tw`p-3 rounded-lg bg-amber-200 dark:bg-amber-800 mr-3 flex-row items-center shadow-sm`}
+                accessibilityLabel="Browse Surahs and Juz"
+              >
+                <Ionicons name="library-outline" size={20} color="#92400e" />
+                <Text style={tw`text-sm text-amber-800 dark:text-amber-200 ml-2 font-semibold`}>
+                  Browse
+                </Text>
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity
               onPress={handleModalOpen}
               style={tw`flex-row items-center flex-1`}
@@ -391,8 +403,8 @@ export default function QuranPageScreen({ route }) {
           <Image
             source={{ uri: getPageImageUrl(currentPage) }}
             style={{
-              width: width, // Full width instead of width - 16
-              height: height * 0.7, // Increased height to 70% for better coverage
+              width: width,
+              height: height * 0.80, // Increased height to 85% for fuller coverage
               resizeMode: 'contain',
               backgroundColor: '#FFFBEB',
             }}
@@ -407,10 +419,10 @@ export default function QuranPageScreen({ route }) {
 
       {currentPage > 1 && !isTransitioning && (
         <TouchableOpacity
-          onPress={prevPage}
+          onPress={nextPage}
           style={[
             tw`absolute top-0 left-0 w-16 justify-center items-center bg-transparent`,
-            { height: height * 0.7, marginTop: 80 } // Match image height and header offset
+            { height: height * 0.85, marginTop: 80 } // Match image height and header offset
           ]}
           activeOpacity={0.1}
         >
@@ -423,10 +435,10 @@ export default function QuranPageScreen({ route }) {
       {/* Right Side Button (Next Page) */}
       {currentPage < totalPages && !isTransitioning && (
         <TouchableOpacity
-          onPress={nextPage}
+          onPress={prevPage}
           style={[
             tw`absolute top-0 right-0 w-16 justify-center items-center bg-transparent`,
-            { height: height * 0.7, marginTop: 80 } // Match image height and header offset
+            { height: height * 0.85, marginTop: 80 } // Match image height and header offset
           ]}
           activeOpacity={0.1}
         >
