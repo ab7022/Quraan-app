@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Qur’an App",
+    "slug": "quran-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "https://img.icons8.com/external-flatart-icons-outline-flatarticons/64/000000/external-quran-ramadan-flatart-icons-outline-flatarticons-1.png",
+    "splash": {
+      "image": "https://img.icons8.com/external-flatart-icons-outline-flatarticons/96/4F8A10/external-quran-ramadan-flatart-icons-outline-flatarticons-1.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAF3E7"
+    },
+    "userInterfaceStyle": "automatic",
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "https://img.icons8.com/external-flatart-icons-outline-flatarticons/64/000000/external-quran-ramadan-flatart-icons-outline-flatarticons-1.png",
+        "backgroundColor": "#FAF3E7"
+      }
+    },
+    "web": {
+      "favicon": "https://img.icons8.com/external-flatart-icons-outline-flatarticons/64/000000/external-quran-ramadan-flatart-icons-outline-flatarticons-1.png"
+    }
+  }
+}
