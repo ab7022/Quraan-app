@@ -47,17 +47,22 @@ const ContinueReading = ({ navigation }) => {
       case 'surah':
         // Navigate to the starting page of the surah
         const pageNumber = surahToPageMapping[lastReadPage.id] || 1;
+        console.log('[CONTINUE READING] Navigating to Surah page:', pageNumber);
         navigation.navigate('Quran', {
-          initialPage: pageNumber
+          screen: 'QuranPage',
+          params: { initialPage: pageNumber }
         });
         break;
       case 'juz':
-        // For juz, navigate to the Juz tab first (would need juz to page mapping)
-        navigation.navigate('Juz');
+        // For juz, navigate to the Juz tab first
+        console.log('[CONTINUE READING] Navigating to Juz tab');
+        navigation.navigate('Quran', { screen: 'QuranTabs', params: { screen: 'JuzList' } });
         break;
       case 'page':
+        console.log('[CONTINUE READING] Navigating to specific page:', lastReadPage.pageNumber);
         navigation.navigate('Quran', {
-          initialPage: lastReadPage.pageNumber || 1
+          screen: 'QuranPage',
+          params: { initialPage: lastReadPage.pageNumber || 1 }
         });
         break;
       default:

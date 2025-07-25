@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, Animated, Easing, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Animated, Easing, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { useSelector, useDispatch } from 'react-redux';

@@ -1,44 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { QuranLogo } from '../components/QuranLogo';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
-import SurahCard from '../components/SurahCard';
 import ContinueReading from '../components/ContinueReading';
+import DailyRecommendations from '../components/DailyRecommendations';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { loadStreak, updateStreak } from '../store/streakSlice';
-import Shimmer from '../components/Shimmer';
-
-const SUGGESTIONS = [
-  { time: 'fajr', surahs: [36] }, // Yaseen
-  { time: 'maghrib', surahs: [67, 56] }, // Mulk, Waqiah
-  { day: 5, surahs: [18] }, // Friday: Kahf
-];
-
-function getCurrentSuggestions(surahs) {
-  const now = new Date();
-  const hour = now.getHours();
-  const day = now.getDay();
-  let suggested = [];
-  if (day === 5) suggested.push(18); // Friday
-  if (hour >= 4 && hour < 8) suggested.push(36); // Fajr
-  if (hour >= 17 && hour < 21) suggested.push(67, 56); // Maghrib
-  return surahs.filter(s => suggested.includes(s.number));
-}
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const streak = useSelector(s => s.streak.streak);
   const [refreshing, setRefreshing] = useState(false);
-  const [surahs, setSurahs] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     console.log('[HOME SCREEN] Component mounted');
     dispatch(loadStreak());
-    loadSurahs();
     
     return () => {
       console.log('[HOME SCREEN] Component unmounting');
@@ -50,11 +30,6 @@ export default function HomeScreen() {
     navigation.navigate('Streak');
   };
 
-  const handleSurahPress = (surah) => {
-    console.log('[HOME SCREEN] Surah card pressed:', surah.englishName, surah.number);
-    navigation.navigate('Surahs', { surahId: surah.number, name: surah.englishName });
-  };
-
   const handleQuranPress = () => {
     console.log('[HOME SCREEN] Quran button pressed');
     navigation.navigate('Quran');
@@ -62,51 +37,30 @@ export default function HomeScreen() {
 
   const handleSurahsPress = () => {
     console.log('[HOME SCREEN] All Surahs button pressed');
-    navigation.navigate('Surahs');
+    navigation.navigate('Quran', { screen: 'QuranTabs', params: { screen: 'SurahsList' } });
   };
 
   const handleJuzPress = () => {
     console.log('[HOME SCREEN] Juz button pressed');
-    navigation.navigate('Juz');
+    navigation.navigate('Quran', { screen: 'QuranTabs', params: { screen: 'JuzList' } });
   };
-
-  const loadSurahs = async () => {
-    console.log('[HOME SCREEN] Loading surahs from API');
-    setLoading(true);
-    try {
-      const res = await fetch('https://api.alquran.cloud/v1/surah');
-      const json = await res.json();
-      if (json.code === 200) {
-        console.log('[HOME SCREEN] Successfully loaded', json.data.length, 'surahs');
-        setSurahs(json.data);
-      } else {
-        console.log('[HOME SCREEN] API returned error code:', json.code);
-        setSurahs([]);
-      }
-    } catch (e) {
-      console.error('[HOME SCREEN] Error loading surahs:', e);
-      setSurahs([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const suggestions = getCurrentSuggestions(surahs);
 
   return (
-    <ScrollView
-      style={tw`bg-white dark:bg-black flex-1`}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => { 
-          console.log('[HOME SCREEN] Pull to refresh triggered');
-          setRefreshing(true); 
-          loadSurahs(); 
-        }} />
-      }
-      contentContainerStyle={tw`pb-8`}
-    >
-      <View style={tw`px-6 pt-7 mb-5 flex-row items-center`}> 
+    <SafeAreaView style={tw`flex-1 bg-white dark:bg-black`}>
+      <ScrollView
+        style={tw`flex-1`}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => { 
+            console.log('[HOME SCREEN] Pull to refresh triggered');
+            setRefreshing(true);
+            // Just refresh the streak data
+            dispatch(loadStreak());
+            setTimeout(() => setRefreshing(false), 1000);
+          }} />
+        }
+        contentContainerStyle={tw`pb-8`}
+      >
+      <View style={tw`px-6 pt-4 mb-5 flex-row items-center`}> 
         <QuranLogo size={54} />
         <View style={tw`ml-4`}> 
           <Text style={tw`text-xl font-bold text-black dark:text-white`}>Assalamu Alaikum, Abdul Bayees</Text>
@@ -129,24 +83,12 @@ export default function HomeScreen() {
       <View style={tw`px-6 mb-5`}>
         <ContinueReading navigation={navigation} />
       </View>
-      
-      <View style={tw`px-6 mb-2`}> 
-        <Text style={tw`text-lg font-bold text-black dark:text-white mb-2`}>Smart Suggestions</Text>
-        {loading ? (
-          <Shimmer height={60} style={tw`mb-2`} />
-        ) : suggestions.length ? (
-          suggestions.map((s) => (
-            <SurahCard
-              key={s.number}
-              surah={s}
-              isSuggested
-              onPress={() => handleSurahPress(s)}
-            />
-          ))
-        ) : (
-          <Text style={tw`text-gray-500 dark:text-gray-400`}>No suggestions at this time</Text>
-        )}
+
+      {/* Daily Recommendations - Smart Suggestions */}
+      <View style={tw`px-6 mb-5`}>
+        <DailyRecommendations navigation={navigation} />
       </View>
+      
       <View style={tw`px-6 mt-4`}> 
         <Text style={tw`text-lg font-bold text-black dark:text-white mb-2`}>Quick Start</Text>
         <View style={tw`gap-3 mb-3`}> 
@@ -184,5 +126,6 @@ export default function HomeScreen() {
       
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
