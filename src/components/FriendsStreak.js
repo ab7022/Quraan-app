@@ -93,6 +93,17 @@ const FriendsStreak = ({ onContactPress, onInvite }) => {
     );
   };
 
+  const onInviteFriends = () => {
+    Alert.alert(
+      'Invite Friends',
+      'Share the app with your friends to compete and motivate each other in reading the Quran!',
+      [
+        { text: 'Share App', onPress: () => console.log('Share app functionality') },
+        { text: 'Cancel', style: 'cancel' }
+      ]
+    );
+  };
+
   const renderContact = ({ item }) => (
     <ContactCard contact={item} onPress={handleContactPress} />
   );

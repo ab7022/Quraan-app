@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import Shimmer from '../components/Shimmer';
 import { useDispatch } from 'react-redux';
-import { updateStreak } from '../store/streakSlice';
+import { updateStreak, saveLastReadPage } from '../store/streakSlice';
 
 export default function SurahDetailScreen({ surahId, name, onBack }) {
   const [verses, setVerses] = useState([]);
@@ -14,6 +14,15 @@ export default function SurahDetailScreen({ surahId, name, onBack }) {
 
   useEffect(() => {
     fetchVerses();
+    // Save this as the last read page
+    if (surahId && name) {
+      dispatch(saveLastReadPage({
+        type: 'surah',
+        id: surahId,
+        name: name,
+        lastReadAt: new Date().toISOString()
+      }));
+    }
   }, [surahId]);
 
   async function fetchVerses() {

@@ -4,6 +4,7 @@ import { QuranLogo } from '../components/QuranLogo';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import SurahCard from '../components/SurahCard';
+import ContinueReading from '../components/ContinueReading';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { loadStreak, updateStreak } from '../store/streakSlice';
@@ -123,6 +124,12 @@ export default function HomeScreen() {
           <Text style={tw`text-lg font-semibold text-green-800 dark:text-green-100`}>Streak: {streak} day{streak === 1 ? '' : 's'} 🔥</Text>
         </TouchableOpacity>
       </View>
+      
+      {/* Continue Reading Section */}
+      <View style={tw`px-6 mb-5`}>
+        <ContinueReading navigation={navigation} />
+      </View>
+      
       <View style={tw`px-6 mb-2`}> 
         <Text style={tw`text-lg font-bold text-black dark:text-white mb-2`}>Smart Suggestions</Text>
         {loading ? (
@@ -174,15 +181,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Tajweed')}
-          style={tw`bg-purple-100 dark:bg-purple-900 rounded-xl px-4 py-4 items-center shadow flex-row justify-center`}
-          accessibilityLabel="Learn Tajweed Rules"
-          activeOpacity={0.88}
-        >
-          <Ionicons name="school" size={28} color="#7c3aed" style={tw`mr-2`} />
-          <Text style={tw`text-base font-semibold text-purple-900 dark:text-purple-100`}>Learn Tajweed Rules</Text>
-        </TouchableOpacity>
+      
       </View>
     </ScrollView>
   );

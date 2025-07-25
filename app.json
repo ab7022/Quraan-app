@@ -18,13 +18,19 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSContactsUsageDescription": "This app needs access to contacts to show friends' reading streaks and encourage each other in Quran reading."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "https://img.icons8.com/external-flatart-icons-outline-flatarticons/64/000000/external-quran-ramadan-flatart-icons-outline-flatarticons-1.png",
         "backgroundColor": "#FAF3E7"
-      }
+      },
+      "permissions": [
+        "READ_CONTACTS"
+      ]
     },
     "web": {
       "favicon": "https://img.icons8.com/external-flatart-icons-outline-flatarticons/64/000000/external-quran-ramadan-flatart-icons-outline-flatarticons-1.png"

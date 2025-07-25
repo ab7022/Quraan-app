@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import PageNavigationModal from '../components/PageNavigationModal';
 import { useDispatch } from 'react-redux';
-import { updateStreak } from '../store/streakSlice';
+import { updateStreak, saveLastReadPage } from '../store/streakSlice';
 
 const { width, height } = Dimensions.get('window');
 
@@ -38,6 +38,15 @@ export default function QuranPageScreen({ route }) {
     setLoading(true);
     setImageError(false);
     dispatch(updateStreak());
+    
+    // Save current page as last read
+    dispatch(saveLastReadPage({
+      type: 'page',
+      id: currentPage,
+      name: `Page ${currentPage}`,
+      pageNumber: currentPage,
+      lastReadAt: new Date().toISOString()
+    }));
   }, [currentPage]);
 
   // Generate SearchTruth.com image URL

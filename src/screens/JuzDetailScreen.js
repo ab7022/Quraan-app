@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import Shimmer from '../components/Shimmer';
 import { useDispatch } from 'react-redux';
-import { updateStreak } from '../store/streakSlice';
+import { updateStreak, saveLastReadPage } from '../store/streakSlice';
 
 export default function JuzDetailScreen({ juz, onBack }) {
   const [verses, setVerses] = useState([]);
@@ -13,6 +13,15 @@ export default function JuzDetailScreen({ juz, onBack }) {
 
   useEffect(() => {
     fetchVerses();
+    // Save this as the last read page
+    if (juz) {
+      dispatch(saveLastReadPage({
+        type: 'juz',
+        id: juz.juz_number,
+        name: `Juz ${juz.juz_number}`,
+        lastReadAt: new Date().toISOString()
+      }));
+    }
   }, [juz]);
 
   async function fetchVerses() {
