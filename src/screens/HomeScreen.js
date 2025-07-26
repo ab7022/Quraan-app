@@ -47,7 +47,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-white dark:bg-black`}>
+    <SafeAreaView style={tw`flex-1 bg-white`}>
       <ScrollView
         style={tw`flex-1`}
         refreshControl={
@@ -60,155 +60,191 @@ export default function HomeScreen() {
           }} />
         }
         contentContainerStyle={tw`pb-8`}
+        showsVerticalScrollIndicator={false}
       >
-      <View style={tw`px-6 pt-4 mb-5 flex-row items-center`}> 
-        <QuranLogo size={54} />
-        <View style={tw`ml-4`}> 
-          <Text style={tw`text-xl font-bold text-black dark:text-white`}>Assalamu Alaikum, Abdul Bayees</Text>
-          <Text style={tw`text-base text-gray-600 dark:text-gray-300 mt-1`}>Welcome to your Qur’an journey</Text>
+      {/* Header with Avatar and Greeting */}
+      <View style={tw`px-6 pt-4 mb-6`}> 
+        <View style={tw`flex-row items-center justify-between`}>
+          <View style={tw`flex-row items-center flex-1`}>
+            <View style={tw`w-12 h-12 bg-emerald-500 rounded-full items-center justify-center mr-3`}>
+              <Text style={tw`text-white font-semibold text-base`}>AB</Text>
+            </View>
+            <View style={tw`flex-1`}> 
+              <Text style={tw`text-xl font-bold text-gray-900`}>Assalamu Alaikum</Text>
+              <Text style={tw`text-base text-gray-500`}>Abdul Bayees</Text>
+            </View>
+          </View>
+          <TouchableOpacity 
+            style={tw`bg-emerald-100 rounded-full px-3 py-2 flex-row items-center`}
+            onPress={handleStreakPress}
+          >
+            <Ionicons name="flame" size={16} color="#059669" style={tw`mr-1`} />
+            <Text style={tw`text-emerald-700 font-bold text-sm`}>{streak}</Text>
+          </TouchableOpacity>
         </View>
       </View>
-      <View style={tw`px-6 mb-5`}> 
-        <Animatable.View animation={streak > 1 ? "pulse" : undefined} iterationCount="infinite">
+
+      {/* Days of Week */}
+      <View style={tw`px-6 mb-6`}>
+        <View style={tw`flex-row justify-between`}>
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+            <TouchableOpacity 
+              key={index}
+              style={tw`w-10 h-10 rounded-full items-center justify-center ${
+                index === new Date().getDay() 
+                  ? 'bg-emerald-500' 
+                  : 'bg-gray-100'
+              }`}
+            >
+              <Text style={tw`font-medium text-sm ${
+                index === new Date().getDay() ? 'text-white' : 'text-gray-600'
+              }`}>
+                {day}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Quick Actions */}
+      <View style={tw`px-6 mb-6`}> 
+        <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>Quick Actions</Text>
+        <View style={tw`flex-row flex-wrap justify-between`}>
+          {/* Read Quran - Google Green Gradient */}
+          <TouchableOpacity
+            onPress={handleQuranPress}
+            style={tw`w-[48%] rounded-2xl mb-3 shadow-lg`}
+            accessibilityLabel="Read Quran Page by Page"
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#34D399', '#10B981', '#059669']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={tw`rounded-2xl p-4 items-center`}
+            >
+              <View style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center mb-3`}>
+                <Ionicons name="book-outline" size={24} color="white" />
+              </View>
+              <Text style={tw`text-sm font-semibold text-white`}>Read Quran</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          
+          {/* Surahs - Google Blue Gradient */}
+          <TouchableOpacity
+            onPress={handleSurahsPress}
+            style={tw`w-[48%] rounded-2xl mb-3 shadow-lg`}
+            accessibilityLabel="Browse Surahs"
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#60A5FA', '#3B82F6', '#2563EB']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={tw`rounded-2xl p-4 items-center`}
+            >
+              <View style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center mb-3`}>
+                <FontAwesome5 name="quran" size={20} color="white" />
+              </View>
+              <Text style={tw`text-sm font-semibold text-white`}>Surahs</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Juz - Google Orange/Red Gradient */}
+          <TouchableOpacity
+            onPress={handleJuzPress}
+            style={tw`w-[48%] rounded-2xl mb-3 shadow-lg`}
+            accessibilityLabel="Browse Juz"
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#FBBF24', '#F59E0B', '#D97706']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={tw`rounded-2xl p-4 items-center`}
+            >
+              <View style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center mb-3`}>
+                <MaterialCommunityIcons name="bookmark-box-multiple" size={24} color="white" />
+              </View>
+              <Text style={tw`text-sm font-semibold text-white`}>Juz</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Progress - Google Purple Gradient */}
           <TouchableOpacity
             onPress={handleStreakPress}
-            style={tw`bg-green-100 dark:bg-green-900 rounded-xl px-4 py-4 shadow-lg`}
-            accessibilityRole="button"
-            accessibilityLabel="View daily reading streak"
+            style={tw`w-[48%] rounded-2xl mb-3 shadow-lg`}
+            accessibilityLabel="View Streak"
+            activeOpacity={0.8}
           >
-            <View style={tw`flex-row items-center justify-between`}>
-              <View style={tw`flex-row items-center`}>
-                <Ionicons 
-                  name="flame" 
-                  size={32} 
-                  color={streak > 1 ? "#ff6b6b" : "#4F8A10"} 
-                  style={tw`mr-2`} 
-                />
-                <View>
-                  <Text style={tw`text-lg font-bold text-green-800 dark:text-green-100`}>
-                    {streak} Day{streak === 1 ? '' : 's'} 🔥
-                  </Text>
-                  <Text style={tw`text-sm text-green-700 dark:text-green-200`}>
-                    {streak > 1 ? "You're on a roll! Keep going!" : "Start your journey today!"}
-                  </Text>
-                </View>
+            <LinearGradient
+              colors={['#A78BFA', '#8B5CF6', '#7C3AED']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={tw`rounded-2xl p-4 items-center`}
+            >
+              <View style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center mb-3`}>
+                <Ionicons name="trophy-outline" size={24} color="white" />
               </View>
-            </View>
-            <View style={tw`flex-row mt-2 justify-center`}>
-              {[...Array(7)].map((_, i) => (
-                <Text key={i} style={tw`mx-1 text-lg`}>
-                  {i < streak ? '🔥' : '⭐'}
-                </Text>
-              ))}
-            </View>
+              <Text style={tw`text-sm font-semibold text-white`}>Progress</Text>
+            </LinearGradient>
           </TouchableOpacity>
-        </Animatable.View>
+        </View>
+      </View>
+
+      {/* Most Read Surahs */}
+      <View style={tw`px-6 mb-6`}>
+        <Text style={tw`text-lg font-bold text-gray-900 mb-3`}>Most Read</Text>
+        <View style={tw`bg-white rounded-2xl p-3 shadow-sm border border-gray-100`}>
+          <View style={tw`flex-row flex-wrap justify-between`}>
+            {[
+              { name: 'Al-Waqi\'ah', page: 534, color: '#8B5CF6' },
+              { name: 'Al-Muzammil', page: 574, color: '#059669' },
+              { name: 'Ayat al-Kursi', page: 40, color: '#DC2626' },
+              { name: 'Ar-Rahman', page: 531, color: '#EA580C' },
+              { name: 'Yaseen', page: 440, color: '#7C3AED' },
+              { name: 'Al-Mulk', page: 562, color: '#0284C7' },
+              { name: 'As-Sajdah', page: 415, color: '#BE185D' }
+            ].map((surah, index) => (
+              <TouchableOpacity
+                key={surah.name}
+                onPress={() => {
+                  console.log('Navigating to page:', surah.page);
+                  navigation.navigate('Quran', {
+                    screen: 'QuranPage',
+                    params: { initialPage: surah.page }
+                  });
+                }}
+                style={[
+                  tw`px-3 py-2 rounded-lg mb-2 mr-2`,
+                  { backgroundColor: surah.color + '15' }
+                ]}
+                activeOpacity={0.7}
+              >
+                <Text 
+                  style={[
+                    tw`text-xs font-semibold`,
+                    { color: surah.color }
+                  ]}
+                >
+                  {surah.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
       </View>
       
       {/* Continue Reading Section */}
-      <View style={tw`px-6 mb-5`}>
+      <View style={tw`px-6 mb-6`}>
         <ContinueReading navigation={navigation} />
       </View>
 
-      {/* Daily Recommendations - Smart Suggestions */}
-      <View style={tw`px-6 mb-5`}>
+      {/* Daily Recommendations */}
+      <View style={tw`px-6 mb-6`}>
         <DailyRecommendations navigation={navigation} />
       </View>
       
-      <View style={tw`px-6 mt-4`}> 
-        <Text style={tw`text-lg font-bold text-black dark:text-white mb-4`}>Quick Start</Text>
-        <View style={tw`flex-row flex-wrap gap-3 mb-3`}>
-          <TouchableOpacity
-            onPress={handleQuranPress}
-            style={tw`w-[48%] bg-green-100 dark:bg-green-900 rounded-xl p-4 items-center shadow-lg`}
-            accessibilityLabel="Read Quran Page by Page"
-            activeOpacity={0.88}
-          >
-            <Ionicons name="book-outline" size={32} color="#4F8A10" />
-            <Text style={tw`mt-2 text-base font-semibold text-green-900 dark:text-green-100`}>Read Quran</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            onPress={handleSurahsPress}
-            style={tw`w-[48%] bg-blue-100 dark:bg-blue-900 rounded-xl p-4 items-center shadow-lg`}
-            accessibilityLabel="Browse Surahs"
-            activeOpacity={0.88}
-          >
-            <FontAwesome5 name="quran" size={32} color="#2563eb" />
-            <Text style={tw`mt-2 text-base font-semibold text-blue-900 dark:text-blue-100`}>Surahs</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleJuzPress}
-            style={tw`w-[48%] bg-yellow-100 dark:bg-yellow-900 rounded-xl p-4 items-center shadow-lg`}
-            accessibilityLabel="Browse Juz"
-            activeOpacity={0.88}
-          >
-            <MaterialCommunityIcons name="bookmark-box-multiple" size={32} color="#eab308" />
-            <Text style={tw`mt-2 text-base font-semibold text-yellow-900 dark:text-yellow-100`}>Juz</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleStreakPress}
-            style={tw`w-[48%] bg-purple-100 dark:bg-purple-900 rounded-xl p-4 items-center shadow-lg`}
-            accessibilityLabel="View Streak"
-            activeOpacity={0.88}
-          >
-            <Ionicons name="trophy-outline" size={32} color="#7e22ce" />
-            <Text style={tw`mt-2 text-base font-semibold text-purple-900 dark:text-purple-100`}>Progress</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={tw`w-[48%] bg-red-100 dark:bg-red-900 rounded-xl p-4 items-center shadow-lg`}
-            accessibilityLabel="Learn Quran"
-            activeOpacity={0.88}
-          >
-            <Ionicons name="school-outline" size={32} color="#dc2626" />
-            <Text style={tw`mt-2 text-base font-semibold text-red-900 dark:text-red-100`}>Learn</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={tw`w-[48%] bg-teal-100 dark:bg-teal-900 rounded-xl p-4 items-center shadow-lg`}
-            accessibilityLabel="Daily Azkar"
-            activeOpacity={0.88}
-          >
-            <MaterialCommunityIcons name="moon-waning-crescent" size={32} color="#0d9488" />
-            <Text style={tw`mt-2 text-base font-semibold text-teal-900 dark:text-teal-100`}>Azkar</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Progress & Rewards Section */}
-      <View style={tw`px-6 mt-4`}>
-        <Text style={tw`text-lg font-bold text-black dark:text-white mb-4`}>Weekly Progress</Text>
-        <View style={tw`bg-indigo-100 dark:bg-indigo-900 rounded-xl p-4 shadow-lg`}>
-          <View style={tw`flex-row justify-between items-center mb-3`}>
-            <Text style={tw`text-base font-semibold text-indigo-900 dark:text-indigo-100`}>
-              Goal: 50 pages this week
-            </Text>
-            <View style={tw`bg-indigo-200 dark:bg-indigo-800 px-3 py-1 rounded-full`}>
-              <Text style={tw`text-indigo-900 dark:text-indigo-100`}>23/50</Text>
-            </View>
-          </View>
-          <View style={tw`bg-indigo-200 dark:bg-indigo-800 h-3 rounded-full overflow-hidden`}>
-            <View style={tw`bg-indigo-500 w-[46%] h-full`} />
-          </View>
-          <View style={tw`flex-row justify-between mt-4`}>
-            <View style={tw`items-center`}>
-              <MaterialCommunityIcons name="star-circle" size={24} color="#4f46e5" />
-              <Text style={tw`text-xs mt-1 text-indigo-900 dark:text-indigo-100`}>150 Points</Text>
-            </View>
-            <View style={tw`items-center`}>
-              <MaterialCommunityIcons name="medal" size={24} color="#4f46e5" />
-              <Text style={tw`text-xs mt-1 text-indigo-900 dark:text-indigo-100`}>5 Badges</Text>
-            </View>
-            <View style={tw`items-center`}>
-              <MaterialCommunityIcons name="trophy" size={24} color="#4f46e5" />
-              <Text style={tw`text-xs mt-1 text-indigo-900 dark:text-indigo-100`}>Level 3</Text>
-            </View>
-          </View>
-        </View>
-      </View>
     </ScrollView>
     </SafeAreaView>
   );

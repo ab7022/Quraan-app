@@ -108,7 +108,18 @@ const DAILY_SCHEDULE = {
         "count": 1
       }
     ],
-    "duas": []
+    "duas": [
+      {
+        "text": "Rabbana atina fi'd-dunya hasanatan wa fi'l-akhirati hasanatan wa qina 'adhab an-nar",
+        "arabic": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+        "english": "Our Lord, give us good in this world and good in the next world, and save us from the punishment of the Fire"
+      },
+      {
+        "text": "Allahumma a'inni 'ala dhikrika wa shukrika wa husni 'ibadatika",
+        "arabic": "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ",
+        "english": "O Allah, help me to remember You, to thank You, and to worship You perfectly"
+      }
+    ]
   },
   "asr": {
     "time": "16:30 - 18:00",
@@ -145,6 +156,26 @@ const DAILY_SCHEDULE = {
         "text": "Allahumma bika amsayna wa bika asbahna wa bika nahya wa bika namutu wa ilayka al-maseer",
         "arabic": "اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ الْمَصِيرُ",
         "english": "O Allah, by Your leave we have reached the evening and by Your leave we have reached the morning, by Your leave we live and die and unto You is our return"
+      },
+      {
+        "text": "Allahumma anta Rabbi la ilaha illa anta, khalaqtani wa ana 'abduka wa ana 'ala 'ahdika wa wa'dika mastata'tu",
+        "arabic": "اللَّهُمَّ أَنْتَ رَبِّي لاَ إِلَهَ إِلاَّ أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ",
+        "english": "O Allah, You are my Lord, there is no deity except You. You created me and I am Your servant, and I am upon Your covenant and promise as much as I am able"
+      },
+      {
+        "text": "Allahumma inni as'aluka min khairi hadha al-yawmi wa khairi ma ba'dahu, wa a'udhu bika min sharri hadha al-yawmi wa sharri ma ba'dahu",
+        "arabic": "اللَّهُمَّ إِنِّي أَسْأَلُكَ مِنْ خَيْرِ هَذَا الْيَوْمِ وَخَيْرِ مَا بَعْدَهُ، وَأَعُوذُ بِكَ مِنْ شَرِّ هَذَا الْيَوْمِ وَشَرِّ مَا بَعْدَهُ",
+        "english": "O Allah, I ask You for the good of this day and the good of what comes after it, and I seek refuge in You from the evil of this day and the evil of what comes after it"
+      },
+      {
+        "text": "Allahumma 'afini fi badani, Allahumma 'afini fi sam'i, Allahumma 'afini fi basari",
+        "arabic": "اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي",
+        "english": "O Allah, grant me health in my body. O Allah, grant me health in my hearing. O Allah, grant me health in my sight"
+      },
+      {
+        "text": "Radheetu billahi rabban, wa bil Islami deenan, wa bi Muhammadin rasulan",
+        "arabic": "رَضِيتُ بِاللهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ رَسُولًا",
+        "english": "I am pleased with Allah as my Lord, Islam as my religion, and Muhammad as my messenger"
       }
     ]
   },
@@ -194,6 +225,21 @@ const DAILY_SCHEDULE = {
         "text": "Allahumma inni as'aluka al-'afwa wal-'afiyah fil-deeni wa'd-dunya wal-akhirah",
         "arabic": "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدِّينِ وَالدُّنْيَا وَالْآخِرَةِ",
         "english": "O Allah, I ask You for forgiveness and well-being in this world and the next"
+      },
+      {
+        "text": "Allahumma 'afini fi badani, Allahumma 'afini fi sam'i, Allahumma 'afini fi basari",
+        "arabic": "اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي",
+        "english": "O Allah, grant me health in my body. O Allah, grant me health in my hearing. O Allah, grant me health in my sight"
+      },
+      {
+        "text": "Allahumma anta khalaqta nafsi wa anta tawaffaha, laka mamatuha wa mahyaha",
+        "arabic": "اللَّهُمَّ أَنْتَ خَلَقْتَ نَفْسِي وَأَنْتَ تَوَفَّاهَا، لَكَ مَمَاتُهَا وَمَحْيَاهَا",
+        "english": "O Allah, You created my soul and You take it in death, unto You belongs its death and its life"
+      },
+      {
+        "text": "Astaghfirullaha rabbiya'l-ladhi la ilaha illa huwa'l-hayya'l-qayyuma wa atubu ilayh",
+        "arabic": "أَسْتَغْفِرُ اللهَ رَبِّيَ الَّذِي لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ وَأَتُوبُ إِلَيْهِ",
+        "english": "I seek forgiveness from Allah, my Lord, besides whom there is no deity, the Ever-Living, the Self-Sustaining, and I repent to Him"
       }
     ]
   }
@@ -257,7 +303,7 @@ const getTimeBasedRecommendations = () => {
           name: 'Dhuhr Prayers', 
           description: 'Midday remembrance', 
           icon: 'hands-pray',
-          content: []
+          content: DAILY_SCHEDULE.dhuhr.duas
         }
       ]
     };
@@ -329,6 +375,15 @@ const getTimeBasedRecommendations = () => {
 
 export default function DailyRecommendations({ navigation }) {
   const [recommendations, setRecommendations] = useState(getTimeBasedRecommendations());
+  const [expandedCard, setExpandedCard] = useState(null);
+
+  const toggleCard = (cardIndex) => {
+    if (expandedCard === cardIndex) {
+      setExpandedCard(null); // Close if already open
+    } else {
+      setExpandedCard(cardIndex); // Open new card and close others
+    }
+  };
 
   // Update recommendations every minute
   useEffect(() => {
@@ -358,114 +413,169 @@ export default function DailyRecommendations({ navigation }) {
 
   return (
     <View>
-      <Text style={tw`text-lg font-bold text-black dark:text-white mb-3`}>Smart Recommendations</Text>
-      <LinearGradient
-        colors={recommendations.gradient}
-        style={tw`rounded-xl p-4 shadow-lg`}
-      >
+      <Text style={tw`text-lg font-bold text-gray-900 mb-3`}>Smart Recommendations</Text>
+      <View style={tw`bg-white rounded-2xl p-4 shadow-sm border border-gray-100`}>
         <View style={tw`flex-row items-center mb-4`}>
-          <MaterialCommunityIcons 
-            name="clock-time-four" 
-            size={24} 
-            color={recommendations.iconColor} 
-          />
-          <Text style={tw`ml-2 text-base font-semibold text-gray-800`}>
+          <View style={tw`w-10 h-10 bg-purple-100 rounded-full items-center justify-center mr-3`}>
+            <MaterialCommunityIcons 
+              name="clock-time-four" 
+              size={20} 
+              color={recommendations.iconColor} 
+            />
+          </View>
+          <Text style={tw`text-base font-semibold text-gray-900`}>
             {recommendations.title}
           </Text>
         </View>
 
-        <ScrollView style={tw`gap-3`}>
-          {recommendations.items.map((item, index) => (
+        <View style={tw`gap-2 mb-20`}>
+          {recommendations.items.map((item, originalIndex) => {
+            // Skip rendering items with empty content but preserve index
+            if ((item.type === 'dua' || item.type === 'dhikr') && (!item.content || item.content.length === 0)) {
+              return null;
+            }
+            
+            return (
             <Animatable.View
               key={item.name}
               animation="fadeIn"
-              delay={index * 100}
+              delay={originalIndex * 100}
               style={tw`mb-3`}
             >
-              <View style={tw`bg-white/80 rounded-lg p-3 shadow-sm`}>
-                <TouchableOpacity
-                  onPress={() => item.type === 'surah' ? handlePress(item) : null}
-                  style={tw`flex-row items-center`}
-                  activeOpacity={0.7}
-                >
-                  <MaterialCommunityIcons
-                    name={item.icon}
-                    size={28}
-                    color={recommendations.iconColor}
-                    style={tw`mr-3`}
-                  />
-                  <View style={tw`flex-1`}>
-                    <Text style={tw`text-base font-semibold text-gray-800`}>
-                      {item.name}
-                    </Text>
-                    <Text style={tw`text-sm text-gray-600`}>
-                      {item.description}
-                    </Text>
-                    {item.surahs && (
-                      <View style={tw`mt-2`}>
-                        {item.surahs.map((surah, idx) => (
-                          <TouchableOpacity 
-                            key={surah.name}
-                            onPress={() => navigateToQuranPage(surah.pageNumber)}
-                            style={tw`flex-row items-center mt-2`}
-                          >
-                            <Text style={tw`text-sm font-medium text-gray-800`}>
-                              {surah.arabic}
-                            </Text>
-                            <Text style={tw`text-sm text-gray-600 ml-2`}>
-                              ({surah.name}) {surah.count && `${surah.count}x`}
-                            </Text>
-                            <MaterialCommunityIcons
-                              name="chevron-right"
-                              size={16}
-                              color={recommendations.iconColor}
-                              style={tw`ml-auto`}
-                            />
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                  {item.type === 'surah' && !item.surahs && (
+              <TouchableOpacity
+                onPress={() => {
+                  if (item.type === 'surah' && !item.content) {
+                    handlePress(item);
+                  } else if (item.type === 'dhikr' || item.type === 'dua') {
+                    toggleCard(originalIndex);
+                  }
+                }}
+                style={tw`p-3 bg-gray-50 rounded-xl ${expandedCard === originalIndex ? 'bg-blue-50' : ''}`}
+                activeOpacity={0.7}
+              >
+                <View style={tw`flex-row items-center`}>
+                  <View style={tw`w-8 h-8 bg-white rounded-full items-center justify-center mr-3 shadow-sm`}>
                     <MaterialCommunityIcons
-                      name="chevron-right"
-                      size={24}
+                      name={item.icon}
+                      size={16}
                       color={recommendations.iconColor}
                     />
-                  )}
-                </TouchableOpacity>
-                
-                {(item.type === 'dhikr' || item.type === 'dua') && item.content && item.content.length > 0 && (
-                  <View style={tw`mt-3 border-t border-gray-200 pt-3`}>
-                    {item.content.map((content, idx) => (
-                      <View key={idx} style={tw`mb-4 last:mb-0`}>
-                        <Text style={tw`text-base font-medium text-gray-800 mb-1`}>
-                          {content.arabic}
-                        </Text>
-                        <Text style={tw`text-sm text-gray-600 mb-1`}>
-                          {content.text}
-                        </Text>
-                        <Text style={tw`text-sm text-gray-600 mb-1`}>
-                          {content.english}
-                        </Text>
-                        {content.count && (
-                          <Text style={tw`text-sm font-medium text-gray-800`}>
-                            Repeat: {content.count}x
+                  </View>
+                  <View style={tw`flex-1`}>
+                    <View style={tw`flex-row items-center justify-between`}>
+                      <Text style={tw`text-sm font-semibold text-gray-900 mb-1`}>
+                        {item.name}
+                      </Text>
+                      {/* Count badge for dhikr/dua */}
+                      {(item.type === 'dhikr' || item.type === 'dua') && item.content && item.content.length > 0 && (
+                        <View style={tw`bg-purple-100 px-2 py-1 rounded-full`}>
+                          <Text style={tw`text-xs font-bold text-purple-700`}>
+                            {item.content.length}
                           </Text>
-                        )}
-                      </View>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={tw`text-xs text-gray-500`}>
+                      {item.description}
+                    </Text>
+                    {/* Tap hint for expandable cards */}
+                    {(item.type === 'dhikr' || item.type === 'dua') && item.content && item.content.length > 0 && expandedCard !== originalIndex && (
+                      <Text style={tw`text-xs text-blue-600 mt-1 font-medium`}>
+                        Tap to view all {item.content.length} {item.type === 'dhikr' ? 'adhkar' : 'duas'}
+                      </Text>
+                    )}
+                  </View>
+                  
+                  {/* Expand/Collapse indicator for dhikr/dua */}
+                  {(item.type === 'dhikr' || item.type === 'dua') && item.content && item.content.length > 0 && (
+                    <Ionicons
+                      name={expandedCard === originalIndex ? "chevron-up" : "chevron-down"}
+                      size={16}
+                      color="#9CA3AF"
+                    />
+                  )}
+                  
+                  {/* Navigation indicator for surahs */}
+                  {item.type === 'surah' && !item.content && (
+                    <Ionicons
+                      name="chevron-forward"
+                      size={14}
+                      color="#9CA3AF"
+                    />
+                  )}
+                </View>
+
+                {/* Expandable content for dhikr/dua */}
+                {(item.type === 'dhikr' || item.type === 'dua') && item.content && item.content.length > 0 && expandedCard === originalIndex && (
+                  <Animatable.View
+                    animation="slideInDown"
+                    duration={300}
+                    style={tw`mt-3 bg-white rounded-lg p-3 border border-gray-200`}
+                  >
+                    <ScrollView 
+                      style={tw`max-h-60`} 
+                      showsVerticalScrollIndicator={false}
+                      nestedScrollEnabled={true}
+                    >
+                      {item.content.map((contentItem, idx) => (
+                        <View key={idx} style={tw`mb-4 pb-3 ${idx < item.content.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                          {/* Arabic Text */}
+                          {contentItem.arabic && (
+                            <Text style={tw`text-lg text-right text-gray-800 mb-2 leading-8`} dir="rtl">
+                              {contentItem.arabic}
+                            </Text>
+                          )}
+                          
+                          {/* Transliteration */}
+                          <Text style={tw`text-sm font-medium text-gray-700 mb-1 italic`}>
+                            {contentItem.text}
+                          </Text>
+                          
+                          {/* English Translation */}
+                          {contentItem.english && (
+                            <Text style={tw`text-sm text-gray-600 mb-2`}>
+                              {contentItem.english}
+                            </Text>
+                          )}
+                          
+                          {/* Recitation Count */}
+                          {contentItem.count && (
+                            <View style={tw`bg-purple-100 px-2 py-1 rounded-lg self-start`}>
+                              <Text style={tw`text-xs text-purple-700 font-semibold`}>
+                                Recite {contentItem.count}x
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      ))}
+                    </ScrollView>
+                  </Animatable.View>
+                )}
+
+                {/* Display surah content (if any) */}
+                {item.surahs && (
+                  <View style={tw`mt-2`}>
+                    {item.surahs.slice(0, 2).map((surah, idx) => (
+                      <TouchableOpacity 
+                        key={surah.name}
+                        onPress={() => navigateToQuranPage(surah.pageNumber)}
+                        style={tw`flex-row items-center mt-1`}
+                      >
+                        <Text style={tw`text-xs font-medium text-gray-700`}>
+                          {surah.name} {surah.count && `(${surah.count}x)`}
+                        </Text>
+                      </TouchableOpacity>
                     ))}
                   </View>
                 )}
-              </View>
+              </TouchableOpacity>
             </Animatable.View>
-          ))}
-        </ScrollView>
-      </LinearGradient>
+            );
+          })}
+        </View>
+      </View>
     </View>
   );
          
 
 }
-
-

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Dimensions, StatusBar, Image, ActivityIndicator, SafeAreaView, Animated, Easing } from 'react-native';
+import { View, Text, TouchableOpacity, Dimensions, StatusBar, Image, ActivityIndicator, SafeAreaView, Animated, Easing, InteractionManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
@@ -63,7 +63,6 @@ export default function QuranPageScreen({ route }) {
     // Reset animation values to default
     slideAnim.setValue(0);
     fadeAnim.setValue(1);
-    scaleAnim.setValue(1);
 
     // Update streak when component mounts
     dispatch(updateStreak());
@@ -173,66 +172,42 @@ export default function QuranPageScreen({ route }) {
   const animatePageTransition = (newPage, isNext) => {
     setIsTransitioning(true);
     
-    // If page is preloaded, use faster animation
-    const animationDuration = preloadedPages.has(newPage) ? 300 : 600;
-    
-    // Start exit animation - slide current page out
-    const slideDirection = isNext ? width : -width; // Reversed direction
-    
-    Animated.parallel([
-      // Slide out current page
-      Animated.timing(slideAnim, {
-        toValue: slideDirection,
-        duration: animationDuration,
-        easing: Easing.bezier(0.25, 0.46, 0.45, 0.94), // Smooth easing
-        useNativeDriver: true,
-      }),
-      // Fade out slightly for depth effect
+    // Use InteractionManager to ensure smooth animation performance
+    InteractionManager.runAfterInteractions(() => {
+      // Correct slide direction: swipe right = page comes from left (negative), swipe left = page comes from right (positive)
+      const slideDirection = isNext ? -width : width;
+      
+      // Smooth fade out current page
       Animated.timing(fadeAnim, {
-        toValue: 0.3,
-        duration: animationDuration * 0.7,
+        toValue: 0,
+        duration: 200, // Longer fade out for more visible effect
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
-      }),
-      // Slight scale down for perspective
-      Animated.timing(scaleAnim, {
-        toValue: 0.95,
-        duration: animationDuration * 0.8,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      // Change page after exit animation
-      setCurrentPage(newPage);
-      
-      // Reset animation values for entrance
-      slideAnim.setValue(isNext ? -width : width); // Reversed direction
-      
-      // Animate new page entrance
-      Animated.parallel([
-        // Slide in new page
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: animationDuration * 0.8,
-          easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
-          useNativeDriver: true,
-        }),
-        // Fade in
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: animationDuration * 0.6,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }),
-        // Scale back to normal
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: animationDuration * 0.6,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setIsTransitioning(false);
+      }).start(() => {
+        // Instantly change page and position
+        setCurrentPage(newPage);
+        slideAnim.setValue(slideDirection * 0.3); // Start further for more dramatic entrance
+        fadeAnim.setValue(0); // Start completely transparent
+        
+        // Smooth fade in and slide animation
+        Animated.parallel([
+          // Spring slide to center - very smooth and natural
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            tension: 80, // Slightly lower tension for smoother feel
+            friction: 12, // Higher friction for controlled motion
+            useNativeDriver: true,
+          }),
+          // Smooth fade in with easing
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300, // Longer fade in for smooth appearance
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          setIsTransitioning(false);
+        });
       });
     });
   };
@@ -273,13 +248,11 @@ export default function QuranPageScreen({ route }) {
   };
 
   const handleBackPress = () => {
-    console.log('[QURAN SCREEN] Back button pressed, navigating to QuranTabs');
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    } else {
-      // Fallback navigation to QuranTabs if can't go back
-      navigation.navigate('QuranTabs');
-    }
+    console.log('[QURAN SCREEN] Back button pressed, navigating to Juz List');
+    navigation.navigate('Quran', { 
+      screen: 'QuranTabs', 
+      params: { screen: 'JuzList' } 
+    });
   };
 
   return (
@@ -289,37 +262,30 @@ export default function QuranPageScreen({ route }) {
       {/* Header */}
       <View style={tw`px-4 py-3 bg-amber-50 dark:bg-gray-900 border-b border-amber-200 dark:border-gray-700`}>
         <View style={tw`flex-row items-center justify-between`}>
-          <View style={tw`flex-row items-center flex-1`}>
-            <View style={tw`flex-row`}>
-              <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                style={tw`p-3 rounded-lg bg-amber-200 dark:bg-amber-800 mr-2 flex-row items-center shadow-sm`}
-                accessibilityLabel="Go Back"
-              >
-                <Ionicons name="arrow-back" size={20} color="#92400e" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleBackPress}
-                style={tw`p-3 rounded-lg bg-amber-200 dark:bg-amber-800 mr-3 flex-row items-center shadow-sm`}
-                accessibilityLabel="Browse Surahs and Juz"
-              >
-                <Ionicons name="library-outline" size={20} color="#92400e" />
-                <Text style={tw`text-sm text-amber-800 dark:text-amber-200 ml-2 font-semibold`}>
-                  Browse
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              onPress={handleModalOpen}
-              style={tw`flex-row items-center flex-1`}
-            >
-              <Text style={tw`text-lg font-bold text-amber-900 dark:text-amber-100`}>
-                Page {currentPage}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color="#92400e" style={tw`ml-1`} />
-            </TouchableOpacity>
-          </View>
+          {/* Back Button with Text */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Quran', { screen: 'QuranTabs', params: { screen: 'JuzList' } })}
+            style={tw`flex-row items-center py-2`}
+            accessibilityLabel="Go Back to Juz List"
+          >
+            <Ionicons name="arrow-back" size={24} color="#92400e" />
+            <Text style={tw`text-lg font-semibold text-amber-900 dark:text-amber-100 ml-2`}>
+              Back
+            </Text>
+          </TouchableOpacity>
           
+          {/* Page Title and Navigation */}
+          <TouchableOpacity
+            onPress={handleModalOpen}
+            style={tw`flex-row items-center`}
+          >
+            <Text style={tw`text-lg font-bold text-amber-900 dark:text-amber-100`}>
+              Page {currentPage}
+            </Text>
+            <Ionicons name="chevron-down" size={20} color="#92400e" style={tw`ml-1`} />
+          </TouchableOpacity>
+          
+          {/* Page Counter and Search */}
           <View style={tw`flex-row items-center`}>
             <Text style={tw`text-sm text-amber-700 dark:text-amber-300 mr-3`}>
               {currentPage} / {totalPages}
@@ -345,19 +311,9 @@ export default function QuranPageScreen({ route }) {
             tw`flex-1 justify-center items-center`,
             {
               transform: [
-                { translateX: slideAnim },
-                { scale: scaleAnim }
+                { translateX: slideAnim }
               ],
               opacity: fadeAnim,
-              // Add subtle shadow during transition
-              shadowColor: '#000',
-              shadowOffset: {
-                width: 0,
-                height: 4,
-              },
-              shadowOpacity: isTransitioning ? 0.25 : 0.1,
-              shadowRadius: isTransitioning ? 8 : 4,
-              elevation: isTransitioning ? 8 : 2,
             }
           ]}
         >
@@ -370,14 +326,7 @@ export default function QuranPageScreen({ route }) {
           </View>
         )}
         
-        {isTransitioning && (
-          <View style={tw`absolute z-10 bg-white/90 dark:bg-gray-800/90 rounded-lg p-3`}>
-            <ActivityIndicator size="small" color="#92400e" />
-            <Text style={tw`text-amber-800 dark:text-amber-200 mt-1 text-center text-sm`}>
-              Turning page...
-            </Text>
-          </View>
-        )}
+    
         
         {imageError ? (
           <View style={tw`bg-white dark:bg-gray-800 rounded-lg p-6 border border-red-200 dark:border-red-800`}>
@@ -447,20 +396,6 @@ export default function QuranPageScreen({ route }) {
           </View>
         </TouchableOpacity>
       )}
-
-      {/* Navigation Controls - Simplified */}
-      <View style={tw`px-4 py-3 bg-amber-50 dark:bg-gray-900 border-t border-amber-200 dark:border-gray-700`}>
-       
-        
-        {/* Swipe Instructions */}
-        <View style={tw`mt-3 pt-3 border-t border-amber-200 dark:border-gray-700`}>
-          <Text style={tw`text-center text-xs text-amber-600 dark:text-amber-400`}>
-            💡 Swipe left/right to turn pages • Tap sides of screen • Tap page number to jump
-          </Text>
-        </View>
-      </View>
-
-     
 
       {/* Navigation Modal */}
       <PageNavigationModal

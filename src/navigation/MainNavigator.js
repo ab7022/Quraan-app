@@ -2,9 +2,11 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import HomeScreen from '../screens/HomeScreen';
 import QuranPageScreen from '../screens/QuranPageScreen';
 import SurahsScreen from '../screens/SurahsScreen';
@@ -91,9 +93,23 @@ function QuranNavigator() {
   );
 }
 
+// Function to determine if tab bar should be visible
+function getTabBarDisplay(route) {
+  const routeName = getFocusedRouteNameFromRoute(route) ?? '';
+  
+  // Hide tab bar on QuranPage screen
+  if (routeName === 'QuranPage') {
+    return 'none';
+  }
+  
+  return 'flex'; // Show tab bar on all other screens
+}
+
 const tabIcons = {
   Home: 'home',
   Quran: 'book-outline',
+  Explore: 'compass-outline',
+  Leaderboard: 'trophy-outline',
   Streak: 'flame',
 };
 
@@ -112,18 +128,89 @@ export default function MainNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarIcon: ({ color, size }) => (
-          <Ionicons name={tabIcons[route.name]} size={size} color={color} accessibilityLabel={route.name + ' tab icon'} />
+        tabBarIcon: ({ color, size, focused }) => (
+          <View style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 60,
+            height: 42,
+            borderRadius: 22,
+            backgroundColor: focused ? 'rgba(8, 145, 178, 0.15)' : 'transparent',
+            borderWidth: focused ? 1 : 0,
+            borderColor: focused ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
+            // Enhanced glassmorphism for focused icons
+            ...(focused && {
+              shadowColor: '#0891B2',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              elevation: 8,
+              // Inner glow effect
+              backgroundColor: 'rgba(8, 145, 178, 0.1)',
+              backdropFilter: 'blur(10px)',
+            }),
+          }}>
+            <Ionicons 
+              name={tabIcons[route.name]} 
+              size={focused ? 26 : 24} 
+              color={color} 
+              accessibilityLabel={route.name + ' tab icon'}
+            />
+          </View>
         ),
-        tabBarActiveTintColor: '#92400e',
-        tabBarInactiveTintColor: scheme === 'dark' ? '#ccc' : '#888',
+        tabBarActiveTintColor: '#0891B2',
+        tabBarInactiveTintColor: '#6B7280', // Slightly darker for better contrast
         tabBarStyle: {
-          backgroundColor: scheme === 'dark' ? '#18181b' : '#FFFBEB',
-          borderTopWidth: 0.5,
-          borderTopColor: scheme === 'dark' ? '#222' : '#F3E8FF',
+          display: route.name === 'Quran' ? getTabBarDisplay(route) : 'flex',
+          position: 'absolute',
+          bottom: 0, // Stick to bottom, no floating
+          left: 0,
+          right: 0,
+          backgroundColor: 'transparent',
+          borderRadius: 0, // No border radius for full bottom coverage
+          borderWidth: 0,
+          height: 85,
+          paddingBottom: 25, // More padding for safe area
+          paddingTop: 15,
+          paddingHorizontal: 20,
+          shadowColor: 'rgba(0, 0, 0, 0.25)', // Keep strong shadow for depth
+          shadowOffset: {
+            width: 0,
+            height: -8, // Upward shadow for stuck-to-bottom effect
+          },
+          shadowOpacity: 0.3,
+          shadowRadius: 25, // Large blur for glassmorphism
+          elevation: 15,
+          overflow: 'hidden',
         },
+        tabBarBackground: () => (
+          <BlurView
+            intensity={100} // Maximum blur intensity for glassmorphism
+            tint="light"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              bottom: 0,
+              right: 0,
+              backgroundColor: 'rgba(255, 255, 255, 0.1)', // Low opacity for true glass effect
+              backdropFilter: 'blur(40px)', // Strong blur
+              borderRadius: 0, // No border radius to match container
+              // Remove top border for cleaner look
+              borderTopWidth: 0,
+              // Inner highlight for glass effect
+              shadowColor: 'rgba(255, 255, 255, 0.5)',
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.8,
+              shadowRadius: 2,
+            }}
+          />
+        ),
         tabBarLabelStyle: {
-          fontWeight: '600',
+          fontWeight: '700',
+          fontSize: 12,
+          marginTop: 2,
+          letterSpacing: 0.5,
         },
       })}
       screenListeners={({ route, navigation }) => ({

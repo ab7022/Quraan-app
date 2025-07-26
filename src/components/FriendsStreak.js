@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { useSelector } from 'react-redux';
@@ -123,7 +123,7 @@ const FriendsStreak = ({ onContactPress, onInvite }) => {
       </View>
 
       {/* Leaderboard header */}
-      <View style={tw`bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-xl p-4 mb-4`}>
+      <View style={tw`bg-gray-50 dark:bg-gray-900 rounded-xl p-4 mb-4`}>
         <Text style={tw`text-base font-semibold text-gray-800 dark:text-gray-200 mb-2`}>
           🏆 Leaderboard
         </Text>
@@ -153,15 +153,18 @@ const FriendsStreak = ({ onContactPress, onInvite }) => {
   );
 
   return (
-    <FlatList
-      data={sortedContacts}
-      renderItem={renderContact}
-      keyExtractor={(item) => item.id}
-      ListHeaderComponent={renderHeader}
-      ListEmptyComponent={renderEmpty}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={tw`pb-6`}
-    />
+    <View>
+      {renderHeader()}
+      {sortedContacts.length === 0 ? (
+        renderEmpty()
+      ) : (
+        <View style={tw`pb-6`}>
+          {sortedContacts.map((item) => (
+            <ContactCard key={item.id} contact={item} onPress={handleContactPress} />
+          ))}
+        </View>
+      )}
+    </View>
   );
 };
 
