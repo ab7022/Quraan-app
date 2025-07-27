@@ -3,8 +3,12 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import analytics from '../services/analyticsService';
+import { useSelector } from 'react-redux';
 
 export default function AnalyticsDashboard() {
+  // Get real streak data from Redux
+  const { streak, totalDaysRead, longestStreak } = useSelector(s => s.streak);
+  
   const [stats, setStats] = useState({
     totalSessions: 0,
     pagesRead: 0,
@@ -16,17 +20,16 @@ export default function AnalyticsDashboard() {
 
   useEffect(() => {
     loadAnalyticsData();
-  }, []);
+  }, [streak, totalDaysRead]);
 
   const loadAnalyticsData = async () => {
-    // In a real implementation, you'd fetch this from your analytics backend
-    // For now, we'll show mock data
+    // Use real streak data from Redux, but keep other mock data for now
     setStats({
       totalSessions: 42,
       pagesRead: 156,
       aiQueriesCount: 23,
       favoriteLanguage: 'Urdu',
-      readingStreak: 7,
+      readingStreak: streak, // Use real streak from Redux
       avgSessionTime: '12 min'
     });
   };

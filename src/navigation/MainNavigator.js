@@ -13,9 +13,10 @@ import SurahsScreen from '../screens/SurahsScreen';
 import SurahDetailScreen from '../screens/SurahDetailScreen';
 import JuzScreen from '../screens/JuzScreen';
 import JuzDetailScreen from '../screens/JuzDetailScreen';
-import StreakScreen from '../screens/StreakScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import AskDoubtScreen from '../screens/AskDoubtScreen';
 import HifzScreen from '../screens/HifzScreen';
+import LearnQuranScreen from '../screens/LearnQuranScreen';
 import analytics from '../services/analyticsService';
 
 const Tab = createBottomTabNavigator();
@@ -30,50 +31,55 @@ function QuranTopTabs() {
     <TopTab.Navigator
       initialRouteName="SurahsList"
       screenOptions={{
-        tabBarActiveTintColor: '#92400e',
-        tabBarInactiveTintColor: scheme === 'dark' ? '#9CA3AF' : '#6B7280',
+        tabBarActiveTintColor: '#059669',
+        tabBarInactiveTintColor: '#6B7280',
         tabBarStyle: {
-          backgroundColor: scheme === 'dark' ? '#1F2937' : '#FFFBEB',
-          borderBottomWidth: 1,
-          borderBottomColor: scheme === 'dark' ? '#374151' : '#E5E7EB',
-          elevation: 4,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          paddingTop: 8,
+          backgroundColor: '#FFFFFF',
+          borderBottomWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
+          paddingTop: 12,
+          paddingBottom: 4,
+          paddingHorizontal: 20,
         },
         tabBarLabelStyle: {
           fontWeight: '700',
-          fontSize: 18,
+          fontSize: 16,
           textTransform: 'none',
-          letterSpacing: 0.5,
+          letterSpacing: 0.3,
+          marginBottom: 4,
         },
         tabBarIndicatorStyle: {
-          backgroundColor: '#92400e',
-          height: 4,
-          borderRadius: 2,
+          backgroundColor: '#059669',
+          height: 3,
+          borderRadius: 3,
+          marginHorizontal: 20,
         },
-        tabBarContentContainerStyle: {
-          paddingHorizontal: 20,
+        tabBarIndicatorContainerStyle: {
+          marginLeft: 20,
+          marginRight: 20,
         },
         tabBarItemStyle: {
           paddingVertical: 8,
+          marginHorizontal: 16,
+          borderRadius: 12,
         },
+        tabBarPressColor: '#F0FDF4',
+        tabBarPressOpacity: 0.8,
       }}
     >
       <TopTab.Screen 
         name="SurahsList" 
         component={SurahsScreen}
         options={{
-          tabBarLabel: 'Surah',
+          tabBarLabel: '📖 Surahs',
         }}
       />
       <TopTab.Screen 
         name="JuzList" 
         component={JuzScreen}
         options={{
-          tabBarLabel: 'Juz',
+          tabBarLabel: '📚 Juz',
         }}
       />
     </TopTab.Navigator>
@@ -82,15 +88,17 @@ function QuranTopTabs() {
 
 // Home Stack Navigator for Home section
 function HomeNavigator() {
-  const scheme = useColorScheme();
-  
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: scheme === 'dark' ? '#1F2937' : '#FFFBEB' }}>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="HomeMain" component={HomeScreen} />
-        <Stack.Screen name="Hifz" component={HifzScreen} />
-      </Stack.Navigator>
-    </SafeAreaView>
+    <Stack.Navigator 
+      screenOptions={{ 
+        headerShown: false,
+        contentStyle: { backgroundColor: 'white' }
+      }}
+    >
+      <Stack.Screen name="HomeMain" component={HomeScreen} />
+      <Stack.Screen name="Hifz" component={HifzScreen} />
+      <Stack.Screen name="LearnQuran" component={LearnQuranScreen} />
+    </Stack.Navigator>
   );
 }
 
@@ -124,6 +132,11 @@ function getTabBarDisplay(route) {
     return 'none';
   }
   
+  // Hide tab bar on LearnQuran screen
+  if (routeName === 'LearnQuran') {
+    return 'none';
+  }
+  
   return 'flex'; // Show tab bar on all other screens
 }
 
@@ -131,7 +144,7 @@ const tabIcons = {
   Home: 'home',
   Quran: 'book-outline',
   AskDoubt: 'help-circle-outline',
-  Streak: 'flame',
+  Profile: 'person-outline',
 };
 
 export default function MainNavigator() {
@@ -162,6 +175,7 @@ export default function MainNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
+        tabBarHideOnKeyboard: true,
         tabBarIcon: ({ color, size, focused }) => (
           <View
             style={{
@@ -199,7 +213,10 @@ export default function MainNavigator() {
         tabBarActiveTintColor: "#0891B2",
         tabBarInactiveTintColor: "#6B7280", // Slightly darker for better contrast
         tabBarStyle: {
-          display: (route.name === "Quran" || route.name === "Home") ? getTabBarDisplay(route) : "flex",
+          display:
+            route.name === "Quran" || route.name === "Home"
+              ? getTabBarDisplay(route)
+              : "flex",
           position: "absolute",
           bottom: 0, // Stick to bottom, no floating
           left: 0,
@@ -259,6 +276,9 @@ export default function MainNavigator() {
       <Tab.Screen
         name="Home"
         component={HomeNavigator}
+        options={{
+          headerShown: false,
+        }}
         listeners={({ navigation, route }) => ({
           tabPress: () => console.log("[TAB] Home tab pressed"),
           focus: () => console.log("[TAB] Home tab focused"),
@@ -274,14 +294,6 @@ export default function MainNavigator() {
       />
 
       <Tab.Screen
-        name="Streak"
-        component={StreakScreen}
-        listeners={({ navigation, route }) => ({
-          tabPress: () => console.log("[TAB] Streak tab pressed"),
-          focus: () => console.log("[TAB] Streak tab focused"),
-        })}
-      />
-      <Tab.Screen
         name="AskDoubt"
         component={AskDoubtScreen}
         options={{
@@ -290,6 +302,14 @@ export default function MainNavigator() {
         listeners={({ navigation, route }) => ({
           tabPress: () => console.log("[TAB] Ask Doubt tab pressed"),
           focus: () => console.log("[TAB] Ask Doubt tab focused"),
+        })}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        listeners={({ navigation, route }) => ({
+          tabPress: () => console.log("[TAB] Profile tab pressed"),
+          focus: () => console.log("[TAB] Profile tab focused"),
         })}
       />
     </Tab.Navigator>

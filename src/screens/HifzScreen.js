@@ -1,203 +1,163 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Alert, Modal, TextInput, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Alert, Modal, TextInput, StatusBar, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const HIFZ_STORAGE_KEY = 'hifz_tracker_data';
-const TOTAL_QURAN_PAGES = 604; // Total pages in the Quran
+const DAILY_TARGET_STORAGE_KEY = 'daily_target_data';
 
 export default function HifzScreen({ navigation }) {
-  const [hifzData, setHifzData] = useState(null);
+  const insets = useSafeAreaInsets();
+  const [targetData, setTargetData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showSetupModal, setShowSetupModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTodayModal, setShowTodayModal] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   
   // Setup form state
-  const [memorizeChoice, setMemorizeChoice] = useState(''); // 'want', 'memorizing', 'completed'
-  const [targetDate, setTargetDate] = useState(new Date());
-  const [alreadyMemorized, setAlreadyMemorized] = useState('');
-  const [todayPages, setTodayPages] = useState('');
+  const [dailyTarget, setDailyTarget] = useState('');
+  const [todayProgress, setTodayProgress] = useState('');
+  const [isStartingFresh, setIsStartingFresh] = useState(null); // true/false/null
+  const [pagesAlreadyRead, setPagesAlreadyRead] = useState('');
 
   useEffect(() => {
-    loadHifzData();
+    loadTargetData();
   }, []);
 
-  const loadHifzData = async () => {
+  const loadTargetData = async () => {
     try {
-      const savedData = await AsyncStorage.getItem(HIFZ_STORAGE_KEY);
+      const savedData = await AsyncStorage.getItem(DAILY_TARGET_STORAGE_KEY);
       if (savedData) {
-        setHifzData(JSON.parse(savedData));
+        setTargetData(JSON.parse(savedData));
       }
     } catch (error) {
-      console.error('Error loading hifz data:', error);
+      console.error('Error loading daily target data:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const saveHifzData = async (data) => {
+  const saveTargetData = async (data) => {
     try {
-      await AsyncStorage.setItem(HIFZ_STORAGE_KEY, JSON.stringify(data));
-      setHifzData(data);
+      await AsyncStorage.setItem(DAILY_TARGET_STORAGE_KEY, JSON.stringify(data));
+      setTargetData(data);
     } catch (error) {
-      console.error('Error saving hifz data:', error);
+      console.error('Error saving target data:', error);
       Alert.alert('Error', 'Failed to save data. Please try again.');
     }
   };
 
-  const calculateDailyTarget = (totalPages, alreadyDone, targetDate) => {
-    const today = new Date();
-    const target = new Date(targetDate);
-    const daysRemaining = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-    const pagesRemaining = totalPages - alreadyDone;
-    
-    console.log('Daily Target Calculation:', {
-      totalPages,
-      alreadyDone, 
-      pagesRemaining,
-      daysRemaining,
-      exactDaily: pagesRemaining / daysRemaining
-    });
-    
-    if (daysRemaining <= 0) return { 
-      dailyPages: pagesRemaining, 
-      daysRemaining: 0,
-      exactDaily: pagesRemaining
-    };
-    
-    const exactDaily = pagesRemaining / daysRemaining;
-    
-    // Smart rounding: if less than 1, round to nearest 0.25
-    let displayDaily;
-    if (exactDaily < 1) {
-      displayDaily = Math.ceil(exactDaily * 4) / 4; // Round to nearest 0.25
-    } else {
-      displayDaily = Math.ceil(exactDaily); // Round up to whole number
-    }
-    
-    return {
-      dailyPages: displayDaily,
-      daysRemaining,
-      exactDaily: exactDaily
-    };
-  };
-
   const handleSetupSubmit = () => {
-    if (!memorizeChoice) {
-      Alert.alert('Missing Information', 'Please select your memorization status.');
+    if (isStartingFresh === null) {
+      Alert.alert('Missing Information', 'Please select if you are starting fresh or have already read some pages.');
       return;
     }
 
-    // For completed users, automatically set to 604 pages
-    let pages;
-    if (memorizeChoice === 'completed') {
-      pages = TOTAL_QURAN_PAGES;
-    } else {
-      if (!alreadyMemorized) {
-        Alert.alert('Missing Information', 'Please enter the number of pages you have memorized.');
+    if (!dailyTarget) {
+      Alert.alert('Missing Information', 'Please enter your daily pages target.');
+      return;
+    }
+
+    const target = parseInt(dailyTarget) || 0;
+    if (target <= 0) {
+      Alert.alert('Invalid Input', 'Daily target must be greater than 0.');
+      return;
+    }
+
+    let alreadyRead = 0;
+    if (!isStartingFresh) {
+      if (!pagesAlreadyRead) {
+        Alert.alert('Missing Information', 'Please enter how many pages you have already read.');
         return;
       }
-      pages = parseInt(alreadyMemorized) || 0;
-      if (pages < 0 || pages > TOTAL_QURAN_PAGES) {
-        Alert.alert('Invalid Input', `Pages must be between 0 and ${TOTAL_QURAN_PAGES}.`);
+      alreadyRead = parseInt(pagesAlreadyRead) || 0;
+      if (alreadyRead < 0 || alreadyRead >= 604) {
+        Alert.alert('Invalid Input', 'Pages already read must be between 0 and 603.');
         return;
       }
     }
 
-    const newHifzData = {
-      choice: memorizeChoice,
-      targetDate: memorizeChoice === 'completed' ? new Date().toISOString() : targetDate.toISOString(),
-      totalPages: TOTAL_QURAN_PAGES,
-      memorizedPages: pages,
+    const newTargetData = {
+      targetType: 'pages',
+      dailyTarget: target,
+      purpose: 'reading',
       dailyProgress: {},
+      totalCompleted: alreadyRead,
+      isStartingFresh,
+      startDate: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString()
     };
 
-    saveHifzData(newHifzData);
-    setShowSetupModal(false);
+    saveTargetData(newTargetData);
     resetForm();
   };
 
   const handleTodaySubmit = () => {
-    if (!todayPages) {
-      Alert.alert('Missing Information', 'Please enter the number of pages.');
+    if (!todayProgress) {
+      Alert.alert('Missing Information', 'Please enter today\'s progress.');
       return;
     }
 
-    const pages = parseFloat(todayPages) || 0;
-    if (pages < 0) {
-      Alert.alert('Invalid Input', 'Pages cannot be negative.');
+    const progress = parseInt(todayProgress) || 0;
+    if (progress < 0) {
+      Alert.alert('Invalid Input', 'Progress cannot be negative.');
       return;
     }
 
     const today = new Date().toISOString().split('T')[0];
     const updatedData = {
-      ...hifzData,
-      memorizedPages: Math.min(hifzData.memorizedPages + pages, TOTAL_QURAN_PAGES),
+      ...targetData,
+      totalCompleted: targetData.totalCompleted + progress,
       dailyProgress: {
-        ...hifzData.dailyProgress,
-        [today]: (hifzData.dailyProgress[today] || 0) + pages
+        ...targetData.dailyProgress,
+        [today]: (targetData.dailyProgress[today] || 0) + progress
       },
       lastUpdated: new Date().toISOString()
     };
 
-    saveHifzData(updatedData);
+    saveTargetData(updatedData);
     setShowTodayModal(false);
-    setTodayPages('');
+    setTodayProgress('');
   };
 
   const handleEditSubmit = () => {
-    if (!alreadyMemorized) {
-      Alert.alert('Missing Information', 'Please enter the number of pages.');
+    if (!dailyTarget) {
+      Alert.alert('Missing Information', 'Please enter your daily pages target.');
       return;
     }
 
-    const pages = parseInt(alreadyMemorized) || 0;
-    if (pages < 0 || pages > TOTAL_QURAN_PAGES) {
-      Alert.alert('Invalid Input', `Pages must be between 0 and ${TOTAL_QURAN_PAGES}.`);
+    const target = parseInt(dailyTarget) || 0;
+    if (target <= 0) {
+      Alert.alert('Invalid Input', 'Daily target must be greater than 0.');
       return;
     }
 
     const updatedData = {
-      ...hifzData,
-      choice: memorizeChoice,
-      targetDate: targetDate.toISOString(),
-      memorizedPages: pages,
+      ...targetData,
+      targetType: 'pages',
+      dailyTarget: target,
+      purpose: 'reading',
       lastUpdated: new Date().toISOString()
     };
 
-    saveHifzData(updatedData);
+    saveTargetData(updatedData);
     setShowEditModal(false);
     resetForm();
   };
 
-  const selectTargetDate = () => {
-    setShowDatePicker(true);
-  };
-
-  const onDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || targetDate;
-    setShowDatePicker(Platform.OS === 'ios');
-    setTargetDate(currentDate);
-  };
-
   const resetForm = () => {
-    setMemorizeChoice('');
-    setTargetDate(new Date());
-    setAlreadyMemorized('');
-    setTodayPages('');
+    setDailyTarget('');
+    setTodayProgress('');
+    setIsStartingFresh(null);
+    setPagesAlreadyRead('');
   };
 
-  const deleteHifzData = () => {
+  const deleteTargetData = () => {
     Alert.alert(
-      'Delete Hifz Data',
-      'Are you sure you want to delete all memorization data? This action cannot be undone.',
+      'Delete Target Data',
+      'Are you sure you want to delete all target data? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -205,381 +165,513 @@ export default function HifzScreen({ navigation }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              await AsyncStorage.removeItem(HIFZ_STORAGE_KEY);
-              setHifzData(null);
+              await AsyncStorage.removeItem(DAILY_TARGET_STORAGE_KEY);
+              setTargetData(null);
             } catch (error) {
-              console.error('Error deleting hifz data:', error);
+              console.error('Error deleting target data:', error);
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
 
-  const getProgressPercentage = () => {
-    if (!hifzData) return 0;
-    return (hifzData.memorizedPages / hifzData.totalPages) * 100;
-  };
-
   const getTodayProgress = () => {
-    if (!hifzData) return 0;
+    if (!targetData) return { completed: 0, percentage: 0 };
     const today = new Date().toISOString().split('T')[0];
-    return hifzData.dailyProgress[today] || 0;
+    const todayProgress = targetData.dailyProgress[today] || 0;
+    const percentage = Math.min((todayProgress / targetData.dailyTarget) * 100, 100);
+    return { completed: todayProgress, percentage };
   };
 
-  const renderChoiceButton = (choice, label, icon) => (
+  const getStreakInfo = () => {
+    if (!targetData) return { current: 0, best: 0 };
+    
+    const dates = Object.keys(targetData.dailyProgress).sort().reverse();
+    let currentStreak = 0;
+    let bestStreak = 0;
+    let tempStreak = 0;
+
+    // Calculate current streak (from today backwards)
+    const today = new Date();
+    for (let i = 0; i < 30; i++) {
+      const checkDate = new Date(today);
+      checkDate.setDate(today.getDate() - i);
+      const dateStr = checkDate.toISOString().split('T')[0];
+      
+      if (targetData.dailyProgress[dateStr] >= targetData.dailyTarget) {
+        if (i === 0 || currentStreak > 0) currentStreak++;
+      } else {
+        break;
+      }
+    }
+
+    // Calculate best streak
+    for (const date of dates) {
+      if (targetData.dailyProgress[date] >= targetData.dailyTarget) {
+        tempStreak++;
+        bestStreak = Math.max(bestStreak, tempStreak);
+      } else {
+        tempStreak = 0;
+      }
+    }
+
+    return { current: currentStreak, best: bestStreak };
+  };
+
+  const getRecentActivity = () => {
+    if (!targetData) return [];
+    
+    const last7Days = [];
+    const today = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      const progress = targetData.dailyProgress[dateStr] || 0;
+      const isComplete = progress >= targetData.dailyTarget;
+      
+      last7Days.push({
+        date: dateStr,
+        dayName: date.toLocaleDateString('en', { weekday: 'short' }),
+        progress,
+        isComplete,
+        isToday: i === 0
+      });
+    }
+    
+    return last7Days;
+  };
+
+  const calculateCompletionInfo = (dailyTarget, alreadyRead = 0) => {
+    const totalPages = 604;
+    const remainingPages = totalPages - alreadyRead;
+    const daysNeeded = Math.ceil(remainingPages / dailyTarget);
+    
+    const today = new Date();
+    const completionDate = new Date(today);
+    completionDate.setDate(today.getDate() + daysNeeded);
+    
+    return {
+      daysNeeded,
+      completionDate: completionDate.toLocaleDateString('en', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }),
+      remainingPages
+    };
+  };
+
+  const renderStartingOption = (isFresh, title, description) => (
     <TouchableOpacity
-      onPress={() => setMemorizeChoice(choice)}
+      onPress={() => setIsStartingFresh(isFresh)}
       style={[
-        tw`flex-1 p-4 rounded-xl border-2 mx-1`,
-        memorizeChoice === choice 
-          ? tw`border-green-500 bg-green-50` 
-          : tw`border-gray-300 bg-white`
+        tw`p-4 rounded-xl border-2 mb-3`,
+        isStartingFresh === isFresh ? tw`border-blue-500 bg-blue-50` : tw`border-gray-200`
       ]}
     >
-      <View style={tw`items-center`}>
+      <View style={tw`flex-row items-center mb-1`}>
         <Ionicons 
-          name={icon} 
-          size={32} 
-          color={memorizeChoice === choice ? '#10b981' : '#6b7280'} 
+          name={isFresh ? "play-circle" : "bookmark"} 
+          size={24} 
+          color={isStartingFresh === isFresh ? '#3B82F6' : '#6B7280'} 
+          style={tw`mr-3`}
         />
-        <Text style={[
-          tw`text-sm font-medium mt-2 text-center`,
-          memorizeChoice === choice ? tw`text-green-700` : tw`text-gray-700`
-        ]}>
-          {label}
+        <Text style={tw`text-lg font-semibold ${isStartingFresh === isFresh ? 'text-blue-600' : 'text-gray-700'}`}>
+          {title}
         </Text>
       </View>
+      <Text style={tw`text-sm text-gray-500 ml-9`}>
+        {description}
+      </Text>
     </TouchableOpacity>
   );
 
   if (isLoading) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-amber-50`}>
-        <View style={tw`flex-1 items-center justify-center`}>
-          <Ionicons name="book" size={48} color="#92400e" />
-          <Text style={tw`text-lg text-amber-800 mt-4`}>Loading Hifz Tracker...</Text>
+      <View style={[tw`flex-1 bg-white`, { paddingTop: insets.top }]}>
+        <StatusBar barStyle="dark-content" backgroundColor="#ffffff" translucent />
+        <View style={tw`flex-1 justify-center items-center`}>
+          <View style={tw`w-16 h-16 bg-gray-200 rounded-full mb-4`} />
+          <Text style={tw`text-gray-500`}>Loading...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-amber-50`}>
+    <View style={[tw`flex-1 bg-gray-50`, { paddingTop: insets.top }]}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" translucent />
       {/* Header */}
-      <View style={tw`bg-white border-b border-amber-200 px-4 py-3`}>
-        <View style={tw`flex-row items-center`}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={tw`w-10 h-10 rounded-full items-center justify-center bg-amber-100 mr-3`}
-          >
-            <Ionicons name="arrow-back" size={20} color="#92400e" />
-          </TouchableOpacity>
-          <View style={tw`flex-1`}>
-            <Text style={tw`text-xl font-bold text-amber-900`}>Hifz Tracker</Text>
-            <Text style={tw`text-sm text-amber-600`}>Quran Memorization Progress</Text>
-          </View>
-          {hifzData && (
-            <TouchableOpacity
-              onPress={deleteHifzData}
-              style={tw`w-10 h-10 rounded-full items-center justify-center bg-red-100`}
+      <LinearGradient
+        colors={['#0369A1', '#0284C7', '#0EA5E9']}
+        style={tw`px-4 py-4 border-b border-blue-200`}
+      >
+        <View style={tw`flex-row items-center justify-between`}>
+          <View style={tw`flex-row items-center flex-1`}>
+            <TouchableOpacity 
+              onPress={() => navigation.goBack()}
+              style={tw`mr-3 p-2 bg-white/20 rounded-full`}
             >
-              <Ionicons name="trash-outline" size={18} color="#dc2626" />
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
+            <View style={tw`flex-1`}>
+              <Text style={tw`text-xl font-bold text-white`}>
+                📖 Daily Quran Journey
+              </Text>
+              <Text style={tw`text-blue-100 text-sm`}>
+                {targetData ? 'May Allah bless your progress' : 'Begin your blessed journey'}
+              </Text>
+            </View>
+          </View>
+          {targetData && (
+            <TouchableOpacity
+              onPress={() => {
+                setDailyTarget(targetData.dailyTarget.toString());
+                setShowEditModal(true);
+              }}
+              style={tw`p-2 bg-white/20 rounded-full ml-2`}
+            >
+              <Ionicons name="settings-outline" size={22} color="white" />
             </TouchableOpacity>
           )}
         </View>
-      </View>
+      </LinearGradient>
 
-      <ScrollView style={tw`flex-1`} contentContainerStyle={tw`p-4`}>
-        {!hifzData ? (
-          // No data - show setup button
-          <View style={tw`flex-1 items-center justify-center py-20`}>
-            <Ionicons name="book-outline" size={80} color="#92400e" />
-            <Text style={tw`text-2xl font-bold text-amber-900 mt-4 text-center`}>
-              Start Your Hifz Journey
-            </Text>
-            <Text style={tw`text-amber-700 text-center mt-2 px-4`}>
-              Track your Quran memorization progress and stay motivated with daily targets
-            </Text>
-            <TouchableOpacity
-              onPress={() => setShowSetupModal(true)}
-              style={tw`mt-8 bg-amber-600 px-8 py-4 rounded-xl`}
-            >
-              <Text style={tw`text-white font-semibold text-lg`}>Setup Hifz Tracker</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          // Show tracker data
-          <View>
-            {/* Progress Overview */}
-            <LinearGradient
-              colors={['#10b981', '#059669', '#047857']}
-              style={tw`rounded-2xl p-6 mb-6`}
-            >
-              <View style={tw`flex-row items-center justify-between mb-4`}>
-                <Text style={tw`text-white text-xl font-bold`}>
-                  {hifzData.memorizedPages} / {hifzData.totalPages} Pages
-                </Text>
-                <Text style={tw`text-white text-lg font-semibold`}>
-                  {getProgressPercentage().toFixed(1)}%
-                </Text>
-              </View>
-              
-              {/* Progress Bar */}
-              <View style={tw`bg-white/20 rounded-full h-3 mb-4`}>
-                <View 
-                  style={[
-                    tw`bg-white rounded-full h-3`,
-                    { width: `${getProgressPercentage()}%` }
-                  ]} 
-                />
-              </View>
-
-              <Text style={tw`text-white/90 text-sm`}>
-                Status: {hifzData.choice === 'want' ? 'Planning to Memorize' : 
-                         hifzData.choice === 'memorizing' ? 'Currently Memorizing' : 'Completed'}
-              </Text>
-            </LinearGradient>
-
-            {/* Congratulations for completed users */}
-            {hifzData.choice === 'completed' && (
-              <View style={tw`bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl p-6 mb-6`}>
-                <LinearGradient
-                  colors={['#34d399', '#10b981', '#059669']}
-                  style={tw`rounded-2xl p-6`}
-                >
-                  <View style={tw`items-center`}>
-                    <Ionicons name="trophy" size={64} color="white" />
-                    <Text style={tw`text-2xl font-bold text-white mt-4 text-center`}>
-                      Masha'Allah! 🎉
-                    </Text>
-                    <Text style={tw`text-white text-center mt-3 text-lg leading-7`}>
-                      You have completed the entire Holy Quran memorization. 
-                      May Allah reward you abundantly and accept your efforts.
-                    </Text>
-                    <View style={tw`bg-white/20 rounded-xl p-4 mt-4`}>
-                      <Text style={tw`text-white text-center font-medium italic`}>
-                        "And We have indeed made the Quran easy to understand and remember" 
-                      </Text>
-                      <Text style={tw`text-white/90 text-center text-sm mt-1`}>
-                        - Quran 54:17
-                      </Text>
-                    </View>
-                  </View>
-                </LinearGradient>
-              </View>
-            )}
-
-            {/* Daily Target & Today's Progress */}
-            {hifzData.choice !== 'completed' && (
-              <View style={tw`bg-white rounded-2xl p-4 mb-4 border border-amber-200`}>
-                <Text style={tw`text-lg font-bold text-amber-900 mb-3`}>Daily Progress</Text>
-                
-                {(() => {
-                  const { dailyPages, daysRemaining } = calculateDailyTarget(
-                    hifzData.totalPages, 
-                    hifzData.memorizedPages, 
-                    hifzData.targetDate
-                  );
-                  
-                  return (
-                    <View style={tw`flex-row justify-between mb-4`}>
-                      <View style={tw`flex-1 bg-blue-50 rounded-xl p-3 mr-2`}>
-                        <Text style={tw`text-blue-800 font-semibold text-lg`}>
-                          {dailyPages} pages
-                        </Text>
-                        <Text style={tw`text-blue-600 text-sm`}>Daily Target</Text>
-                      </View>
-                      
-                      <View style={tw`flex-1 bg-purple-50 rounded-xl p-3 ml-2`}>
-                        <Text style={tw`text-purple-800 font-semibold text-lg`}>
-                          {daysRemaining} days
-                        </Text>
-                        <Text style={tw`text-purple-600 text-sm`}>Remaining</Text>
-                      </View>
-                    </View>
-                  );
-                })()}
-
-                <View style={tw`flex-row justify-between items-center`}>
-                  <View>
-                    <Text style={tw`text-amber-900 font-semibold`}>
-                      Today: {getTodayProgress()} pages
-                    </Text>
-                    <Text style={tw`text-amber-600 text-sm`}>Memorized today</Text>
-                  </View>
-                  
-                  <TouchableOpacity
-                    onPress={() => setShowTodayModal(true)}
-                    style={tw`bg-green-500 px-4 py-2 rounded-lg`}
+      <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false}>
+        {!targetData ? (
+          // Direct Setup View - No Modal
+          <LinearGradient
+            colors={['#F0F9FF', '#E0F2FE', '#BAE6FD']}
+            style={tw`flex-1`}
+          >
+            <View style={tw`p-6`}>
+              <LinearGradient
+                colors={['#FFFFFF', '#F8FAFC']}
+                style={tw`rounded-3xl p-8 mb-6 shadow-lg`}
+              >
+                <View style={tw`items-center mb-8`}>
+                  <LinearGradient
+                    colors={['#3B82F6', '#1D4ED8', '#1E40AF']}
+                    style={tw`w-24 h-24 rounded-full items-center justify-center mb-6`}
                   >
-                    <Text style={tw`text-white font-semibold`}>Add Today</Text>
-                  </TouchableOpacity>
+                    <Ionicons name="book" size={40} color="white" />
+                  </LinearGradient>
+                  <Text style={tw`text-3xl font-bold text-gray-900 mb-3 text-center`}>
+                    🌟 Start Your Sacred Journey
+                  </Text>
+                  <Text style={tw`text-gray-600 text-center text-lg leading-6`}>
+                    Set your daily Quran reading goal and witness the beautiful transformation in your spiritual life
+                  </Text>
                 </View>
-              </View>
-            )}
 
-            {/* Target Date */}
-            <View style={tw`bg-white rounded-2xl p-4 mb-4 border border-amber-200`}>
-              <Text style={tw`text-lg font-bold text-amber-900 mb-2`}>Target Completion</Text>
-              <Text style={tw`text-amber-700`}>
-                {new Date(hifzData.targetDate).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </Text>
-            </View>
-
-            {/* Action Buttons */}
-            <View style={tw`flex-row gap-3`}>
-              <TouchableOpacity
-                onPress={() => {
-                  setMemorizeChoice(hifzData.choice);
-                  setTargetDate(new Date(hifzData.targetDate));
-                  setAlreadyMemorized(hifzData.memorizedPages.toString());
-                  setShowEditModal(true);
-                }}
-                style={tw`flex-1 bg-amber-600 py-4 rounded-xl`}
-              >
-                <Text style={tw`text-white font-semibold text-center`}>Edit Details</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Setup Modal */}
-      <Modal
-        visible={showSetupModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView style={tw`flex-1 bg-white`}>
-          <View style={tw`flex-1 p-6`}>
-            <View style={tw`flex-row items-center justify-between mb-6`}>
-              <Text style={tw`text-2xl font-bold text-amber-900`}>Setup Hifz Tracker</Text>
-              <TouchableOpacity
-                onPress={() => setShowSetupModal(false)}
-                style={tw`w-8 h-8 rounded-full items-center justify-center bg-gray-100`}
-              >
-                <Ionicons name="close" size={20} color="#6b7280" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Choice Selection */}
+              {/* Starting Point Selection */}
               <View style={tw`mb-6`}>
-                <Text style={tw`text-lg font-semibold text-gray-800 mb-3`}>
-                  What's your memorization status?
+                <Text style={tw`text-lg font-semibold text-gray-900 mb-3`}>
+                  Are you starting fresh?
                 </Text>
-                <View style={tw`flex-row`}>
-                  {renderChoiceButton('want', 'Want to\nMemorize', 'heart-outline')}
-                  {renderChoiceButton('memorizing', 'Currently\nMemorizing', 'book-outline')}
-                  {renderChoiceButton('completed', 'Already\nCompleted', 'checkmark-circle-outline')}
-                </View>
+                
+                {renderStartingOption(
+                  true,
+                  "Starting Fresh",
+                  "I'm beginning my Quran reading journey from page 1"
+                )}
+                {renderStartingOption(
+                  false,
+                  "Already Started",
+                  "I've already read some pages of the Quran"
+                )}
               </View>
 
-              {/* Pages Already Memorized */}
-              {memorizeChoice !== 'completed' && (
+              {/* Pages Already Read Input */}
+              {isStartingFresh === false && (
                 <View style={tw`mb-6`}>
-                  <Text style={tw`text-lg font-semibold text-gray-800 mb-3`}>
-                    How many pages have you already memorized?
+                  <Text style={tw`text-lg font-semibold text-gray-900 mb-3`}>
+                    Pages Already Read
                   </Text>
                   <TextInput
-                    style={tw`border border-gray-300 rounded-xl p-4 text-base`}
-                    placeholder="Enter number of pages (0-604)"
-                    value={alreadyMemorized}
-                    onChangeText={setAlreadyMemorized}
+                    style={tw`border border-gray-300 rounded-xl px-4 py-3 text-lg text-center`}
+                    placeholder="How many pages have you read?"
+                    value={pagesAlreadyRead}
+                    onChangeText={setPagesAlreadyRead}
                     keyboardType="numeric"
                   />
-                </View>
-              )}
-
-              {/* Target Date - only if not completed */}
-              {memorizeChoice !== 'completed' && (
-                <View style={tw`mb-6`}>
-                  <Text style={tw`text-lg font-semibold text-gray-800 mb-3`}>
-                    When do you want to complete memorization?
+                  <Text style={tw`text-sm text-gray-500 text-center mt-2`}>
+                    Total Quran has 604 pages
                   </Text>
-                  
-                  {/* Quick Preset Buttons */}
-                  <View style={tw`flex-row flex-wrap gap-2 mb-3`}>
-                    <TouchableOpacity
-                      onPress={() => {
-                        const newDate = new Date();
-                        newDate.setMonth(newDate.getMonth() + 6);
-                        setTargetDate(newDate);
-                      }}
-                      style={tw`bg-blue-100 px-3 py-2 rounded-lg`}
-                    >
-                      <Text style={tw`text-blue-800 text-sm font-medium`}>6 Months</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      onPress={() => {
-                        const newDate = new Date();
-                        newDate.setFullYear(newDate.getFullYear() + 1);
-                        setTargetDate(newDate);
-                      }}
-                      style={tw`bg-purple-100 px-3 py-2 rounded-lg`}
-                    >
-                      <Text style={tw`text-purple-800 text-sm font-medium`}>1 Year</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      onPress={() => {
-                        const newDate = new Date();
-                        newDate.setFullYear(newDate.getFullYear() + 2);
-                        setTargetDate(newDate);
-                      }}
-                      style={tw`bg-green-100 px-3 py-2 rounded-lg`}
-                    >
-                      <Text style={tw`text-green-800 text-sm font-medium`}>2 Years</Text>
-                    </TouchableOpacity>
-                  </View>
-                  
-                  <TouchableOpacity
-                    onPress={selectTargetDate}
-                    style={tw`border border-gray-300 rounded-xl p-4 flex-row items-center justify-between`}
-                  >
-                    <Text style={tw`text-base text-gray-700`}>
-                      {targetDate.toLocaleDateString()}
-                    </Text>
-                    <Ionicons name="calendar-outline" size={24} color="#6b7280" />
-                  </TouchableOpacity>
                 </View>
               )}
 
-              {/* Beautiful message for completed users */}
-              {memorizeChoice === 'completed' && (
-                <View style={tw`bg-green-50 rounded-xl p-6 mb-6 border border-green-200`}>
-                  <View style={tw`items-center`}>
-                    <Ionicons name="trophy" size={48} color="#059669" />
-                    <Text style={tw`text-xl font-bold text-green-800 mt-3 text-center`}>
-                      Masha'Allah! 🎉
-                    </Text>
-                    <Text style={tw`text-green-700 text-center mt-2 leading-6`}>
-                      May Allah accept your efforts and grant you the highest ranks in Jannah. 
-                      Your dedication to memorizing the Holy Quran is truly inspiring.
-                    </Text>
-                    <Text style={tw`text-green-600 text-center mt-3 font-medium`}>
-                      "And We have indeed made the Quran easy to understand and remember" - Quran 54:17
+              {/* Daily Target Input */}
+              {isStartingFresh !== null && (
+                <View style={tw`mb-6`}>
+                  <Text style={tw`text-lg font-semibold text-gray-900 mb-3`}>
+                    Daily Target (Pages)
+                  </Text>
+                  <TextInput
+                    style={tw`border border-gray-300 rounded-xl px-4 py-4 text-lg text-center`}
+                    placeholder="Enter number of pages"
+                    value={dailyTarget}
+                    onChangeText={setDailyTarget}
+                    keyboardType="numeric"
+                  />
+                  <Text style={tw`text-sm text-gray-500 text-center mt-2`}>
+                    Recommended: 1-5 pages per day
+                  </Text>
+                </View>
+              )}
+
+              {/* Completion Prediction */}
+              {dailyTarget && isStartingFresh !== null && (
+                <View style={tw`bg-green-50 border border-green-200 rounded-xl p-4 mb-6`}>
+                  <View style={tw`flex-row items-center mb-2`}>
+                    <Ionicons name="calendar-outline" size={20} color="#059669" style={tw`mr-2`} />
+                    <Text style={tw`text-green-800 font-semibold`}>
+                      Completion Prediction
                     </Text>
                   </View>
+                  {(() => {
+                    const alreadyRead = isStartingFresh ? 0 : (parseInt(pagesAlreadyRead) || 0);
+                    const target = parseInt(dailyTarget) || 0;
+                    if (target > 0) {
+                      const completion = calculateCompletionInfo(target, alreadyRead);
+                      return (
+                        <View>
+                          <Text style={tw`text-green-700 text-sm`}>
+                            📖 You'll complete the Quran on{'\n'}
+                            <Text style={tw`font-bold`}>{completion.completionDate}</Text>
+                          </Text>
+                          <Text style={tw`text-green-600 text-xs mt-1`}>
+                            ({completion.daysNeeded} days • {completion.remainingPages} pages remaining)
+                          </Text>
+                        </View>
+                      );
+                    }
+                    return null;
+                  })()}
                 </View>
               )}
 
               <TouchableOpacity
                 onPress={handleSetupSubmit}
-                style={tw`bg-amber-600 py-4 rounded-xl mt-4`}
+                style={[
+                  tw`rounded-xl py-4 px-6`,
+                  (dailyTarget && isStartingFresh !== null && (isStartingFresh || pagesAlreadyRead)) 
+                    ? tw`bg-blue-500` : tw`bg-gray-300`
+                ]}
+                disabled={!(dailyTarget && isStartingFresh !== null && (isStartingFresh || pagesAlreadyRead))}
               >
-                <Text style={tw`text-white font-semibold text-lg text-center`}>
-                  Start Tracking
-                </Text>
+                <LinearGradient
+                  colors={(dailyTarget && isStartingFresh !== null && (isStartingFresh || pagesAlreadyRead)) 
+                    ? ['#3B82F6', '#1D4ED8'] : ['#D1D5DB', '#9CA3AF']}
+                  style={tw`rounded-2xl py-4 px-6 items-center`}
+                >
+                  <Text style={tw`text-white font-bold text-center text-xl`}>
+                    🚀 Begin Your Journey
+                  </Text>
+                </LinearGradient>
               </TouchableOpacity>
-            </ScrollView>
+            </LinearGradient>
+          </View>
+        </LinearGradient>
+        ) : (
+          // Dashboard View
+          <View style={tw`p-6`}>
+            {/* Today's Progress Card */}
+            <View style={tw`bg-white rounded-2xl p-6 mb-6`}>
+              <View style={tw`flex-row items-center justify-between mb-4`}>
+                <Text style={tw`text-xl font-bold text-gray-900`}>
+                  Today's Progress
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowTodayModal(true)}
+                  style={tw`bg-blue-500 rounded-full px-4 py-2`}
+                >
+                  <Text style={tw`text-white font-semibold text-sm`}>
+                    Add Progress
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={tw`mb-4`}>
+                <View style={tw`flex-row justify-between items-center mb-2`}>
+                  <Text style={tw`text-gray-600`}>
+                    {getTodayProgress().completed} / {targetData.dailyTarget} pages
+                  </Text>
+                  <Text style={tw`font-semibold text-gray-900`}>
+                    {getTodayProgress().percentage.toFixed(0)}%
+                  </Text>
+                </View>
+                <View style={tw`bg-gray-200 rounded-full h-3`}>
+                  <View 
+                    style={[
+                      tw`bg-blue-500 rounded-full h-3`,
+                      { width: `${getTodayProgress().percentage}%` }
+                    ]} 
+                  />
+                </View>
+              </View>
+
+              <View style={tw`flex-row justify-between`}>
+                <View style={tw`items-center flex-1`}>
+                  <Text style={tw`text-2xl font-bold text-blue-500`}>
+                    {getStreakInfo().current}
+                  </Text>
+                  <Text style={tw`text-sm text-gray-500`}>Current Streak</Text>
+                </View>
+                <View style={tw`items-center flex-1`}>
+                  <Text style={tw`text-2xl font-bold text-green-500`}>
+                    {getStreakInfo().best}
+                  </Text>
+                  <Text style={tw`text-sm text-gray-500`}>Best Streak</Text>
+                </View>
+                <View style={tw`items-center flex-1`}>
+                  <Text style={tw`text-2xl font-bold text-purple-500`}>
+                    {targetData.totalCompleted}
+                  </Text>
+                  <Text style={tw`text-sm text-gray-500`}>Total Pages</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Last 7 Days */}
+            <View style={tw`bg-white rounded-2xl p-6 mb-6`}>
+              <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
+                Last 7 Days
+              </Text>
+              <View style={tw`flex-row justify-between`}>
+                {getRecentActivity().map((day, index) => (
+                  <View key={day.date} style={tw`items-center flex-1`}>
+                    <Text style={tw`text-xs text-gray-500 mb-2`}>
+                      {day.dayName}
+                    </Text>
+                    <View 
+                      style={[
+                        tw`w-8 h-8 rounded-full items-center justify-center`,
+                        day.isComplete 
+                          ? tw`bg-green-500` 
+                          : day.isToday 
+                            ? tw`bg-blue-100 border-2 border-blue-500`
+                            : tw`bg-gray-200`
+                      ]}
+                    >
+                      {day.isComplete ? (
+                        <Ionicons name="checkmark" size={16} color="white" />
+                      ) : day.isToday ? (
+                        <View style={tw`w-2 h-2 bg-blue-500 rounded-full`} />
+                      ) : null}
+                    </View>
+                    <Text style={tw`text-xs text-gray-500 mt-1`}>
+                      {day.progress}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* Target Info */}
+            <View style={tw`bg-white rounded-2xl p-6 mb-6`}>
+              <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
+                Your Target
+              </Text>
+              <View style={tw`space-y-3`}>
+                <View style={tw`flex-row justify-between`}>
+                  <Text style={tw`text-gray-600`}>Daily Goal</Text>
+                  <Text style={tw`font-semibold`}>{targetData.dailyTarget} pages</Text>
+                </View>
+                
+                {/* Completion Prediction */}
+                {(() => {
+                  const completion = calculateCompletionInfo(targetData.dailyTarget, targetData.totalCompleted);
+                  return (
+                    <>
+                      <View style={tw`flex-row justify-between`}>
+                        <Text style={tw`text-gray-600`}>Pages Remaining</Text>
+                        <Text style={tw`font-semibold`}>{completion.remainingPages} pages</Text>
+                      </View>
+                      <View style={tw`flex-row justify-between`}>
+                        <Text style={tw`text-gray-600`}>Days to Complete</Text>
+                        <Text style={tw`font-semibold`}>{completion.daysNeeded} days</Text>
+                      </View>
+                      <View style={tw`bg-green-50 border border-green-200 rounded-xl p-3 mt-2`}>
+                        <View style={tw`flex-row items-center mb-1`}>
+                          <Ionicons name="calendar" size={16} color="#059669" style={tw`mr-2`} />
+                          <Text style={tw`text-green-800 font-semibold text-sm`}>
+                            Completion Date
+                          </Text>
+                        </View>
+                        <Text style={tw`text-green-700 font-bold`}>
+                          {completion.completionDate}
+                        </Text>
+                      </View>
+                    </>
+                  );
+                })()}
+              </View>
+            </View>
+
+            {/* Delete Button */}
+            <TouchableOpacity
+              onPress={deleteTargetData}
+              style={tw`bg-red-50 border border-red-200 rounded-xl p-4 mb-6`}
+            >
+              <View style={tw`flex-row items-center justify-center`}>
+                <Ionicons name="trash-outline" size={20} color="#DC2626" style={tw`mr-2`} />
+                <Text style={tw`text-red-600 font-semibold`}>
+                  Delete All Data
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Add Progress Modal */}
+      <Modal
+        visible={showTodayModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={tw`flex-1 bg-white`}>
+          <StatusBar barStyle="dark-content" backgroundColor="#ffffff" translucent />
+          <View style={tw`flex-row items-center justify-between p-6 border-b border-gray-100`}>
+            <Text style={tw`text-xl font-bold text-gray-900`}>
+              Add Today's Progress
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowTodayModal(false)}
+              style={tw`p-2`}
+            >
+              <Ionicons name="close" size={24} color="#6B7280" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={tw`flex-1 p-6`}>
+            <Text style={tw`text-lg font-semibold text-gray-900 mb-4`}>
+              How many pages did you complete today?
+            </Text>
+            <TextInput
+              style={tw`border border-gray-300 rounded-xl px-4 py-3 text-lg mb-6`}
+              placeholder="Number of pages"
+              value={todayProgress}
+              onChangeText={setTodayProgress}
+              keyboardType="numeric"
+            />
+            
+            <TouchableOpacity
+              onPress={handleTodaySubmit}
+              style={[
+                tw`rounded-xl py-4 px-6`,
+                todayProgress ? tw`bg-blue-500` : tw`bg-gray-300`
+              ]}
+              disabled={!todayProgress}
+            >
+              <Text style={tw`text-white font-semibold text-center text-lg`}>
+                Add Progress
+              </Text>
+            </TouchableOpacity>
           </View>
         </SafeAreaView>
       </Modal>
@@ -591,167 +683,46 @@ export default function HifzScreen({ navigation }) {
         presentationStyle="pageSheet"
       >
         <SafeAreaView style={tw`flex-1 bg-white`}>
-          <View style={tw`flex-1 p-6`}>
-            <View style={tw`flex-row items-center justify-between mb-6`}>
-              <Text style={tw`text-2xl font-bold text-amber-900`}>Edit Details</Text>
-              <TouchableOpacity
-                onPress={() => setShowEditModal(false)}
-                style={tw`w-8 h-8 rounded-full items-center justify-center bg-gray-100`}
-              >
-                <Ionicons name="close" size={20} color="#6b7280" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Choice Selection */}
-              <View style={tw`mb-6`}>
-                <Text style={tw`text-lg font-semibold text-gray-800 mb-3`}>
-                  Update memorization status
-                </Text>
-                <View style={tw`flex-row`}>
-                  {renderChoiceButton('want', 'Want to\nMemorize', 'heart-outline')}
-                  {renderChoiceButton('memorizing', 'Currently\nMemorizing', 'book-outline')}
-                  {renderChoiceButton('completed', 'Already\nCompleted', 'checkmark-circle-outline')}
-                </View>
-              </View>
-
-              {/* Pages Already Memorized */}
-              <View style={tw`mb-6`}>
-                <Text style={tw`text-lg font-semibold text-gray-800 mb-3`}>
-                  Total pages memorized
-                </Text>
-                <TextInput
-                  style={tw`border border-gray-300 rounded-xl p-4 text-base`}
-                  placeholder="Enter number of pages (0-604)"
-                  value={alreadyMemorized}
-                  onChangeText={setAlreadyMemorized}
-                  keyboardType="numeric"
-                />
-              </View>
-
-              {/* Target Date */}
-              {memorizeChoice !== 'completed' && (
-                <View style={tw`mb-6`}>
-                  <Text style={tw`text-lg font-semibold text-gray-800 mb-3`}>
-                    Target completion date
-                  </Text>
-                  
-                  {/* Quick Preset Buttons */}
-                  <View style={tw`flex-row flex-wrap gap-2 mb-3`}>
-                    <TouchableOpacity
-                      onPress={() => {
-                        const newDate = new Date();
-                        newDate.setMonth(newDate.getMonth() + 6);
-                        setTargetDate(newDate);
-                      }}
-                      style={tw`bg-blue-100 px-3 py-2 rounded-lg`}
-                    >
-                      <Text style={tw`text-blue-800 text-sm font-medium`}>6 Months</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      onPress={() => {
-                        const newDate = new Date();
-                        newDate.setFullYear(newDate.getFullYear() + 1);
-                        setTargetDate(newDate);
-                      }}
-                      style={tw`bg-purple-100 px-3 py-2 rounded-lg`}
-                    >
-                      <Text style={tw`text-purple-800 text-sm font-medium`}>1 Year</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      onPress={() => {
-                        const newDate = new Date();
-                        newDate.setFullYear(newDate.getFullYear() + 2);
-                        setTargetDate(newDate);
-                      }}
-                      style={tw`bg-green-100 px-3 py-2 rounded-lg`}
-                    >
-                      <Text style={tw`text-green-800 text-sm font-medium`}>2 Years</Text>
-                    </TouchableOpacity>
-                  </View>
-                  
-                  <TouchableOpacity
-                    onPress={selectTargetDate}
-                    style={tw`border border-gray-300 rounded-xl p-4 flex-row items-center justify-between`}
-                  >
-                    <Text style={tw`text-base text-gray-700`}>
-                      {targetDate.toLocaleDateString()}
-                    </Text>
-                    <Ionicons name="calendar-outline" size={24} color="#6b7280" />
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              <TouchableOpacity
-                onPress={handleEditSubmit}
-                style={tw`bg-amber-600 py-4 rounded-xl mt-4`}
-              >
-                <Text style={tw`text-white font-semibold text-lg text-center`}>
-                  Update Details
-                </Text>
-              </TouchableOpacity>
-            </ScrollView>
+          <StatusBar barStyle="dark-content" backgroundColor="#ffffff" translucent />
+          <View style={tw`flex-row items-center justify-between p-6 border-b border-gray-100`}>
+            <Text style={tw`text-xl font-bold text-gray-900`}>
+              Edit Daily Target
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowEditModal(false)}
+              style={tw`p-2`}
+            >
+              <Ionicons name="close" size={24} color="#6B7280" />
+            </TouchableOpacity>
           </View>
-        </SafeAreaView>
-      </Modal>
-
-      {/* Today's Progress Modal */}
-      <Modal
-        visible={showTodayModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView style={tw`flex-1 bg-white`}>
+          
           <View style={tw`flex-1 p-6`}>
-            <View style={tw`flex-row items-center justify-between mb-6`}>
-              <Text style={tw`text-2xl font-bold text-amber-900`}>Today's Progress</Text>
-              <TouchableOpacity
-                onPress={() => setShowTodayModal(false)}
-                style={tw`w-8 h-8 rounded-full items-center justify-center bg-gray-100`}
-              >
-                <Ionicons name="close" size={20} color="#6b7280" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={tw`mb-6`}>
-              <Text style={tw`text-lg font-semibold text-gray-800 mb-3`}>
-                How many pages did you memorize today?
-              </Text>
-              <TextInput
-                style={tw`border border-gray-300 rounded-xl p-4 text-base`}
-                placeholder="Enter pages (can be decimal like 0.5)"
-                value={todayPages}
-                onChangeText={setTodayPages}
-                keyboardType="decimal-pad"
-              />
-            </View>
+            <Text style={tw`text-lg font-semibold text-gray-900 mb-4`}>
+              Daily Pages Target
+            </Text>
+            <TextInput
+              style={tw`border border-gray-300 rounded-xl px-4 py-3 text-lg mb-6`}
+              placeholder="How many pages per day?"
+              value={dailyTarget}
+              onChangeText={setDailyTarget}
+              keyboardType="numeric"
+            />
 
             <TouchableOpacity
-              onPress={handleTodaySubmit}
-              style={tw`bg-green-500 py-4 rounded-xl`}
+              onPress={handleEditSubmit}
+              style={[
+                tw`rounded-xl py-4 px-6`,
+                dailyTarget ? tw`bg-blue-500` : tw`bg-gray-300`
+              ]}
+              disabled={!dailyTarget}
             >
-              <Text style={tw`text-white font-semibold text-lg text-center`}>
-                Add Progress
+              <Text style={tw`text-white font-semibold text-center text-lg`}>
+                Update Target
               </Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
       </Modal>
-
-      {/* Date Picker */}
-      {showDatePicker && (
-        <DateTimePicker
-          testID="dateTimePicker"
-          value={targetDate}
-          mode="date"
-          is24Hour={true}
-          display="default"
-          minimumDate={new Date()}
-          onChange={onDateChange}
-        />
-      )}
-    </SafeAreaView>
+    </View>
   );
 }

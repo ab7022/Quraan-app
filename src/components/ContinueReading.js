@@ -84,8 +84,6 @@ const getJuzForPage = (pageNumber) => {
 const ContinueReading = ({ navigation }) => {
   const lastReadPage = useSelector(s => s.streak.lastReadPage);
 
-  if (!lastReadPage) return null;
-
   const handleContinueReading = () => {
     Alert.alert(
       'Continue Reading',
@@ -98,6 +96,52 @@ const ContinueReading = ({ navigation }) => {
         {
           text: 'Continue',
           onPress: () => navigateToLastPage(),
+        },
+      ]
+    );
+  };
+
+  const handleStartFresh = () => {
+    Alert.alert(
+      'Start Reading',
+      'Where would you like to start your Quran journey?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'From Beginning',
+          onPress: () => {
+            // Track start fresh action
+            analytics.trackUserAction('start_fresh', {
+              starting_point: 'beginning',
+              page: 1
+            });
+            
+            analytics.trackNavigationEvent('StartFresh', 'QuranPageScreen', 'start_beginning');
+            
+            navigation.navigate('Quran', {
+              screen: 'QuranPage',
+              params: { initialPage: 1 }
+            });
+          },
+        },
+        {
+          text: 'Browse Surahs',
+          onPress: () => {
+            // Track start fresh action
+            analytics.trackUserAction('start_fresh', {
+              starting_point: 'surahs_list'
+            });
+            
+            analytics.trackNavigationEvent('StartFresh', 'SurahsScreen', 'browse_surahs');
+            
+            navigation.navigate('Quran', { 
+              screen: 'QuranTabs', 
+              params: { screen: 'SurahsList' } 
+            });
+          },
         },
       ]
     );
@@ -161,74 +205,136 @@ const ContinueReading = ({ navigation }) => {
     }
   };
 
+  // Check if we have valid reading data
+  const hasValidReadingData = lastReadPage && lastReadPage.name && lastReadPage.type;
+
   return (
     <View>
-      <Text style={tw`text-xl font-bold text-gray-900 mb-4`}>Continue Reading</Text>
-      <TouchableOpacity
-        onPress={handleContinueReading}
-        style={tw`rounded-2xl shadow-lg overflow-hidden`}
-        accessibilityLabel={`Continue reading ${lastReadPage.name}`}
-        activeOpacity={0.8}
-      >
-        <LinearGradient
-          colors={['#10B981', '#059669', '#047857']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={tw`p-4`}
+      <Text style={tw`text-xl font-bold text-gray-900 mb-4`}>
+        {hasValidReadingData ? 'Continue Reading' : 'Start Your Journey'}
+      </Text>
+      
+      {hasValidReadingData ? (
+        // Show Continue Reading Card
+        <TouchableOpacity
+          onPress={handleContinueReading}
+          style={tw`rounded-2xl shadow-lg overflow-hidden`}
+          accessibilityLabel={`Continue reading ${lastReadPage.name}`}
+          activeOpacity={0.8}
         >
-          <View style={tw`flex-row items-center justify-between`}>
-            {/* Left Content */}
-            <View style={tw`flex-1 mr-3`}>
-              <View style={tw`flex-row items-center mb-2`}>
-                <View style={tw`w-8 h-8 bg-white/20 rounded-xl items-center justify-center mr-3`}>
-                  <Ionicons name="book" size={16} color="white" />
+          <LinearGradient
+            colors={['#10B981', '#059669', '#047857']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={tw`p-4`}
+          >
+            <View style={tw`flex-row items-center justify-between`}>
+              {/* Left Content */}
+              <View style={tw`flex-1 mr-3`}>
+                <View style={tw`flex-row items-center mb-2`}>
+                  <View style={tw`w-8 h-8 bg-white/20 rounded-xl items-center justify-center mr-3`}>
+                    <Ionicons name="book" size={16} color="white" />
+                  </View>
+                  <View style={tw`flex-1`}>
+                    <Text style={tw`text-white font-bold text-base`} numberOfLines={1}>
+                      {lastReadPage.name}
+                    </Text>
+                    <Text style={tw`text-white/80 text-xs`}>
+                      {getTypeLabel()}
+                    </Text>
+                  </View>
                 </View>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-white font-bold text-base`} numberOfLines={1}>
-                    {lastReadPage.name}
-                  </Text>
-                  <Text style={tw`text-white/80 text-xs`}>
-                    {getTypeLabel()}
-                  </Text>
-                </View>
+                
+                {lastReadPage.pageNumber && (
+                  <View style={tw`flex-row items-center flex-wrap`}>
+                    <View style={tw`bg-white/15 rounded-lg px-2 py-1 mr-2 mb-1`}>
+                      <Text style={tw`text-white text-xs font-medium`}>
+                        Page {lastReadPage.pageNumber}
+                      </Text>
+                    </View>
+                    {(() => {
+                      const surahInfo = getSurahForPage(lastReadPage.pageNumber);
+                      const juzNumber = getJuzForPage(lastReadPage.pageNumber);
+                      return (
+                        <>
+                          <View style={tw`bg-white/15 rounded-lg px-2 py-1 mr-2 mb-1`}>
+                            <Text style={tw`text-white text-xs font-medium`} numberOfLines={1}>
+                              {surahInfo.name}
+                            </Text>
+                          </View>
+                          <View style={tw`bg-white/15 rounded-lg px-2 py-1 mb-1`}>
+                            <Text style={tw`text-white text-xs font-medium`}>
+                              Juz {juzNumber}
+                            </Text>
+                          </View>
+                        </>
+                      );
+                    })()}
+                  </View>
+                )}
               </View>
               
-              {lastReadPage.pageNumber && (
+              {/* Right Action */}
+              <View style={tw`w-12 h-12 bg-white/20 rounded-2xl items-center justify-center`}>
+                <Ionicons name="play" size={18} color="white" />
+              </View>
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
+      ) : (
+        // Show Start Fresh Card
+        <TouchableOpacity
+          onPress={handleStartFresh}
+          style={tw`rounded-2xl shadow-lg overflow-hidden`}
+          accessibilityLabel="Start reading the Quran"
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={['#3B82F6', '#2563EB', '#1D4ED8']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={tw`p-4`}
+          >
+            <View style={tw`flex-row items-center justify-between`}>
+              {/* Left Content */}
+              <View style={tw`flex-1 mr-3`}>
+                <View style={tw`flex-row items-center mb-2`}>
+                  <View style={tw`w-8 h-8 bg-white/20 rounded-xl items-center justify-center mr-3`}>
+                    <Ionicons name="book-outline" size={16} color="white" />
+                  </View>
+                  <View style={tw`flex-1`}>
+                    <Text style={tw`text-white font-bold text-base`}>
+                      Start Reading Quran
+                    </Text>
+                    <Text style={tw`text-white/80 text-xs`}>
+                      Begin your spiritual journey
+                    </Text>
+                  </View>
+                </View>
+                
                 <View style={tw`flex-row items-center flex-wrap`}>
                   <View style={tw`bg-white/15 rounded-lg px-2 py-1 mr-2 mb-1`}>
                     <Text style={tw`text-white text-xs font-medium`}>
-                      Page {lastReadPage.pageNumber}
+                      ✨ Fresh Start
                     </Text>
                   </View>
-                  {(() => {
-                    const surahInfo = getSurahForPage(lastReadPage.pageNumber);
-                    const juzNumber = getJuzForPage(lastReadPage.pageNumber);
-                    return (
-                      <>
-                        <View style={tw`bg-white/15 rounded-lg px-2 py-1 mr-2 mb-1`}>
-                          <Text style={tw`text-white text-xs font-medium`} numberOfLines={1}>
-                            {surahInfo.name}
-                          </Text>
-                        </View>
-                        <View style={tw`bg-white/15 rounded-lg px-2 py-1 mb-1`}>
-                          <Text style={tw`text-white text-xs font-medium`}>
-                            Juz {juzNumber}
-                          </Text>
-                        </View>
-                      </>
-                    );
-                  })()}
+                
+                  <View style={tw`bg-white/15 rounded-lg px-2 py-1 mb-1`}>
+                    <Text style={tw`text-white text-xs font-medium`}>
+                      🌙 Blessed Journey
+                    </Text>
+                  </View>
                 </View>
-              )}
+              </View>
+              
+              {/* Right Action */}
+              <View style={tw`w-12 h-12 bg-white/20 rounded-2xl items-center justify-center`}>
+                <Ionicons name="arrow-forward" size={18} color="white" />
+              </View>
             </View>
-            
-            {/* Right Action */}
-            <View style={tw`w-12 h-12 bg-white/20 rounded-2xl items-center justify-center`}>
-              <Ionicons name="play" size={18} color="white" />
-            </View>
-          </View>
-        </LinearGradient>
-      </TouchableOpacity>
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

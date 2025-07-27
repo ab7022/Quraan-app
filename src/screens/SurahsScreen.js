@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, SafeAreaView, StatusBar, TextInput } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import SurahCard from '../components/SurahCard';
 import Shimmer from '../components/Shimmer';
@@ -24,7 +26,9 @@ const surahToPageMapping = {
 
 export default function SurahsScreen() {
   const [surahs, setSurahs] = useState([]);
+  const [filteredSurahs, setFilteredSurahs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState('');
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -43,11 +47,14 @@ export default function SurahsScreen() {
       const json = await res.json();
       if (json.code === 200) {
         setSurahs(json.data);
+        setFilteredSurahs(json.data);
       } else {
         setSurahs([]);
+        setFilteredSurahs([]);
       }
     } catch (e) {
       setSurahs([]);
+      setFilteredSurahs([]);
     } finally {
       setLoading(false);
     }
@@ -58,27 +65,150 @@ export default function SurahsScreen() {
     navigation.navigate('QuranPage', { initialPage: pageNumber });
   };
 
+  const handleSearch = (text) => {
+    setSearchText(text);
+    if (text.trim() === '') {
+      setFilteredSurahs(surahs);
+    } else {
+      const filtered = surahs.filter(surah => 
+        surah.englishName.toLowerCase().includes(text.toLowerCase()) ||
+        surah.name.includes(text) ||
+        surah.englishNameTranslation.toLowerCase().includes(text.toLowerCase()) ||
+        surah.number.toString().includes(text)
+      );
+      setFilteredSurahs(filtered);
+    }
+  };
+
   return (
-    <SafeAreaView style={tw`flex-1 bg-white dark:bg-black`}>
-      <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
-      <View style={tw`px-6 pt-4 pb-2 flex-1`}> 
-        <Text style={tw`text-2xl font-bold text-black dark:text-white mb-4`}>Surahs</Text>
+    <SafeAreaView style={tw`flex-1 bg-white`}>
+      <StatusBar backgroundColor="#FFFFFF" barStyle="dark-content" />
+      
+      {/* Clean Header */}
+      <View style={tw`bg-white px-6 py-4 mb-2`}>
+        <View style={tw`flex-row items-center justify-between mb-4`}>
+          <View style={tw`flex-1`}>
+            <Text style={tw`text-2xl font-bold text-gray-900`}>Surah Collection</Text>
+            <Text style={tw`text-base text-gray-600 mt-1`}>
+              114 Chapters • Complete Quran
+            </Text>
+          </View>
+          
+          {/* Stats Card */}
+          <View style={tw`bg-blue-100 px-4 py-3 rounded-xl`}>
+            <View style={tw`flex-row items-center`}>
+              <Ionicons name="book-outline" size={18} color="#2563EB" />
+              <Text style={tw`text-blue-700 font-bold text-lg ml-2`}>114</Text>
+            </View>
+            <Text style={tw`text-blue-600 text-xs font-medium`}>Surahs</Text>
+          </View>
+        </View>
+        
+        {/* Search Bar */}
+        <View style={tw`bg-gray-50 rounded-xl px-4 py-3 flex-row items-center`}>
+          <Ionicons name="search" size={20} color="#6B7280" style={tw`mr-3`} />
+          <TextInput
+            style={tw`flex-1 text-gray-900 text-base`}
+            placeholder="Search surahs by name, number, or meaning..."
+            placeholderTextColor="#9CA3AF"
+            value={searchText}
+            onChangeText={handleSearch}
+          />
+          {searchText.length > 0 && (
+            <TouchableOpacity onPress={() => handleSearch('')}>
+              <Ionicons name="close-circle" size={20} color="#6B7280" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Main Content */}
+      <View style={tw`flex-1 px-6`}>
         {loading ? (
-          Array.from({ length: 8 }).map((_, idx) => <Shimmer key={idx} height={56} style={tw`mb-3`} />)
+          <View>
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <View key={idx} style={tw`bg-gray-50 rounded-xl p-4 mb-3`}>
+                <Shimmer height={70} style={tw`rounded-lg`} />
+              </View>
+            ))}
+          </View>
         ) : (
           <FlatList
-            data={surahs}
+            data={filteredSurahs}
             keyExtractor={(item, index) => `surah-${item.number || index}`}
             renderItem={({ item }) => (
-              <SurahCard
-                surah={item}
+              <TouchableOpacity
                 onPress={() => handleSurahPress(item)}
-              />
+                style={tw`mb-3`}
+                activeOpacity={0.7}
+              >
+                <View style={tw`bg-white rounded-xl p-5 border border-gray-200`}>
+                  <View style={tw`flex-row items-center justify-between`}>
+                    {/* Left Content */}
+                    <View style={tw`flex-1 mr-4`}>
+                      <View style={tw`flex-row items-center mb-3`}>
+                        <View style={tw`w-14 h-14 bg-blue-500 rounded-xl items-center justify-center mr-4`}>
+                          <Text style={tw`text-white font-bold text-lg`}>
+                            {item.number}
+                          </Text>
+                        </View>
+                        <View style={tw`flex-1`}>
+                          <Text style={tw`text-gray-900 font-bold text-lg mb-1`}>
+                            {item.englishName}
+                          </Text>
+                          <Text style={tw`text-gray-700 text-base mb-1`}>
+                            {item.name}
+                          </Text>
+                          <Text style={tw`text-gray-600 text-sm`}>
+                            {item.englishNameTranslation}
+                          </Text>
+                        </View>
+                      </View>
+                      
+                      <View style={tw`flex-row items-center flex-wrap`}>
+                        <View style={tw`bg-purple-100 rounded-lg px-3 py-1 mr-2 mb-1`}>
+                          <Text style={tw`text-purple-700 text-xs font-medium`}>
+                            {item.numberOfAyahs} Verses
+                          </Text>
+                        </View>
+                        <View style={tw`bg-green-100 rounded-lg px-3 py-1 mr-2 mb-1`}>
+                          <Text style={tw`text-green-700 text-xs font-medium`}>
+                            {item.revelationType === 'Meccan' ? '🕋 Meccan' : '🕌 Medinan'}
+                          </Text>
+                        </View>
+                        <View style={tw`bg-blue-100 rounded-lg px-3 py-1 mb-1`}>
+                          <Text style={tw`text-blue-700 text-xs font-medium`}>
+                            Page {surahToPageMapping[item.number]}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    
+                    {/* Right Arrow */}
+                    <View style={tw`w-12 h-12 bg-gray-50 rounded-xl items-center justify-center`}>
+                      <Ionicons name="arrow-forward" size={20} color="#2563EB" />
+                    </View>
+                  </View>
+                </View>
+              </TouchableOpacity>
             )}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={tw`pb-6`}
+            ListEmptyComponent={
+              searchText.length > 0 ? (
+                <View style={tw`bg-gray-50 rounded-xl p-8 items-center`}>
+                  <Ionicons name="search-outline" size={48} color="#9CA3AF" style={tw`mb-4`} />
+                  <Text style={tw`text-gray-900 font-bold text-lg mb-2`}>No Results Found</Text>
+                  <Text style={tw`text-gray-600 text-center`}>
+                    Try searching with different keywords or check your spelling
+                  </Text>
+                </View>
+              ) : null
+            }
           />
         )}
       </View>
     </SafeAreaView>
   );
+
 }

@@ -19,20 +19,14 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSContactsUsageDescription": "This app needs access to contacts to show friends' reading streaks and encourage each other in Quran reading."
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#FAF3E7"
       },
-      "permissions": [
-        "READ_CONTACTS"
-      ],
-      "package": "com.bayees2003.quranapp"
+      "package": "com.quranapp.mobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -44,7 +38,6 @@
       "eas": {
         "projectId": "1607f79d-b140-4b17-9f12-a91de51d7e88"
       }
-    },
-    "owner": "bayees2003"
+    }
   }
 }

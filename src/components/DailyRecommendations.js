@@ -295,7 +295,7 @@ const getTimeBasedRecommendations = () => {
           type: 'dhikr', 
           name: 'Tasbeeh', 
           description: '💫 Remember Allah in prosperity', 
-          icon: 'prayer-beads',
+          icon: 'counter',
           content: DAILY_SCHEDULE.dhuhr.adhkar
         },
         { 

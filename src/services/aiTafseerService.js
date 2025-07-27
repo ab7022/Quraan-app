@@ -30,7 +30,22 @@ class AITafseerService {
   }
 
   // System prompt for AI to understand its role
-  getSystemPrompt() {
+  getSystemPrompt(language = 'en') {
+    const languageMap = {
+      'en': 'English',
+      'ar': 'Arabic',
+      'ur': 'Urdu',
+      'hi': 'Hindi',
+      'fr': 'French',
+      'es': 'Spanish',
+      'tr': 'Turkish',
+      'id': 'Indonesian',
+      'ms': 'Malay',
+      'bn': 'Bengali'
+    };
+
+    const selectedLanguage = languageMap[language] || 'English';
+
     return `You are an expert Islamic scholar and Quran commentator (Mufassir) with deep knowledge of:
 
 1. **Quranic Sciences**: Tafseer, Asbab al-Nuzul (reasons for revelation), Nasikh wa Mansukh (abrogation)
@@ -47,6 +62,8 @@ class AITafseerService {
 - Reference classical scholarly opinions when appropriate
 - Use proper Islamic terminology and respectful language
 - Format responses in clean, readable markdown
+
+**IMPORTANT: Respond in ${selectedLanguage} language. Use appropriate cultural context and terminology for ${selectedLanguage}-speaking Muslims.**
 
 **Guidelines:**
 - Always begin with "Bismillah" (In the name of Allah)
@@ -106,9 +123,9 @@ Please provide this in proper markdown format. Keep the explanation scholarly ye
   }
 
   // OpenAI API call
-  async getOpenAITafseer(pageNumber) {
+  async getOpenAITafseer(pageNumber, language = 'en') {
     try {
-      const systemPrompt = this.getSystemPrompt();
+      const systemPrompt = this.getSystemPrompt(language);
       const userPrompt = this.generatePagePrompt(pageNumber);
 
       const response = await this.openaiClient.post('/chat/completions', {
@@ -134,7 +151,8 @@ Please provide this in proper markdown format. Keep the explanation scholarly ye
         success: true,
         content: response.data.choices[0].message.content,
         usage: response.data.usage,
-        model: response.data.model
+        model: response.data.model,
+        language: language
       };
     } catch (error) {
       console.error('OpenAI API Error:', error.response?.data || error.message);
@@ -143,9 +161,9 @@ Please provide this in proper markdown format. Keep the explanation scholarly ye
   }
 
   // Claude AI API call (Alternative)
-  async getClaudeTafseer(pageNumber) {
+  async getClaudeTafseer(pageNumber, language = 'en') {
     try {
-      const systemPrompt = this.getSystemPrompt();
+      const systemPrompt = this.getSystemPrompt(language);
       const userPrompt = this.generatePagePrompt(pageNumber);
 
       const response = await this.claudeClient.post('/messages', {
@@ -174,12 +192,12 @@ Please provide this in proper markdown format. Keep the explanation scholarly ye
   }
 
   // Main method - tries OpenAI first, falls back to Claude
-  async getTafseer(pageNumber, preferredProvider = 'openai') {
+  async getTafseer(pageNumber, language = 'en', preferredProvider = 'openai') {
     try {
       if (preferredProvider === 'openai') {
-        return await this.getOpenAITafseer(pageNumber);
+        return await this.getOpenAITafseer(pageNumber, language);
       } else if (preferredProvider === 'claude') {
-        return await this.getClaudeTafseer(pageNumber);
+        return await this.getClaudeTafseer(pageNumber, language);
       }
     } catch (error) {
       console.warn(`${preferredProvider} failed, trying fallback...`);
@@ -187,14 +205,39 @@ Please provide this in proper markdown format. Keep the explanation scholarly ye
       // Fallback to the other provider
       try {
         if (preferredProvider === 'openai') {
-          return await this.getClaudeTafseer(pageNumber);
+          return await this.getClaudeTafseer(pageNumber, language);
         } else {
-          return await this.getOpenAITafseer(pageNumber);
+          return await this.getOpenAITafseer(pageNumber, language);
         }
       } catch (fallbackError) {
         console.error('Both AI providers failed:', fallbackError);
         throw new Error('All AI providers failed. Please try again later.');
       }
+    }
+  }
+
+  // Helper method to get explanation with language preference
+  async getExplanationWithLanguageCheck(pageNumber, preferredProvider = 'openai') {
+    try {
+      // Import the language service
+      const { getExplanationLanguage, promptForExplanationLanguage } = await import('./explanationLanguageService');
+      
+      // Get user's preferred language
+      let language = await getExplanationLanguage();
+      
+      // If no language is set, prompt user to select one
+      if (!language) {
+        language = await promptForExplanationLanguage();
+        if (!language) {
+          throw new Error('Language selection cancelled');
+        }
+      }
+      
+      // Get explanation in the selected language
+      return await this.getTafseer(pageNumber, language.code, preferredProvider);
+    } catch (error) {
+      console.error('Error getting explanation with language check:', error);
+      throw error;
     }
   }
 

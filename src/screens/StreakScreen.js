@@ -4,13 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { useSelector, useDispatch } from 'react-redux';
-import { loadStreak, loadSavedContacts } from '../store/streakSlice';
+import { loadStreak } from '../store/streakSlice';
 import FriendsStreak from '../components/FriendsStreak';
 import Last30DaysStreak from '../components/Last30DaysStreak';
 import analytics from '../services/analyticsService';
 
 export default function StreakScreen({ navigation }) {
-  const { streak, contacts, contactsLoaded } = useSelector(s => s.streak);
+  const { streak } = useSelector(s => s.streak);
   const dispatch = useDispatch();
   const pulse = React.useRef(new Animated.Value(1)).current;
   
@@ -20,12 +20,9 @@ export default function StreakScreen({ navigation }) {
     // Track screen view with streak data
     analytics.trackScreenView('StreakScreen', {
       current_streak: streak,
-      has_contacts: contacts.length > 0,
-      contacts_count: contacts.length,
     });
     
     dispatch(loadStreak());
-    dispatch(loadSavedContacts());
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, { toValue: 1.15, duration: 700, useNativeDriver: true, easing: Easing.inOut(Easing.ease) }),
