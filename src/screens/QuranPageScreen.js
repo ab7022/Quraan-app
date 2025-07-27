@@ -11,6 +11,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Markdown from 'react-native-markdown-display';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '../services/analyticsService';
+import rateLimitService from '../services/rateLimitService';
+import RateLimitStatus from '../components/RateLimitStatus';
 
 const { width, height } = Dimensions.get('window');
 
@@ -408,6 +410,24 @@ export default function QuranPageScreen({ route }) {
   };
 
   const proceedWithAIExplanation = async (languageCodeOverride = null) => {
+    // Check rate limit before proceeding
+    try {
+      const rateLimitResult = await rateLimitService.checkRateLimit('quran/tafseer');
+      
+      if (!rateLimitResult.allowed) {
+        const resetTime = rateLimitService.getTimeUntilReset(rateLimitResult.resetTime);
+        Alert.alert(
+          'Rate Limit Exceeded',
+          `You've reached the maximum number of AI Tafseer requests (${rateLimitResult.maxRequests}) for this hour. Please try again in ${resetTime}.`,
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking rate limit:', error);
+      // Continue with request if rate limit check fails
+    }
+
     setShowAIModal(true);
     setAiLoading(true);
     setAiResponse('');
@@ -457,6 +477,9 @@ export default function QuranPageScreen({ route }) {
       const data = await response.json();
       
       if (data.success && data.tafseer) {
+        // Record successful request for rate limiting
+        await rateLimitService.recordRequest('quran/tafseer');
+        
         setAiResponse(data.tafseer);
       } else {
         throw new Error(data.error || 'Failed to get tafseer');
@@ -864,6 +887,9 @@ export default function QuranPageScreen({ route }) {
           setCurrentPage(page);
         }}
       />
+      
+      {/* Rate Limit Status Component for debugging */}
+      <RateLimitStatus />
     </SafeAreaView>
   );
 }

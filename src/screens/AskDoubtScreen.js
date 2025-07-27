@@ -4,6 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import Markdown from 'react-native-markdown-display';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import rateLimitService from '../services/rateLimitService';
+import RateLimitStatus from '../components/RateLimitStatus';
+
+// Maximum number of chat messages to keep in history
+const MAX_CHAT_MESSAGES = 20;
 
 export default function AskDoubtScreen() {
   const [message, setMessage] = useState('');
@@ -36,7 +41,19 @@ export default function AskDoubtScreen() {
       if (savedMessages) {
         const parsedMessages = JSON.parse(savedMessages);
         console.log('[CHAT] Loaded', parsedMessages.length, 'messages from storage');
-        setChatMessages(parsedMessages);
+        
+        // Ensure we don't load more than the maximum messages (safety check)
+        const messagesToLoad = parsedMessages.length > MAX_CHAT_MESSAGES 
+          ? parsedMessages.slice(-MAX_CHAT_MESSAGES) 
+          : parsedMessages;
+        
+        if (messagesToLoad.length !== parsedMessages.length) {
+          console.log(`[CHAT] Trimmed loaded messages from ${parsedMessages.length} to ${messagesToLoad.length}`);
+          // Save the trimmed version back to storage
+          await saveChatHistory(messagesToLoad);
+        }
+        
+        setChatMessages(messagesToLoad);
       } else {
         // Set default welcome message if no history exists
         const welcomeMessage = {
@@ -60,18 +77,50 @@ export default function AskDoubtScreen() {
         sender: 'Islamic Scholar'
       };
       setChatMessages([welcomeMessage]);
+      await saveChatHistory([welcomeMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Save chat history to AsyncStorage
+  // Save chat history to AsyncStorage (keep only last 20 messages)
   const saveChatHistory = async (messages) => {
     try {
-      await AsyncStorage.setItem('islamic_chat_history', JSON.stringify(messages));
-      console.log('[CHAT] Saved', messages.length, 'messages to storage');
+      // Keep only the last MAX_CHAT_MESSAGES messages to prevent storage bloat
+      let messagesToSave = messages;
+      
+      if (messages.length > MAX_CHAT_MESSAGES) {
+        // Keep the last messages
+        messagesToSave = messages.slice(-MAX_CHAT_MESSAGES);
+        console.log(`[CHAT] Trimmed messages from ${messages.length} to ${messagesToSave.length} (keeping last ${MAX_CHAT_MESSAGES})`);
+      }
+      
+      await AsyncStorage.setItem('islamic_chat_history', JSON.stringify(messagesToSave));
+      console.log('[CHAT] Saved', messagesToSave.length, 'messages to storage');
+      
+      // Update state with trimmed messages if we trimmed anything
+      if (messages.length > MAX_CHAT_MESSAGES) {
+        setChatMessages(messagesToSave);
+      }
     } catch (error) {
       console.error('[CHAT] Error saving chat history:', error);
+    }
+  };
+
+  // Manually trim chat history to maximum allowed messages
+  const trimChatHistory = async () => {
+    try {
+      if (chatMessages.length > MAX_CHAT_MESSAGES) {
+        const trimmedMessages = chatMessages.slice(-MAX_CHAT_MESSAGES);
+        setChatMessages(trimmedMessages);
+        await AsyncStorage.setItem('islamic_chat_history', JSON.stringify(trimmedMessages));
+        console.log(`[CHAT] Manually trimmed messages from ${chatMessages.length} to ${trimmedMessages.length}`);
+        return trimmedMessages.length;
+      }
+      return chatMessages.length;
+    } catch (error) {
+      console.error('[CHAT] Error trimming chat history:', error);
+      return chatMessages.length;
     }
   };
 
@@ -96,6 +145,24 @@ export default function AskDoubtScreen() {
 
   const sendMessage = async () => {
     if (!message.trim()) return;
+
+    // Check rate limit before proceeding
+    try {
+      const rateLimitResult = await rateLimitService.checkRateLimit('quran/ask');
+      
+      if (!rateLimitResult.allowed) {
+        const resetTime = rateLimitService.getTimeUntilReset(rateLimitResult.resetTime);
+        Alert.alert(
+          'Rate Limit Exceeded',
+          `You've reached the maximum number of AI questions (${rateLimitResult.maxRequests}) for this hour. Please try again in ${resetTime}.`,
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking rate limit:', error);
+      // Continue with request if rate limit check fails
+    }
 
     const userMessage = {
       id: Date.now().toString(),
@@ -138,6 +205,9 @@ export default function AskDoubtScreen() {
       if (response.ok) {
         const data = await response.json();
         console.log('Backend response:', data);
+        
+        // Record successful request for rate limiting
+        await rateLimitService.recordRequest('quran/ask');
         
         // Simulate typing delay for better UX
         setTimeout(async () => {
@@ -455,6 +525,9 @@ export default function AskDoubtScreen() {
         </View>
       </KeyboardAvoidingView>
       </SafeAreaView>
+      
+      {/* Rate Limit Status Component for debugging */}
+      <RateLimitStatus />
     </View>
   );
 }

@@ -377,24 +377,6 @@ export default function ProfileScreen({ navigation }) {
           />
         </View>
 
-        {/* App Settings */}
-        <SectionHeader title="App Settings" />
-        <View style={tw`bg-white dark:bg-gray-800 mx-4 rounded-xl shadow-sm overflow-hidden`}>
-          <ProfileItem
-            icon="moon-outline"
-            title="Dark Mode"
-            subtitle="Automatic based on system"
-            showArrow={false}
-            rightContent={
-              <Switch
-                value={settings.nightMode}
-                onValueChange={(value) => saveSettings({ nightMode: value })}
-                trackColor={{ false: '#E5E7EB', true: '#10B981' }}
-                thumbColor={settings.nightMode ? '#FFFFFF' : '#9CA3AF'}
-              />
-            }
-          />
-        </View>
 
         {/* Support */}
         <SectionHeader title="Support" />

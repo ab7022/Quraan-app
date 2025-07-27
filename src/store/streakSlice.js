@@ -109,7 +109,7 @@ export const loadStreak = () => async (dispatch) => {
 
     // Use local timezone instead of UTC to fix timezone issues
     //increase day by 1
-    const now = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const now = new Date();
 
     const todayStr =
       now.getFullYear() +
@@ -117,9 +117,6 @@ export const loadStreak = () => async (dispatch) => {
       String(now.getMonth() + 1).padStart(2, "0") +
       "-" +
       String(now.getDate()).padStart(2, "0");
-
-    console.log("🌍 [TIMEZONE] Current time in India:", now.toString());
-    console.log("🌍 [TIMEZONE] Today string (local):", todayStr);
 
     let updatedHistory = { ...readingHistory };
     let currentStreak = 0;
@@ -160,7 +157,6 @@ export const loadStreak = () => async (dispatch) => {
           }
         }
 
-        console.log("🔄 Recalculated streak from history:", recalculatedStreak);
         currentStreak = Math.max(recalculatedStreak, 1); // At least 1 if we have today
         updatedHistory[todayStr] = true;
 
