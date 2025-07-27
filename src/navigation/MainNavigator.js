@@ -14,6 +14,9 @@ import SurahDetailScreen from '../screens/SurahDetailScreen';
 import JuzScreen from '../screens/JuzScreen';
 import JuzDetailScreen from '../screens/JuzDetailScreen';
 import StreakScreen from '../screens/StreakScreen';
+import AskDoubtScreen from '../screens/AskDoubtScreen';
+import HifzScreen from '../screens/HifzScreen';
+import analytics from '../services/analyticsService';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -77,6 +80,20 @@ function QuranTopTabs() {
   );
 }
 
+// Home Stack Navigator for Home section
+function HomeNavigator() {
+  const scheme = useColorScheme();
+  
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: scheme === 'dark' ? '#1F2937' : '#FFFBEB' }}>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="HomeMain" component={HomeScreen} />
+        <Stack.Screen name="Hifz" component={HifzScreen} />
+      </Stack.Navigator>
+    </SafeAreaView>
+  );
+}
+
 // Main Stack Navigator for Quran section
 function QuranNavigator() {
   const scheme = useColorScheme();
@@ -102,14 +119,18 @@ function getTabBarDisplay(route) {
     return 'none';
   }
   
+  // Hide tab bar on Hifz screen
+  if (routeName === 'Hifz') {
+    return 'none';
+  }
+  
   return 'flex'; // Show tab bar on all other screens
 }
 
 const tabIcons = {
   Home: 'home',
   Quran: 'book-outline',
-  Explore: 'compass-outline',
-  Leaderboard: 'trophy-outline',
+  AskDoubt: 'help-circle-outline',
   Streak: 'flame',
 };
 
@@ -118,10 +139,23 @@ export default function MainNavigator() {
   
   const handleTabPress = (tabName) => {
     console.log(`[TAB LOG] Tab pressed: ${tabName} at ${new Date().toLocaleTimeString()}`);
+    
+    // Track tab navigation
+    analytics.trackNavigationEvent('BottomTab', tabName, 'tab_press');
+    analytics.trackUserAction('tab_navigation', { 
+      tab_name: tabName,
+      timestamp: new Date().toISOString()
+    });
   };
 
   const handleTabFocus = (tabName) => {
     console.log(`[TAB LOG] Tab focused: ${tabName} at ${new Date().toLocaleTimeString()}`);
+    
+    // Track tab focus (when actually navigated to)
+    analytics.trackScreenView(tabName, {
+      navigation_type: 'tab_focus',
+      timestamp: new Date().toISOString()
+    });
   };
 
   return (
@@ -129,51 +163,55 @@ export default function MainNavigator() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ color, size, focused }) => (
-          <View style={{
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 60,
-            height: 42,
-            borderRadius: 22,
-            backgroundColor: focused ? 'rgba(8, 145, 178, 0.15)' : 'transparent',
-            borderWidth: focused ? 1 : 0,
-            borderColor: focused ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
-            // Enhanced glassmorphism for focused icons
-            ...(focused && {
-              shadowColor: '#0891B2',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 12,
-              elevation: 8,
-              // Inner glow effect
-              backgroundColor: 'rgba(8, 145, 178, 0.1)',
-              backdropFilter: 'blur(10px)',
-            }),
-          }}>
-            <Ionicons 
-              name={tabIcons[route.name]} 
-              size={focused ? 26 : 24} 
-              color={color} 
-              accessibilityLabel={route.name + ' tab icon'}
+          <View
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              width: 60,
+              height: 42,
+              borderRadius: 22,
+              backgroundColor: focused
+                ? "rgba(8, 145, 178, 0.15)"
+                : "transparent",
+              borderWidth: focused ? 1 : 0,
+              borderColor: focused ? "rgba(255, 255, 255, 0.3)" : "transparent",
+              // Enhanced glassmorphism for focused icons
+              ...(focused && {
+                shadowColor: "#0891B2",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
+                elevation: 8,
+                // Inner glow effect
+                backgroundColor: "rgba(8, 145, 178, 0.1)",
+                backdropFilter: "blur(10px)",
+              }),
+            }}
+          >
+            <Ionicons
+              name={tabIcons[route.name]}
+              size={focused ? 26 : 24}
+              color={color}
+              accessibilityLabel={route.name + " tab icon"}
             />
           </View>
         ),
-        tabBarActiveTintColor: '#0891B2',
-        tabBarInactiveTintColor: '#6B7280', // Slightly darker for better contrast
+        tabBarActiveTintColor: "#0891B2",
+        tabBarInactiveTintColor: "#6B7280", // Slightly darker for better contrast
         tabBarStyle: {
-          display: route.name === 'Quran' ? getTabBarDisplay(route) : 'flex',
-          position: 'absolute',
+          display: (route.name === "Quran" || route.name === "Home") ? getTabBarDisplay(route) : "flex",
+          position: "absolute",
           bottom: 0, // Stick to bottom, no floating
           left: 0,
           right: 0,
-          backgroundColor: 'transparent',
+          backgroundColor: "transparent",
           borderRadius: 0, // No border radius for full bottom coverage
           borderWidth: 0,
           height: 85,
           paddingBottom: 25, // More padding for safe area
           paddingTop: 15,
           paddingHorizontal: 20,
-          shadowColor: 'rgba(0, 0, 0, 0.25)', // Keep strong shadow for depth
+          shadowColor: "rgba(0, 0, 0, 0.25)", // Keep strong shadow for depth
           shadowOffset: {
             width: 0,
             height: -8, // Upward shadow for stuck-to-bottom effect
@@ -181,25 +219,25 @@ export default function MainNavigator() {
           shadowOpacity: 0.3,
           shadowRadius: 25, // Large blur for glassmorphism
           elevation: 15,
-          overflow: 'hidden',
+          overflow: "hidden",
         },
         tabBarBackground: () => (
           <BlurView
             intensity={100} // Maximum blur intensity for glassmorphism
             tint="light"
             style={{
-              position: 'absolute',
+              position: "absolute",
               top: 0,
               left: 0,
               bottom: 0,
               right: 0,
-              backgroundColor: 'rgba(255, 255, 255, 0.1)', // Low opacity for true glass effect
-              backdropFilter: 'blur(40px)', // Strong blur
+              backgroundColor: "rgba(255, 255, 255, 0.1)", // Low opacity for true glass effect
+              backdropFilter: "blur(40px)", // Strong blur
               borderRadius: 0, // No border radius to match container
               // Remove top border for cleaner look
               borderTopWidth: 0,
               // Inner highlight for glass effect
-              shadowColor: 'rgba(255, 255, 255, 0.5)',
+              shadowColor: "rgba(255, 255, 255, 0.5)",
               shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.8,
               shadowRadius: 2,
@@ -207,7 +245,7 @@ export default function MainNavigator() {
           />
         ),
         tabBarLabelStyle: {
-          fontWeight: '700',
+          fontWeight: "700",
           fontSize: 12,
           marginTop: 2,
           letterSpacing: 0.5,
@@ -218,28 +256,40 @@ export default function MainNavigator() {
         focus: () => handleTabFocus(route.name),
       })}
     >
-      <Tab.Screen 
-        name="Home" 
-        component={HomeScreen}
+      <Tab.Screen
+        name="Home"
+        component={HomeNavigator}
         listeners={({ navigation, route }) => ({
-          tabPress: () => console.log('[TAB] Home tab pressed'),
-          focus: () => console.log('[TAB] Home tab focused'),
+          tabPress: () => console.log("[TAB] Home tab pressed"),
+          focus: () => console.log("[TAB] Home tab focused"),
         })}
       />
-      <Tab.Screen 
-        name="Quran" 
+      <Tab.Screen
+        name="Quran"
         component={QuranNavigator}
         listeners={({ navigation, route }) => ({
-          tabPress: () => console.log('[TAB] Quran tab pressed'),
-          focus: () => console.log('[TAB] Quran tab focused'),
+          tabPress: () => console.log("[TAB] Quran tab pressed"),
+          focus: () => console.log("[TAB] Quran tab focused"),
         })}
       />
-      <Tab.Screen 
-        name="Streak" 
+
+      <Tab.Screen
+        name="Streak"
         component={StreakScreen}
         listeners={({ navigation, route }) => ({
-          tabPress: () => console.log('[TAB] Streak tab pressed'),
-          focus: () => console.log('[TAB] Streak tab focused'),
+          tabPress: () => console.log("[TAB] Streak tab pressed"),
+          focus: () => console.log("[TAB] Streak tab focused"),
+        })}
+      />
+      <Tab.Screen
+        name="AskDoubt"
+        component={AskDoubtScreen}
+        options={{
+          tabBarLabel: "Ask Doubt",
+        }}
+        listeners={({ navigation, route }) => ({
+          tabPress: () => console.log("[TAB] Ask Doubt tab pressed"),
+          focus: () => console.log("[TAB] Ask Doubt tab focused"),
         })}
       />
     </Tab.Navigator>

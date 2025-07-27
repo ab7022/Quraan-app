@@ -7,6 +7,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { loadStreak, loadSavedContacts } from '../store/streakSlice';
 import FriendsStreak from '../components/FriendsStreak';
 import Last30DaysStreak from '../components/Last30DaysStreak';
+import analytics from '../services/analyticsService';
 
 export default function StreakScreen({ navigation }) {
   const { streak, contacts, contactsLoaded } = useSelector(s => s.streak);
@@ -15,6 +16,14 @@ export default function StreakScreen({ navigation }) {
   
   useEffect(() => {
     console.log('[STREAK SCREEN] Component mounted, current streak:', streak);
+    
+    // Track screen view with streak data
+    analytics.trackScreenView('StreakScreen', {
+      current_streak: streak,
+      has_contacts: contacts.length > 0,
+      contacts_count: contacts.length,
+    });
+    
     dispatch(loadStreak());
     dispatch(loadSavedContacts());
     Animated.loop(

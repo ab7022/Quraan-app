@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import tw from 'twrnc';
 import { useSelector } from 'react-redux';
+import analytics from '../services/analyticsService';
 
 // Mapping of Surah number to starting page in Mushaf
 const surahToPageMapping = {
@@ -103,11 +104,22 @@ const ContinueReading = ({ navigation }) => {
   };
 
   const navigateToLastPage = () => {
+    // Track continue reading action
+    analytics.trackUserAction('continue_reading', {
+      last_read_type: lastReadPage.type,
+      last_read_id: lastReadPage.id,
+      last_read_page: lastReadPage.pageNumber,
+      last_read_name: lastReadPage.name,
+    });
+
     switch (lastReadPage.type) {
       case 'surah':
         // Navigate to the starting page of the surah
         const pageNumber = surahToPageMapping[lastReadPage.id] || 1;
         console.log('[CONTINUE READING] Navigating to Surah page:', pageNumber);
+        
+        analytics.trackNavigationEvent('ContinueReading', 'QuranPageScreen', 'continue_surah');
+        
         navigation.navigate('Quran', {
           screen: 'QuranPage',
           params: { initialPage: pageNumber }
@@ -116,10 +128,16 @@ const ContinueReading = ({ navigation }) => {
       case 'juz':
         // For juz, navigate to the Juz tab first
         console.log('[CONTINUE READING] Navigating to Juz tab');
+        
+        analytics.trackNavigationEvent('ContinueReading', 'JuzScreen', 'continue_juz');
+        
         navigation.navigate('Quran', { screen: 'QuranTabs', params: { screen: 'JuzList' } });
         break;
       case 'page':
         console.log('[CONTINUE READING] Navigating to specific page:', lastReadPage.pageNumber);
+        
+        analytics.trackNavigationEvent('ContinueReading', 'QuranPageScreen', 'continue_page');
+        
         navigation.navigate('Quran', {
           screen: 'QuranPage',
           params: { initialPage: lastReadPage.pageNumber || 1 }

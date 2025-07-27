@@ -16,7 +16,7 @@ const Last30DaysStreak = () => {
     if (isToday && hasRead) return 'bg-green-500 border-green-600';
     if (isToday && !hasRead) return 'bg-gray-300 dark:bg-gray-600 border-green-500 border-2';
     if (hasRead) return 'bg-green-400';
-    return 'bg-gray-200 dark:bg-gray-700';
+    return 'bg-gray-200 dark:bg-gray-700 border-red-400 border-2'; // Added red border for missed days
   };
 
   const getTextColor = (hasRead, isToday) => {
@@ -163,7 +163,7 @@ const Last30DaysStreak = () => {
           <Text style={tw`text-xs text-gray-500 dark:text-gray-400`}>Read</Text>
         </View>
         <View style={tw`flex-row items-center mr-4`}>
-          <View style={tw`w-3 h-3 bg-gray-200 dark:bg-gray-700 rounded-full mr-1`} />
+          <View style={tw`w-3 h-3 bg-gray-200 dark:bg-gray-700 border-2 border-red-400 rounded-full mr-1`} />
           <Text style={tw`text-xs text-gray-500 dark:text-gray-400`}>Missed</Text>
         </View>
         <View style={tw`flex-row items-center`}>

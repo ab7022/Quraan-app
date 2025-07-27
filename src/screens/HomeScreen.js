@@ -7,43 +7,97 @@ import { LinearGradient } from 'expo-linear-gradient';
 import tw from 'twrnc';
 import ContinueReading from '../components/ContinueReading';
 import DailyRecommendations from '../components/DailyRecommendations';
+import HifzCard from '../components/HifzCard';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { loadStreak, updateStreak } from '../store/streakSlice';
+import { loadStreak, updateStreak, getLast7DaysStreak } from '../store/streakSlice';
 import * as Animatable from 'react-native-animatable';
+import analytics from '../services/analyticsService';
 export default function HomeScreen() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const streak = useSelector(s => s.streak.streak);
+  const { streak, readingHistory } = useSelector(s => s.streak);
   const [refreshing, setRefreshing] = useState(false);
+  const [hifzRefreshKey, setHifzRefreshKey] = useState(0);
+
+  // Get last 7 days streak data
+  const last7Days = getLast7DaysStreak(readingHistory);
 
   useEffect(() => {
     console.log('[HOME SCREEN] Component mounted');
+    
+    // Track screen view
+    analytics.trackScreenView('HomeScreen', {
+      streak_count: streak,
+      has_reading_history: readingHistory.length > 0,
+    });
+    
     dispatch(loadStreak());
+    
+    // Auto-increment streak when app is opened (once per day)
+    const markDailyStreak = async () => {
+      try {
+        console.log('[HOME SCREEN] Checking if streak should be updated for app open');
+        dispatch(updateStreak());
+      } catch (error) {
+        console.log('[HOME SCREEN] Error updating streak on app open:', error);
+      }
+    };
+    
+    markDailyStreak();
     
     return () => {
       console.log('[HOME SCREEN] Component unmounting');
     };
   }, []);
 
+  // Add focus listener to refresh HifzCard when returning from other screens
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('[HOME SCREEN] Screen focused, refreshing HifzCard');
+      setHifzRefreshKey(prev => prev + 1);
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   const handleStreakPress = () => {
     console.log('[HOME SCREEN] Streak button pressed, current streak:', streak);
+    
+    // Track navigation event
+    analytics.trackNavigationEvent('HomeScreen', 'StreakScreen', 'button_tap');
+    analytics.trackUserAction('view_streak', { current_streak: streak });
+    
     navigation.navigate('Streak');
   };
 
   const handleQuranPress = () => {
     console.log('[HOME SCREEN] Quran button pressed');
+    
+    // Track navigation event
+    analytics.trackNavigationEvent('HomeScreen', 'QuranScreen', 'button_tap');
+    analytics.trackUserAction('start_reading', { from_screen: 'home' });
+    
     navigation.navigate('Quran');
   };
 
   const handleSurahsPress = () => {
     console.log('[HOME SCREEN] All Surahs button pressed');
+    
+    // Track navigation event
+    analytics.trackNavigationEvent('HomeScreen', 'SurahsScreen', 'button_tap');
+    analytics.trackUserAction('browse_surahs', { from_screen: 'home' });
+    
     navigation.navigate('Quran', { screen: 'QuranTabs', params: { screen: 'SurahsList' } });
   };
 
-  const handleJuzPress = () => {
-    console.log('[HOME SCREEN] Juz button pressed');
-    navigation.navigate('Quran', { screen: 'QuranTabs', params: { screen: 'JuzList' } });
+  const handleAskDoubtPress = () => {
+    console.log('[HOME SCREEN] Ask Doubt button pressed');
+    
+    // Track navigation event
+    analytics.trackNavigationEvent('HomeScreen', 'AskDoubtScreen', 'button_tap');
+    analytics.trackUserAction('ask_doubt', { from_screen: 'home' });
+    
+    navigation.navigate('AskDoubt');
   };
 
   return (
@@ -54,8 +108,9 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={() => { 
             console.log('[HOME SCREEN] Pull to refresh triggered');
             setRefreshing(true);
-            // Just refresh the streak data
+            // Refresh streak data and check for updates
             dispatch(loadStreak());
+            dispatch(updateStreak()); // Also check if streak should be updated
             setTimeout(() => setRefreshing(false), 1000);
           }} />
         }
@@ -84,26 +139,63 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Days of Week */}
+      {/* Compact Streak Section */}
       <View style={tw`px-6 mb-6`}>
-        <View style={tw`flex-row justify-between`}>
-          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-            <TouchableOpacity 
-              key={index}
-              style={tw`w-10 h-10 rounded-full items-center justify-center ${
-                index === new Date().getDay() 
-                  ? 'bg-emerald-500' 
-                  : 'bg-gray-100'
-              }`}
-            >
-              <Text style={tw`font-medium text-sm ${
-                index === new Date().getDay() ? 'text-white' : 'text-gray-600'
-              }`}>
-                {day}
+        <View style={tw`bg-white rounded-2xl p-4 shadow-sm border border-gray-100`}>
+          <View style={tw`flex-row items-center justify-between mb-3`}>
+            <Text style={tw`text-lg font-bold text-gray-900`}>
+              Last 7 Days 📊
+            </Text>
+            <View style={tw`flex-row items-center`}>
+              <Ionicons name="flame" size={16} color="#059669" />
+              <Text style={tw`text-sm font-medium text-emerald-600 ml-1`}>
+                {last7Days.filter(day => day.hasRead).length}/7
               </Text>
-            </TouchableOpacity>
-          ))}
+            </View>
+          </View>
+
+          {/* Compact Days Row */}
+          <View style={tw`flex-row justify-between mb-3`}>
+            {last7Days.map((day, index) => (
+              <View key={day.date} style={tw`items-center`}>
+                <Text style={tw`text-xs text-gray-500 mb-1`}>
+                  {day.dayName.charAt(0)}
+                </Text>
+                <View
+                  style={tw`w-7 h-7 rounded-full ${
+                    day.isToday && day.hasRead ? 'bg-emerald-500' :
+                    day.isToday && !day.hasRead ? 'bg-gray-300 border-emerald-500 border-2' :
+                    day.hasRead ? 'bg-emerald-400' : 'bg-gray-200 border-red-400 border-2'
+                  } items-center justify-center shadow-sm`}
+                >
+                  {day.hasRead ? (
+                    <Ionicons name="checkmark" size={12} color="white" />
+                  ) : day.isToday ? (
+                    <View style={tw`w-2 h-2 bg-emerald-500 rounded-full`} />
+                  ) : null}
+                </View>
+                <Text style={tw`text-xs ${
+                  day.hasRead || day.isToday ? 'text-emerald-600 font-medium' : 'text-gray-500'
+                } mt-1`}>
+                  {day.dayNumber}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Info Footer */}
+          <View style={tw`flex-row items-center justify-center pt-2 border-t border-gray-100`}>
+            <Ionicons name="information-circle" size={12} color="#059669" style={tw`mr-1`} />
+            <Text style={tw`text-xs text-gray-500`}>
+              Opening the app daily counts! 🔥
+            </Text>
+          </View>
         </View>
+      </View>
+
+      {/* Hifz Tracker Card */}
+      <View style={tw`px-6 mb-6`}>
+        <HifzCard key={hifzRefreshKey} navigation={navigation} />
       </View>
 
       {/* Quick Actions */}
@@ -130,11 +222,11 @@ export default function HomeScreen() {
             </LinearGradient>
           </TouchableOpacity>
           
-          {/* Surahs - Google Blue Gradient */}
+          {/* Ask Doubt - Google Blue Gradient */}
           <TouchableOpacity
-            onPress={handleSurahsPress}
+            onPress={handleAskDoubtPress}
             style={tw`w-[48%] rounded-2xl mb-3 shadow-lg`}
-            accessibilityLabel="Browse Surahs"
+            accessibilityLabel="Ask Islamic Questions"
             activeOpacity={0.8}
           >
             <LinearGradient
@@ -144,29 +236,9 @@ export default function HomeScreen() {
               style={tw`rounded-2xl p-4 items-center`}
             >
               <View style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center mb-3`}>
-                <FontAwesome5 name="quran" size={20} color="white" />
+                <Ionicons name="chatbubble-ellipses-outline" size={24} color="white" />
               </View>
-              <Text style={tw`text-sm font-semibold text-white`}>Surahs</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          {/* Juz - Google Orange/Red Gradient */}
-          <TouchableOpacity
-            onPress={handleJuzPress}
-            style={tw`w-[48%] rounded-2xl mb-3 shadow-lg`}
-            accessibilityLabel="Browse Juz"
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={['#FBBF24', '#F59E0B', '#D97706']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={tw`rounded-2xl p-4 items-center`}
-            >
-              <View style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center mb-3`}>
-                <MaterialCommunityIcons name="bookmark-box-multiple" size={24} color="white" />
-              </View>
-              <Text style={tw`text-sm font-semibold text-white`}>Juz</Text>
+              <Text style={tw`text-sm font-semibold text-white`}>Ask Doubt</Text>
             </LinearGradient>
           </TouchableOpacity>
 

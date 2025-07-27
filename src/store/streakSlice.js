@@ -412,6 +412,32 @@ export const loadSavedContacts = () => async (dispatch) => {
   }
 };
 
+// Get streak data for the last 7 days (including today)
+export const getLast7DaysStreak = (readingHistory) => {
+  const last7Days = [];
+  const today = new Date();
+  
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+    const dayNumber = date.getDate();
+    const hasRead = Boolean(readingHistory && readingHistory[dateStr]);
+    const isToday = i === 0;
+    
+    last7Days.push({
+      date: dateStr,
+      dayName,
+      dayNumber,
+      hasRead,
+      isToday,
+    });
+  }
+  
+  return last7Days;
+};
+
 // Get streak data for the last 30 days
 export const getLast30DaysStreak = (readingHistory) => {
   const last30Days = [];

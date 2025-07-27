@@ -4,6 +4,7 @@ import tw from 'twrnc';
 import SurahCard from '../components/SurahCard';
 import Shimmer from '../components/Shimmer';
 import { useNavigation } from '@react-navigation/native';
+import analytics from '../services/analyticsService';
 
 // Mapping of Surah number to starting page in Mushaf
 const surahToPageMapping = {
@@ -27,6 +28,11 @@ export default function SurahsScreen() {
   const navigation = useNavigation();
 
   useEffect(() => {
+    // Track screen view
+    analytics.trackScreenView('SurahsScreen', {
+      total_surahs: 114,
+    });
+    
     fetchSurahs();
   }, []);
 

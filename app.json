@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Qur’an App",
+    "name": "Qur'an App",
     "slug": "quran-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -36,6 +36,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "experiments": {
+      "tsconfigPaths": true
     },
     "extra": {
       "eas": {

@@ -4,6 +4,7 @@ import tw from 'twrnc';
 import JuzCard from '../components/JuzCard';
 import Shimmer from '../components/Shimmer';
 import { useNavigation } from '@react-navigation/native';
+import analytics from '../services/analyticsService';
 
 // Mapping of Juz number to starting page in Mushaf
 const juzToPageMapping = {
@@ -18,6 +19,11 @@ export default function JuzScreen() {
   const navigation = useNavigation();
 
   useEffect(() => {
+    // Track screen view
+    analytics.trackScreenView('JuzScreen', {
+      total_juz: 30,
+    });
+    
     fetchJuz();
   }, []);
 
