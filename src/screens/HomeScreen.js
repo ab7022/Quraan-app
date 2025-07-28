@@ -97,9 +97,10 @@ export default function HomeScreen() {
     console.log('[HOME SCREEN] Streak button pressed, current streak:', streak);
     
     // Track navigation event
-    analytics.trackNavigationEvent('HomeScreen', 'StreakScreen', 'button_tap');
+    analytics.trackNavigationEvent('HomeScreen', 'StreakScreen', 'streak_button_tap');
     analytics.trackUserAction('view_streak', { current_streak: streak });
     
+    // Navigate to dedicated Streak screen
     navigation.navigate('Streak');
   };
 

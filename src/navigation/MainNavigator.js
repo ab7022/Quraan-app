@@ -17,6 +17,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import AskDoubtScreen from '../screens/AskDoubtScreen';
 import HifzScreen from '../screens/HifzScreen';
 import LearnQuranScreen from '../screens/LearnQuranScreen';
+import StreakScreen from '../screens/StreakScreen';
 import analytics from '../services/analyticsService';
 
 const Tab = createBottomTabNavigator();
@@ -98,6 +99,7 @@ function HomeNavigator() {
       <Stack.Screen name="HomeMain" component={HomeScreen} />
       <Stack.Screen name="Hifz" component={HifzScreen} />
       <Stack.Screen name="LearnQuran" component={LearnQuranScreen} />
+      <Stack.Screen name="Streak" component={StreakScreen} />
     </Stack.Navigator>
   );
 }

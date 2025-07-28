@@ -4,9 +4,9 @@
     "slug": "quran-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo2.png",
+    "icon": "./assets/logo2.jpg",
     "splash": {
-      "image": "./assets/logo2.png",
+      "image": "./assets/logo2.jpg",
       "resizeMode": "cover",
       "backgroundColor": "#FAF3E7"
     },
@@ -23,7 +23,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo2.png",
+        "foregroundImage": "./assets/logo2.jpg",
         "backgroundColor": "#FAF3E7"
       },
       "package": "com.quranapp.mobile"

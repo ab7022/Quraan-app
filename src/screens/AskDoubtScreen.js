@@ -404,130 +404,142 @@ export default function AskDoubtScreen() {
   );
 
   return (
-    <View style={tw`flex-1 bg-amber-50 dark:bg-gray-900`}>
-      <StatusBar backgroundColor="#FFFBEB" barStyle="dark-content" translucent={false} />
-      <SafeAreaView style={tw`flex-1`}>
-        
-        <View style={tw`bg-white dark:bg-gray-800 border-b border-amber-200 dark:border-gray-700 px-4 py-3`}>
-        <View style={tw`flex-row items-center`}>
-          <View style={tw`w-10 h-10 bg-amber-600 rounded-full items-center justify-center mr-3`}>
-            <Ionicons name="person" size={20} color="white" />
-          </View>
-          <View style={tw`flex-1`}>
-            <Text style={tw`text-lg font-bold text-amber-900 dark:text-amber-100`}>
-              Islamic Scholar Chat
-            </Text>
-            <Text style={tw`text-sm text-amber-600 dark:text-amber-400`}>
-              Ask your Islamic questions
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => {
-              Alert.alert(
-                'Clear Chat History',
-                'Are you sure you want to clear all chat messages? This action cannot be undone.',
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Clear', style: 'destructive', onPress: clearChatHistory }
-                ]
-              );
-            }}
-            style={tw`w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-full items-center justify-center mr-2`}
-          >
-            <Ionicons name="trash-outline" size={16} color="#92400e" />
-          </TouchableOpacity>
-          <View style={tw`w-3 h-3 bg-green-500 rounded-full`} />
-        </View>
-      </View>
-
-      {/* Chat Messages */}
-      {isLoading ? (
-        <View style={tw`flex-1 items-center justify-center`}>
-          <View style={tw`animate-spin`}>
-            <Ionicons name="hourglass" size={32} color="#92400e" />
-          </View>
-          <Text style={tw`text-amber-800 mt-2`}>Loading chat history...</Text>
-        </View>
-      ) : (
-        <FlatList
-          ref={flatListRef}
-          data={chatMessages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          style={tw`flex-1`}
-          contentContainerStyle={tw`py-4`}
-          showsVerticalScrollIndicator={false}
-          ListFooterComponent={isTyping ? renderTypingIndicator : null}
-        />
-      )}
-
-      {/* Quick Questions */}
-      <View style={tw`px-4 py-2`}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={tw`flex-row gap-2`}>
-            {[
-              'Prayer times',
-              'Wudu steps',
-              'Quran recitation',
-              'Zakat calculation',
-              'Hajj rituals'
-            ].map((question) => (
-              <TouchableOpacity
-                key={question}
-                onPress={() => setMessage(question)}
-                style={tw`bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-full px-3 py-2`}
+    <SafeAreaView style={tw`flex-1`}>
+      <View style={tw`flex-1 bg-amber-50 dark:bg-gray-900`}>
+        <View
+          style={tw`bg-white dark:bg-gray-800 border-b border-amber-200 dark:border-gray-700 px-4 py-3`}
+        >
+          <View style={tw`flex-row items-center`}>
+            <View
+              style={tw`w-10 h-10 bg-amber-600 rounded-full items-center justify-center mr-3`}
+            >
+              <Ionicons name="person" size={20} color="white" />
+            </View>
+            <View style={tw`flex-1`}>
+              <Text
+                style={tw`text-lg font-bold text-amber-900 dark:text-amber-100`}
               >
-                <Text style={tw`text-amber-800 dark:text-amber-200 text-sm`}>
-                  {question}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-      </View>
-
-      {/* Message Input */}
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
-        <View style={tw`bg-white dark:bg-gray-800 border-t border-amber-200 dark:border-gray-700 px-4 py-3 pb-24`}>
-          <View style={tw`flex-row items-end`}>
-            <View style={tw`flex-1 bg-amber-50 dark:bg-gray-700 rounded-2xl border border-amber-200 dark:border-gray-600 mr-3`}>
-              <TextInput
-                style={tw`px-4 py-3 text-amber-900 dark:text-amber-100 text-base max-h-24`}
-                placeholder="Ask your Islamic question..."
-                placeholderTextColor="#92400e"
-                value={message}
-                onChangeText={setMessage}
-                multiline
-                textAlignVertical="top"
-                maxLength={1000}
-              />
+                Islamic Scholar Chat
+              </Text>
+              <Text style={tw`text-sm text-amber-600 dark:text-amber-400`}>
+                Ask your Islamic questions
+              </Text>
             </View>
             <TouchableOpacity
-              onPress={sendMessage}
-              disabled={isSending || !message.trim()}
-              style={[
-                tw`w-12 h-12 bg-amber-600 rounded-full items-center justify-center`,
-                (isSending || !message.trim()) && tw`opacity-50`
-              ]}
+              onPress={() => {
+                Alert.alert(
+                  "Clear Chat History",
+                  "Are you sure you want to clear all chat messages? This action cannot be undone.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Clear",
+                      style: "destructive",
+                      onPress: clearChatHistory,
+                    },
+                  ]
+                );
+              }}
+              style={tw`w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-full items-center justify-center mr-2`}
             >
-              {isSending ? (
-                <View style={tw`animate-spin`}>
-                  <Ionicons name="hourglass" size={24} color="white" />
-                </View>
-              ) : (
-                <Ionicons name="send" size={24} color="white" />
-              )}
+              <Ionicons name="trash-outline" size={16} color="#92400e" />
             </TouchableOpacity>
+            <View style={tw`w-3 h-3 bg-green-500 rounded-full`} />
           </View>
         </View>
-      </KeyboardAvoidingView>
-      </SafeAreaView>
-      
-      {/* Rate Limit Status Component for debugging */}
-      <RateLimitStatus />
-    </View>
+
+        {/* Chat Messages */}
+        {isLoading ? (
+          <View style={tw`flex-1 items-center justify-center`}>
+            <View style={tw`animate-spin`}>
+              <Ionicons name="hourglass" size={32} color="#92400e" />
+            </View>
+            <Text style={tw`text-amber-800 mt-2`}>Loading chat history...</Text>
+          </View>
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={chatMessages}
+            renderItem={renderMessage}
+            keyExtractor={(item) => item.id}
+            style={tw`flex-1`}
+            contentContainerStyle={tw`py-4`}
+            showsVerticalScrollIndicator={false}
+            ListFooterComponent={isTyping ? renderTypingIndicator : null}
+          />
+        )}
+
+        {/* Quick Questions */}
+        <View style={tw`px-4 py-2`}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={tw`flex-row gap-2`}>
+              {[
+                "Prayer times",
+                "Wudu steps",
+                "Quran recitation",
+                "Zakat calculation",
+                "Hajj rituals",
+              ].map((question) => (
+                <TouchableOpacity
+                  key={question}
+                  onPress={() => setMessage(question)}
+                  style={tw`bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-full px-3 py-2`}
+                >
+                  <Text style={tw`text-amber-800 dark:text-amber-200 text-sm`}>
+                    {question}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
+
+        {/* Message Input */}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        >
+          <View
+            style={tw`bg-white dark:bg-gray-800 border-t border-amber-200 dark:border-gray-700 px-4 py-3 pb-24`}
+          >
+            <View style={tw`flex-row items-end`}>
+              <View
+                style={tw`flex-1 bg-amber-50 dark:bg-gray-700 rounded-2xl border border-amber-200 dark:border-gray-600 mr-3`}
+              >
+                <TextInput
+                  style={tw`px-4 py-3 text-amber-900 dark:text-amber-100 text-base max-h-24`}
+                  placeholder="Ask your Islamic question..."
+                  placeholderTextColor="#92400e"
+                  value={message}
+                  onChangeText={setMessage}
+                  multiline
+                  textAlignVertical="top"
+                  maxLength={1000}
+                />
+              </View>
+              <TouchableOpacity
+                onPress={sendMessage}
+                disabled={isSending || !message.trim()}
+                style={[
+                  tw`w-12 h-12 bg-amber-600 rounded-full items-center justify-center`,
+                  (isSending || !message.trim()) && tw`opacity-50`,
+                ]}
+              >
+                {isSending ? (
+                  <View style={tw`animate-spin`}>
+                    <Ionicons name="hourglass" size={24} color="white" />
+                  </View>
+                ) : (
+                  <Ionicons name="send" size={24} color="white" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+
+        {/* Rate Limit Status Component for debugging */}
+        <RateLimitStatus />
+      </View>
+    </SafeAreaView>
   );
 }

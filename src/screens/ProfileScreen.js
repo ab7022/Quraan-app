@@ -323,24 +323,26 @@ export default function ProfileScreen({ navigation }) {
       </View>
 
       <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false}>
-        {/* Profile Info */}
+        {/* Compact Profile Info */}
         <View style={tw`bg-white dark:bg-gray-800 mx-4 mt-4 rounded-xl shadow-sm`}>
           <TouchableOpacity onPress={handleEditName} activeOpacity={0.7}>
-            <View style={tw`items-center py-6`}>
-              <View style={tw`w-20 h-20 rounded-full bg-green-100 dark:bg-green-900 items-center justify-center mb-4`}>
-                <Ionicons name="person" size={40} color="#059669" />
+            <View style={tw`flex-row items-center py-3 px-2`}> 
+              <View style={tw`w-12 h-12 rounded-full bg-green-100 dark:bg-green-900 items-center justify-center mr-3`}>
+                <Ionicons name="person" size={28} color="#059669" />
               </View>
-              <Text style={tw`text-xl font-bold text-gray-900 dark:text-gray-100 mb-1`}>
-                {userName || 'Quran Reader'}
-              </Text>
-              <Text style={tw`text-sm text-gray-500 dark:text-gray-400 mb-1`}>
-                {lastReadPage ? `Last read: ${lastReadPage.name}` : 'Start your journey today'}
-              </Text>
-              {userName && (
-                <Text style={tw`text-xs text-blue-500 dark:text-blue-400`}>
-                  Tap to edit name
+              <View style={tw`flex-1`}> 
+                <Text style={tw`text-base font-bold text-gray-900 dark:text-gray-100`}>
+                  {userName || 'Quran Reader'}
                 </Text>
-              )}
+                <Text style={tw`text-xs text-gray-500 dark:text-gray-400`}>
+                  {lastReadPage ? `Last read: ${lastReadPage.name}` : 'Start your journey today'}
+                </Text>
+                {userName && (
+                  <Text style={tw`text-xs text-blue-500 dark:text-blue-400 mt-0.5`}>
+                    Tap to edit name
+                  </Text>
+                )}
+              </View>
             </View>
           </TouchableOpacity>
         </View>
@@ -380,7 +382,7 @@ export default function ProfileScreen({ navigation }) {
 
         {/* Support */}
         <SectionHeader title="Support" />
-        <View style={tw`bg-white dark:bg-gray-800 mx-4 rounded-xl shadow-sm overflow-hidden mb-6`}>
+        <View style={tw`bg-white dark:bg-gray-800 mx-4 rounded-xl shadow-sm overflow-hidden mb-20`}>
           <ProfileItem
             icon="help-circle-outline"
             title="Help & Support"
@@ -403,7 +405,10 @@ export default function ProfileScreen({ navigation }) {
             icon="information-circle-outline"
             title="About"
             subtitle="Version 1.0.0"
-            onPress={() => Alert.alert('About', 'Quran App v1.0.0\nA beautiful way to read and learn the Quran.')}
+            onPress={() => Alert.alert(
+              'About',
+              'Quran App v1.0.0\nA beautiful way to read and learn the Quran.\n\nDeveloped by Abdul Bayees\nContact: bayees1@gmail.com'
+            )}
           />
         </View>
       </ScrollView>
