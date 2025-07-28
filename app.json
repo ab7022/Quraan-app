@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Learn Quran",
-    "slug": "Learn-Quran",
+    "slug": "quran-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo2.png",
@@ -38,6 +38,7 @@
       "eas": {
         "projectId": "1607f79d-b140-4b17-9f12-a91de51d7e88"
       }
-    }
+    },
+    "owner": "bayees2003"
   }
 }
