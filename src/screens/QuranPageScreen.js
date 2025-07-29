@@ -294,37 +294,27 @@ export default function QuranPageScreen({ route }) {
 
   const animatePageTransition = (newPage, isNext) => {
     setIsTransitioning(true);
-    
-    // Use InteractionManager to ensure smooth animation performance
     InteractionManager.runAfterInteractions(() => {
-      // Correct slide direction: swipe right = page comes from left (negative), swipe left = page comes from right (positive)
       const slideDirection = isNext ? -width : width;
-      
-      // Smooth fade out current page
       Animated.timing(fadeAnim, {
         toValue: 0,
-        duration: 200, // Longer fade out for more visible effect
+        duration: 80, // much faster fade out
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }).start(() => {
-        // Instantly change page and position
         setCurrentPage(newPage);
-        slideAnim.setValue(slideDirection * 0.3); // Start further for more dramatic entrance
-        fadeAnim.setValue(0); // Start completely transparent
-        
-        // Smooth fade in and slide animation
+        slideAnim.setValue(slideDirection * 0.3);
+        fadeAnim.setValue(0);
         Animated.parallel([
-          // Spring slide to center - very smooth and natural
           Animated.spring(slideAnim, {
             toValue: 0,
-            tension: 80, // Slightly lower tension for smoother feel
-            friction: 12, // Higher friction for controlled motion
+            tension: 120, // snappier
+            friction: 18, // snappier
             useNativeDriver: true,
           }),
-          // Smooth fade in with easing
           Animated.timing(fadeAnim, {
             toValue: 1,
-            duration: 300, // Longer fade in for smooth appearance
+            duration: 120, // much faster fade in
             easing: Easing.out(Easing.quad),
             useNativeDriver: true,
           }),
@@ -548,8 +538,7 @@ export default function QuranPageScreen({ route }) {
       </View>
 
       {/* Mushaf Page Image with Page Turn Animation and Swipe Gestures */}
-      <PanGestureHandler 
-        onGestureEvent={onGestureEvent}
+      <PanGestureHandler
         onHandlerStateChange={onHandlerStateChange}
         minDist={30}
       >
@@ -600,7 +589,7 @@ export default function QuranPageScreen({ route }) {
             source={{ uri: getPageImageUrl(currentPage) }}
             style={{
               width: width,
-              height: height * 0.80, // Increased height to 85% for fuller coverage
+              height: height * 0.90, // Increased height to 85% for fuller coverage
               resizeMode: 'contain',
               backgroundColor: '#FFFBEB',
             }}
@@ -613,42 +602,25 @@ export default function QuranPageScreen({ route }) {
       </Animated.View>
       </PanGestureHandler>
 
-      {currentPage > 1 && !isTransitioning && (
-        <TouchableOpacity
-          onPress={nextPage}
-          style={[
-            tw`absolute top-0 left-0 w-16 justify-center items-center bg-transparent`,
-            { height: height * 0.85, marginTop: 80 } // Match image height and header offset
-          ]}
-          activeOpacity={0.1}
-        >
-          <View style={tw`bg-black/20 rounded-full p-3`}>
-            <Ionicons name="chevron-back" size={24} color="white" />
-          </View>
-        </TouchableOpacity>
-      )}
 
-      {/* Right Side Button (Next Page) */}
-      {currentPage < totalPages && !isTransitioning && (
-        <TouchableOpacity
-          onPress={prevPage}
-          style={[
-            tw`absolute top-0 right-0 w-16 justify-center items-center bg-transparent`,
-            { height: height * 0.85, marginTop: 80 } // Match image height and header offset
-          ]}
-          activeOpacity={0.1}
-        >
-          <View style={tw`bg-black/20 rounded-full p-3`}>
-            <Ionicons name="chevron-forward" size={24} color="white" />
-          </View>
-        </TouchableOpacity>
-      )}
 
-      {/* Compact Explain Button */}
-      <View style={tw`absolute bottom-6 left-0 right-0 px-20`}>
+
+      {/* Compact Explain Button with Next/Prev */}
+      <View style={tw`absolute bottom-6 left-0 right-0 flex-row items-center justify-center px-6`}>
+        {/* Previous Page Button */}
+        <TouchableOpacity
+          onPress={isTransitioning ? undefined : nextPage}
+          disabled={isTransitioning || currentPage >= totalPages}
+          style={tw`bg-amber-200 rounded-full p-3 mr-3 ${currentPage >= totalPages ? 'opacity-40' : ''}`}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="chevron-back" size={22} color="#92400e" />
+        </TouchableOpacity>
+
+        {/* Explain Button */}
         <TouchableOpacity
           onPress={handleAIExplanation}
-          style={tw`rounded-full shadow-lg`}
+          style={tw`rounded-full shadow-lg flex-1 mx-1`}
           activeOpacity={0.8}
         >
           <LinearGradient
@@ -658,6 +630,16 @@ export default function QuranPageScreen({ route }) {
             <Ionicons name="sparkles" size={16} color="white" style={tw`mr-2`} />
             <Text style={tw`text-white font-semibold text-base`}>Explain</Text>
           </LinearGradient>
+        </TouchableOpacity>
+
+        {/* Next Page Button */}
+        <TouchableOpacity
+          onPress={isTransitioning ? undefined : prevPage}
+          disabled={isTransitioning || currentPage <= 1}
+          style={tw`bg-amber-200 rounded-full p-3 ml-3 ${currentPage <= 1 ? 'opacity-40' : ''}`}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="chevron-forward" size={22} color="#92400e" />
         </TouchableOpacity>
       </View>
 

@@ -104,19 +104,19 @@ export default function SurahsScreen() {
           </View>
         </View>
         
-        {/* Search Bar */}
-        <View style={tw`bg-gray-50 rounded-xl px-4 py-3 flex-row items-center`}>
-          <Ionicons name="search" size={20} color="#6B7280" style={tw`mr-3`} />
+        {/* Compact Search Bar */}
+        <View style={tw`bg-gray-50 rounded-lg px-2 py-1 flex-row items-center`}>
+          <Ionicons name="search" size={16} color="#6B7280" style={tw`mr-2`} />
           <TextInput
-            style={tw`flex-1 text-gray-900 text-base`}
-            placeholder="Search surahs by name, number, or meaning..."
+            style={tw`flex-1 text-gray-900 text-sm py-1`}
+            placeholder="Search surahs..."
             placeholderTextColor="#9CA3AF"
             value={searchText}
             onChangeText={handleSearch}
           />
           {searchText.length > 0 && (
             <TouchableOpacity onPress={() => handleSearch('')}>
-              <Ionicons name="close-circle" size={20} color="#6B7280" />
+              <Ionicons name="close-circle" size={16} color="#6B7280" />
             </TouchableOpacity>
           )}
         </View>

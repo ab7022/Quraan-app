@@ -1,6 +1,20 @@
 import "react-native-url-polyfill/auto"
 
 import React, { useEffect, useState } from 'react';
+import * as Updates from 'expo-updates';
+// Auto-update function
+const updateApp = async () => {
+  try {
+    const update = await Updates.checkForUpdateAsync();
+    if (update.isAvailable) {
+      await Updates.fetchUpdateAsync();
+      await Updates.reloadAsync(); // Reload app with new update
+    }
+  } catch (e) {
+    // Optionally log or ignore update errors
+    console.log('Update check failed:', e);
+  }
+};
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { Provider } from 'react-redux';
 import { useColorScheme, AppState } from 'react-native';
@@ -22,7 +36,10 @@ export default function App() {
   useEffect(() => {
     // Initialize analytics when app starts
     analytics.startNewSession();
-    
+
+    // Auto-update on app start
+    updateApp();
+
     // Check if onboarding is completed
     checkOnboardingStatus();
 
@@ -30,6 +47,7 @@ export default function App() {
     const handleAppStateChange = (nextAppState) => {
       if (nextAppState === 'active') {
         analytics.startNewSession();
+        updateApp(); // Also check for updates when app comes to foreground
       } else if (nextAppState === 'background') {
         analytics.endSession();
       }
