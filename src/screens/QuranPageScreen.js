@@ -609,8 +609,8 @@ export default function QuranPageScreen({ route }) {
       <View style={tw`absolute bottom-6 left-0 right-0 flex-row items-center justify-center px-6`}>
         {/* Previous Page Button */}
         <TouchableOpacity
-          onPress={isTransitioning ? undefined : nextPage}
-          disabled={isTransitioning || currentPage >= totalPages}
+          onPress={currentPage < totalPages ? nextPage : undefined}
+          disabled={currentPage >= totalPages}
           style={tw`bg-amber-200 rounded-full p-3 mr-3 ${currentPage >= totalPages ? 'opacity-40' : ''}`}
           activeOpacity={0.7}
         >
@@ -634,8 +634,8 @@ export default function QuranPageScreen({ route }) {
 
         {/* Next Page Button */}
         <TouchableOpacity
-          onPress={isTransitioning ? undefined : prevPage}
-          disabled={isTransitioning || currentPage <= 1}
+          onPress={currentPage > 1 ? prevPage : undefined}
+          disabled={currentPage <= 1}
           style={tw`bg-amber-200 rounded-full p-3 ml-3 ${currentPage <= 1 ? 'opacity-40' : ''}`}
           activeOpacity={0.7}
         >

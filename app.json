@@ -9,7 +9,6 @@
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/1607f79d-b140-4b17-9f12-a91de51d7e88"
     },
-   
     "description": "Learn Quran with ease",
     "icon": "./assets/logo2.jpg",
     "splash": {
@@ -47,6 +46,9 @@
     "owner": "bayees2003",
     "runtimeVersion": {
       "policy": "appVersion"
-    }
+    },
+    "plugins": [
+      "expo-tracking-transparency"
+    ]
   }
 }
