@@ -7,13 +7,48 @@ import {
   StatusBar,
   TouchableOpacity,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
-import JuzCard from '../components/JuzCard';
-import Shimmer from '../components/Shimmer';
 import { useNavigation } from '@react-navigation/native';
 import analytics from '../services/analyticsService';
+
+const SectionHeader = ({ title }) => (
+  <View style={tw`px-4 py-2 bg-gray-100`}>
+    <Text style={tw`text-sm text-gray-500 uppercase font-normal tracking-wide`}>
+      {title}
+    </Text>
+  </View>
+);
+
+const JuzItem = ({ item, onPress }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={tw`bg-white px-4 py-4 border-b border-gray-200`}
+    activeOpacity={0.3}
+  >
+    <View style={tw`flex-row items-center`}>
+      {/* Juz Number */}
+      <View style={tw`w-12 h-12 rounded-lg bg-gray-100 items-center justify-center mr-3`}>
+        <Text style={tw`text-lg font-semibold text-gray-700`}>
+          {item.juz_number}
+        </Text>
+      </View>
+
+      {/* Juz Info */}
+      <View style={tw`flex-1`}>
+        <Text style={tw`text-base font-medium text-black mb-1`}>
+          Juz {item.juz_number}
+        </Text>
+        <Text style={tw`text-sm text-gray-500`}>
+          Para {item.juz_number} • 20 pages
+        </Text>
+      </View>
+
+      {/* Chevron */}
+      <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+    </View>
+  </TouchableOpacity>
+);
 
 // Mapping of Juz number to starting page in Mushaf
 const juzToPageMapping = {
@@ -87,151 +122,6 @@ export default function JuzScreen() {
     navigation.navigate('QuranPage', { initialPage: pageNumber });
   };
 
-  return (
-    <SafeAreaView style={[tw`flex-1`, { backgroundColor: '#f2f2f7' }]}>
-      <StatusBar backgroundColor="#f2f2f7" barStyle="dark-content" />
-
-      <View style={tw`px-4 pt-4 pb-4`}>
-        <View
-          style={tw`flex flex-row justify-between align-center items-center mb-1 pl-4`}
-        >
-          <Text
-            style={[
-              tw`text-3xl font-bold text-gray-700 mb-0`,
-              { letterSpacing: -0.5 },
-            ]}
-          >
-            Juz
-          </Text>
-          <Text style={tw`text-gray-500 text-base font-medium`}>30 Parts</Text>
-        </View>
-      </View>
-
-      {/* Apple-Style Content */}
-      <View style={tw`flex-1 px-4 mb-12`}>
-        {loading ? (
-          <View style={tw`flex-1`}>
-            {Array.from({ length: 8 }).map((_, idx) => (
-              <View
-                key={idx}
-                style={[
-                  tw`bg-white rounded-2xl p-4 mb-3 mx-2`,
-                  {
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  },
-                ]}
-              >
-                <Shimmer height={60} style={tw`rounded-xl`} />
-              </View>
-            ))}
-          </View>
-        ) : (
-          <FlatList
-            data={juzList}
-            keyExtractor={(item, index) => `juz-${item.juz_number || index}`}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => handleJuzPress(item)}
-                style={tw`mb-3 mx-2`}
-                activeOpacity={0.6}
-              >
-                <View
-                  style={[
-                    tw`bg-white  rounded-2xl overflow-hidden`,
-                    {
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    },
-                  ]}
-                >
-                  <View style={tw`px-4 py-4`}>
-                    <View style={tw`flex-row items-center`}>
-                      {/* Apple-Style Number Circle */}
-                      <View
-                        style={[
-                          tw`w-10 h-10 rounded-full items-center justify-center mr-4`,
-                          { backgroundColor: '#34c759' },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            tw`text-white font-semibold`,
-                            { fontSize: 15 },
-                          ]}
-                        >
-                          {item.juz_number}
-                        </Text>
-                      </View>
-
-                      {/* Content */}
-                      <View style={tw`flex-1`}>
-                        <View
-                          style={tw`flex-row items-center justify-between mb-1`}
-                        >
-                          <Text
-                            style={[
-                              tw`text-gray-900 font-semibold`,
-                              { fontSize: 17, letterSpacing: -0.3 },
-                            ]}
-                          >
-                            Juz {item.juz_number}
-                          </Text>
-                          <Text style={tw`text-gray-400 text-sm font-medium`}>
-                            Page {juzToPageMapping[item.juz_number]}
-                          </Text>
-                        </View>
-
-                        <Text style={tw`text-gray-500 text-sm font-medium`}>
-                          {getJuzDescription(item.juz_number)}
-                        </Text>
-
-                        <View style={tw`flex-row items-center mt-2`}>
-                          <View
-                            style={[
-                              tw`px-2 py-1 rounded-lg`,
-                              { backgroundColor: '#e3f2fd' },
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                tw`text-xs font-medium`,
-                                { color: '#1976d2' },
-                              ]}
-                            >
-                              Part {item.juz_number}/30
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      {/* Apple-Style Chevron */}
-                      <View style={tw`ml-3`}>
-                        <Ionicons
-                          name="chevron-forward"
-                          size={18}
-                          color="#c7c7cc"
-                        />
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            )}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={tw`pb-6`}
-          />
-        )}
-      </View>
-    </SafeAreaView>
-  );
-
   // Helper function to get Juz description
   function getJuzDescription(juzNumber) {
     const descriptions = {
@@ -269,4 +159,46 @@ export default function JuzScreen() {
 
     return descriptions[juzNumber] || `Part ${juzNumber} of Quran`;
   }
+
+  return (
+    <SafeAreaView style={tw`flex-1 bg-gray-100`}>
+      <StatusBar backgroundColor="#f3f4f6" barStyle="dark-content" />
+
+      {loading ? (
+        <View style={tw`flex-1`}>
+          <SectionHeader title="Loading Juz" />
+          <View style={tw`bg-white border-t border-gray-200`}>
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <View key={idx} style={tw`px-4 py-4 border-b border-gray-200`}>
+                <View style={tw`flex-row items-center`}>
+                  <View style={tw`w-12 h-12 rounded-lg bg-gray-200 mr-3`} />
+                  <View style={tw`flex-1`}>
+                    <View style={tw`h-4 bg-gray-200 rounded mb-2 w-2/3`} />
+                    <View style={tw`h-3 bg-gray-200 rounded w-1/2`} />
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : (
+        <View style={tw`flex-1`}>
+          <SectionHeader title="30 Juz Parts" />
+          <FlatList
+            data={juzList}
+            keyExtractor={item => item.juz_number.toString()}
+            renderItem={({ item }) => (
+              <JuzItem
+                item={item}
+                onPress={() => handleJuzPress(item)}
+              />
+            )}
+            style={tw`bg-white border-t border-gray-200`}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={tw`pb-20`}
+          />
+        </View>
+      )}
+    </SafeAreaView>
+  );
 }

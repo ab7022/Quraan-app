@@ -156,7 +156,7 @@ export default function HomeScreen() {
             <View style={tw`flex-row items-center flex-1`}>
               <TouchableOpacity
                 style={tw`w-12 h-12  items-center justify-center mr-4 `}
-                onPress={() => navigation.navigate('Profile')}
+                onPress={() => navigation.navigate('Settings')}
                 activeOpacity={0.7}
               >
                 <View style={tw`w-11 h-11 rounded-full bg-gray-200 border-2 border-gray-300 items-center justify-center`}>
@@ -288,7 +288,7 @@ export default function HomeScreen() {
           <HifzCard key={hifzRefreshKey} navigation={navigation} />
         </View>
 
-        <View style={tw`px-6 mb-6`}>
+        <View style={tw`px-6 mb-4`}>
           <ContinueReading navigation={navigation} />
         </View>
 

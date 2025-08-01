@@ -21,33 +21,42 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadStreak, getLast7DaysStreak } from '../store/streakSlice';
 import analytics from '../services/analyticsService';
 
-const ProfileItem = ({
+const SettingsItem = ({
   icon,
   title,
   subtitle,
   onPress,
   showArrow = true,
   rightContent = null,
+  iconColor = "#007AFF",
+  iconBg = null,
 }) => (
   <TouchableOpacity
     onPress={onPress}
-    style={tw`bg-white dark:bg-gray-800 px-4 py-4 flex-row items-center justify-between border-b border-gray-100 dark:border-gray-700`}
-    activeOpacity={0.7}
+    style={tw`bg-white px-4 py-3 flex-row items-center justify-between border-b border-gray-200`}
+    activeOpacity={0.3}
   >
     <View style={tw`flex-row items-center flex-1`}>
-      <View
-        style={tw`w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900 items-center justify-center mr-3`}
-      >
-        <Ionicons name={icon} size={18} color="#3B82F6" />
-      </View>
-      <View style={tw`flex-1`}>
-        <Text
-          style={tw`text-base font-medium text-gray-900 dark:text-gray-100`}
+      {icon && (
+        <View
+          style={[
+            tw`w-7 h-7 rounded-lg items-center justify-center mr-3`,
+            { backgroundColor: iconBg || iconColor }
+          ]}
         >
+          <Ionicons 
+            name={icon} 
+            size={18} 
+            color={iconBg ? "white" : iconColor} 
+          />
+        </View>
+      )}
+      <View style={tw`flex-1`}>
+        <Text style={tw`text-base text-black font-normal`}>
           {title}
         </Text>
         {subtitle && (
-          <Text style={tw`text-sm text-gray-500 dark:text-gray-400 mt-0.5`}>
+          <Text style={tw`text-sm text-gray-500 mt-0.5`}>
             {subtitle}
           </Text>
         )}
@@ -55,29 +64,20 @@ const ProfileItem = ({
     </View>
     {rightContent ||
       (showArrow && (
-        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+        <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
       ))}
   </TouchableOpacity>
 );
 
-const SectionHeader = ({ title, onPress = null }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    style={tw`px-4 py-3 bg-gray-50 dark:bg-gray-900 ${onPress ? 'active:bg-gray-100 dark:active:bg-gray-800' : ''}`}
-    activeOpacity={onPress ? 0.7 : 1}
-  >
-    <View style={tw`flex-row items-center justify-between`}>
-      <Text
-        style={tw`text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide`}
-      >
-        {title}
-      </Text>
-      {onPress && <Ionicons name="create-outline" size={16} color="#9CA3AF" />}
-    </View>
-  </TouchableOpacity>
+const SectionHeader = ({ title }) => (
+  <View style={tw`px-4 py-2 bg-gray-50`}>
+    <Text style={tw`text-sm text-gray-500 uppercase font-normal tracking-wide`}>
+      {title}
+    </Text>
+  </View>
 );
 
-export default function ProfileScreen({ navigation }) {
+export default function SettingsScreen({ navigation }) {
   const { streak, totalDaysRead, longestStreak, lastReadPage, readingHistory } =
     useSelector(s => s.streak);
   const dispatch = useDispatch();
@@ -106,8 +106,8 @@ export default function ProfileScreen({ navigation }) {
   };
 
   useEffect(() => {
-    console.log('[PROFILE SCREEN] Component mounted');
-    analytics.trackScreenView('ProfileScreen', {
+    console.log('[SETTINGS SCREEN] Component mounted');
+    analytics.trackScreenView('SettingsScreen', {
       current_streak: streak,
       total_days_read: totalDaysRead,
     });
@@ -544,533 +544,421 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
   };
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-50 dark:bg-black`}>
-      {/* Header */}
-      <View
-        style={tw`bg-white dark:bg-gray-800 px-4 py-4 border-b border-gray-200 dark:border-gray-700`}
-      >
+    <SafeAreaView style={tw`flex-1 bg-gray-100`}>
+      {/* iOS-Style Header */}
+      <View style={tw`bg-gray-100 px-4 py-2`}>
         <View style={tw`flex-row items-center justify-between`}>
           <TouchableOpacity
             onPress={handleBackPress}
-            style={tw`p-2 rounded-full bg-gray-100 dark:bg-gray-700`}
+            style={tw`py-2`}
             accessibilityLabel="Go back"
           >
-            <Ionicons name="chevron-back" size={24} color="#6B7280" />
+            <View style={tw`flex-row items-center`}>
+              <Ionicons name="chevron-back" size={28} color="#007AFF" />
+              <Text style={tw`text-lg text-blue-500 ml-1`}>Back</Text>
+            </View>
           </TouchableOpacity>
 
-          <Text style={tw`text-xl font-bold text-gray-900 dark:text-gray-100`}>
-            Profile
+          <Text style={tw`text-lg font-semibold text-black`}>
+            Settings
           </Text>
 
-          <TouchableOpacity
-            onPress={handleShareApp}
-            style={tw`p-2 rounded-full bg-blue-50 dark:bg-blue-900`}
-            accessibilityLabel="Share app"
-          >
-            <Ionicons name="share-outline" size={24} color="#3B82F6" />
-          </TouchableOpacity>
+          <View style={tw`w-16`} />
         </View>
       </View>
 
       <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false}>
-        {/* Compact Profile Info */}
-        <View
-          style={tw`bg-white dark:bg-gray-800 mx-4 mt-4 rounded-xl shadow-sm`}
-        >
-          <TouchableOpacity onPress={handleEditName} activeOpacity={0.7}>
-            <View style={tw`flex-row items-center py-3 px-2`}>
-              <View
-                style={tw`w-12 h-12 rounded-full bg-green-100 dark:bg-green-900 items-center justify-center mr-3`}
-              >
-                <Ionicons name="person" size={28} color="#059669" />
+        {/* User Section */}
+        <View style={tw`mt-6`}>
+          <TouchableOpacity 
+            onPress={handleEditName} 
+            style={tw`bg-white px-4 py-4 border-b border-gray-200`}
+            activeOpacity={0.3}
+          >
+            <View style={tw`flex-row items-center`}>
+              <View style={tw`w-16 h-16 rounded-full bg-gray-300 items-center justify-center mr-4`}>
+                <Ionicons name="person" size={32} color="#666" />
               </View>
               <View style={tw`flex-1`}>
-                <Text
-                  style={tw`text-base font-bold text-gray-900 dark:text-gray-100`}
-                >
-                  {userName || 'Quran Reader'}
+                <Text style={tw`text-xl font-medium text-black mb-1`}>
+                  {userName || 'User'}
                 </Text>
-                <Text style={tw`text-xs text-gray-500 dark:text-gray-400`}>
-                  {lastReadPage
-                    ? `Last read: ${lastReadPage.name}`
-                    : 'Start your journey today'}
+                <Text style={tw`text-base text-gray-500`}>
+                  {lastReadPage ? `Last read: ${lastReadPage.name}` : 'Start your journey today'}
                 </Text>
-                {userName && (
-                  <Text
-                    style={tw`text-xs text-blue-500 dark:text-blue-400 mt-0.5`}
-                  >
-                    Tap to edit name
-                  </Text>
-                )}
+                <Text style={tw`text-sm text-blue-500 mt-1`}>
+                  {userName ? 'Tap to edit' : 'Tap to set name'}
+                </Text>
               </View>
             </View>
           </TouchableOpacity>
         </View>
 
-        {/* Personal Settings */}
-        <SectionHeader title="Personal" onPress={handleEditName} />
-        <View
-          style={tw`bg-white dark:bg-gray-800 mx-4 rounded-xl shadow-sm overflow-hidden`}
-        >
-          <ProfileItem
-            icon="person-outline"
-            title="Name"
-            subtitle={userName || 'Not set - tap to add'}
-            onPress={handleEditName}
-          />
-          <ProfileItem
-            icon="analytics-outline"
-            title="Reading Progress"
-            subtitle={`${streak} day streak • View detailed statistics`}
-            onPress={handleViewStreaks}
-          />
+        {/* Reading Progress Section */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="Reading Progress" />
+          <View style={tw`bg-white border-t border-gray-200`}>
+            <SettingsItem
+              icon="analytics"
+              iconBg="#FF3B30"
+              title="Statistics"
+              subtitle={`${streak} day streak • ${totalDaysRead} total days`}
+              onPress={handleViewStreaks}
+            />
+          </View>
         </View>
 
-        {/* Reading Settings */}
-        <SectionHeader title="Reading Settings" />
-        <View
-          style={tw`bg-white dark:bg-gray-800 mx-4 rounded-xl shadow-sm overflow-hidden`}
-        >
-          <ProfileItem
-            icon="book-outline"
-            title="Mushaf Style"
-            subtitle="Choose your preferred Mushaf layout"
-            onPress={() => navigation.navigate('MushafStyle')}
-          />
-       
+        {/* Reading Settings Section */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="Reading Settings" />
+          <View style={tw`bg-white border-t border-gray-200`}>
+            <SettingsItem
+              icon="book"
+              iconBg="#007AFF"
+              title="Mushaf Style"
+              subtitle="Choose your preferred layout"
+              onPress={() => navigation.navigate('MushafStyle')}
+            />
+          </View>
         </View>
 
-        {/* Support */}
-        <SectionHeader title="Support" />
-        <View
-          style={tw`bg-white dark:bg-gray-800 mx-4 rounded-xl shadow-sm overflow-hidden`}
-        >
-          <ProfileItem
-            icon="help-circle-outline"
-            title="Help & Support"
-            subtitle="WhatsApp or Email support"
-            onPress={handleHelpAndSupport}
-          />
-          <ProfileItem
-            icon="star-outline"
-            title="Rate the App"
-            subtitle="Share your feedback on Google Play Store"
-            onPress={handleRateApp}
-          />
-          <ProfileItem
-            icon="share-social-outline"
-            title="Share App"
-            subtitle="Tell others about this app"
-            onPress={handleShareApp}
-          />
-          <ProfileItem
-            icon="information-circle-outline"
-            title="About"
-            subtitle="Version 1.0.0"
-            onPress={() =>
-              Alert.alert(
-                'About',
-                'Quran App v1.0.0\nA beautiful way to read and learn the Quran.\n\nDeveloped by Abdul Bayees\nContact: bayees1@gmail.com'
-              )
-            }
-          />
+        {/* Support & Feedback Section */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="Support & Feedback" />
+          <View style={tw`bg-white border-t border-gray-200`}>
+            <SettingsItem
+              icon="help-circle"
+              iconBg="#34C759"
+              title="Help & Support"
+              subtitle="Get help via WhatsApp or Email"
+              onPress={handleHelpAndSupport}
+            />
+            <SettingsItem
+              icon="star"
+              iconBg="#FF9500"
+              title="Rate App"
+              subtitle="Share feedback on Google Play Store"
+              onPress={handleRateApp}
+            />
+            <SettingsItem
+              icon="share"
+              iconBg="#5856D6"
+              title="Share App"
+              subtitle="Tell others about this app"
+              onPress={handleShareApp}
+            />
+          </View>
         </View>
 
-        {/* Data Management */}
-        <SectionHeader title="Data Management" />
-        <View
-          style={tw`bg-white dark:bg-gray-800 mx-4 rounded-xl shadow-sm overflow-hidden mb-20`}
-        >
-          <ProfileItem
-            icon="trash-outline"
-            title="Delete All Data"
-            subtitle="Permanently remove all stored data"
-            onPress={handleDeleteAllData}
-          />
+        {/* About Section */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="About" />
+          <View style={tw`bg-white border-t border-gray-200`}>
+            <SettingsItem
+              icon="information-circle"
+              iconBg="#8E8E93"
+              title="About"
+              subtitle="Version 1.0.0"
+              onPress={() =>
+                Alert.alert(
+                  'About',
+                  'Quran App v1.0.0\nA beautiful way to read and learn the Quran.\n\nDeveloped by Abdul Bayees\nContact: bayees1@gmail.com'
+                )
+              }
+            />
+            <SettingsItem
+              icon="trash"
+              iconBg="#FF3B30"
+              title="Delete All Data"
+              subtitle="Permanently remove all stored data"
+              onPress={handleDeleteAllData}
+            />
+          </View>
         </View>
+
+        {/* Bottom Spacing */}
+        <View style={tw`h-20`} />
       </ScrollView>
 
-      {/* Apple-Style Name Edit Modal */}
+      {/* iOS-Style Name Edit Modal */}
       <Modal
         visible={showNameModal}
         transparent
-        animationType="fade"
+        animationType="slide"
         onRequestClose={handleCancelNameEdit}
       >
-        <View style={tw`flex-1 justify-center items-center px-6`}>
-          {/* Backdrop with subtle blur effect */}
-          <View style={[
-            tw`absolute inset-0`,
-            { backgroundColor: 'rgba(0,0,0,0.4)' }
-          ]} />
-          
-          {/* Apple Card Container */}
-          <View style={[
-            tw`bg-white rounded-3xl overflow-hidden w-full max-w-sm`,
-            {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 20 },
-              shadowOpacity: 0.25,
-              shadowRadius: 25,
-              elevation: 25,
-            }
-          ]}>
-            {/* Clean Header */}
-            <View style={tw`px-6 pt-8 pb-2`}>
-              <View style={tw`items-center mb-4`}>
-                {/* Profile Icon */}
-                <View style={[
-                  tw`w-16 h-16 rounded-full items-center justify-center mb-4`,
-                  { backgroundColor: '#f1f5f9' }
-                ]}>
-                  <Ionicons name="person" size={32} color="#64748b" />
-                </View>
+        <View style={tw`flex-1 bg-gray-100`}>
+          {/* iOS Navigation Header */}
+          <SafeAreaView style={tw`bg-gray-100`}>
+            <View style={tw`px-4 py-2 border-b border-gray-200 bg-gray-100`}>
+              <View style={tw`flex-row items-center justify-between`}>
+                <TouchableOpacity onPress={handleCancelNameEdit} style={tw`py-2`}>
+                  <Text style={tw`text-lg text-blue-500`}>Cancel</Text>
+                </TouchableOpacity>
                 
-                <Text style={tw`text-2xl font-semibold text-gray-900 text-center`}>
-                  Edit Name
-                </Text>
-                <Text style={tw`text-gray-500 text-center text-base mt-2 leading-relaxed`}>
-                  Your name will appear in greetings and throughout the app
-                </Text>
-              </View>
-            </View>
-
-            {/* Input Section */}
-            <View style={tw`px-6 pb-6`}>
-              {/* Apple-style Input */}
-              <View style={[
-                tw`rounded-2xl overflow-hidden`,
-                { backgroundColor: '#f8fafc' }
-              ]}>
-                <TextInput
-                  style={[
-                    tw`px-5 py-4 text-gray-900 text-lg`,
-                    { backgroundColor: 'transparent' }
-                  ]}
-                  placeholder="Enter your name"
-                  placeholderTextColor="#9ca3af"
-                  value={tempName}
-                  onChangeText={setTempName}
-                  autoFocus={true}
-                  maxLength={50}
-                  selectionColor="#007AFF"
-                />
-              </View>
-              
-              <Text style={tw`text-gray-400 text-sm mt-3 text-center`}>
-                Leave empty to remove your name
-              </Text>
-            </View>
-
-            {/* Apple-style Action Buttons */}
-            <View style={tw`border-t border-gray-200`}>
-              <View style={tw`flex-row`}>
-                <TouchableOpacity
-                  onPress={handleCancelNameEdit}
-                  style={[
-                    tw`flex-1 py-4 items-center border-r border-gray-200`,
-                    { minHeight: 56 }
-                  ]}
-                  activeOpacity={0.6}
-                >
-                  <Text style={tw`text-gray-600 text-lg font-medium`}>
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={handleSaveName}
-                  style={[
-                    tw`flex-1 py-4 items-center`,
-                    { minHeight: 56 }
-                  ]}
-                  activeOpacity={0.6}
-                >
-                  <Text style={tw`text-blue-600 text-lg font-semibold`}>
-                    Save
-                  </Text>
+                <Text style={tw`text-lg font-semibold text-black`}>Edit Name</Text>
+                
+                <TouchableOpacity onPress={handleSaveName} style={tw`py-2`}>
+                  <Text style={tw`text-lg text-blue-500 font-semibold`}>Save</Text>
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
+          </SafeAreaView>
+
+          <ScrollView style={tw`flex-1`}>
+            {/* User Section */}
+            <View style={tw`mt-6`}>
+              <View style={tw`bg-white px-4 py-4 border-b border-gray-200`}>
+                <View style={tw`flex-row items-center`}>
+                  <View style={tw`w-16 h-16 rounded-full bg-gray-300 items-center justify-center mr-4`}>
+                    <Ionicons name="person" size={32} color="#666" />
+                  </View>
+                  <View style={tw`flex-1`}>
+                    <Text style={tw`text-sm text-gray-500 mb-1`}>NAME</Text>
+                    <TextInput
+                      style={tw`text-xl text-black font-medium`}
+                      placeholder="Enter your name"
+                      placeholderTextColor="#9ca3af"
+                      value={tempName}
+                      onChangeText={setTempName}
+                      autoFocus={true}
+                      maxLength={50}
+                      selectionColor="#007AFF"
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Info Section */}
+            <View style={tw`mt-8`}>
+              <SectionHeader title="About Names" />
+              <View style={tw`bg-white border-t border-gray-200`}>
+                <View style={tw`px-4 py-3`}>
+                  <Text style={tw`text-base text-black mb-2`}>Your name will be used for:</Text>
+                  <Text style={tw`text-sm text-gray-600 leading-relaxed`}>
+                    • Personal greetings throughout the app{'\n'}
+                    • Support messages and communications{'\n'}
+                    • A more personalized reading experience
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
         </View>
       </Modal>
 
-      {/* Apple-Style Reading Progress Modal */}
+      {/* iOS-Style Reading Progress Modal */}
       <Modal
         visible={showStreakModal}
         transparent
-        animationType="fade"
+        animationType="slide"
         onRequestClose={() => setShowStreakModal(false)}
       >
-        <View style={tw`flex-1 justify-center items-center px-6`}>
-          {/* Backdrop */}
-          <View style={[
-            tw`absolute inset-0`,
-            { backgroundColor: 'rgba(0,0,0,0.4)' }
-          ]} />
-          
-          {/* Compact Apple Card */}
-          <View style={[
-            tw`bg-white rounded-3xl overflow-hidden w-full max-w-sm`,
-            {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 15 },
-              shadowOpacity: 0.25,
-              shadowRadius: 20,
-              elevation: 20,
-            }
-          ]}>
-            {/* Header with Close */}
-            <View style={tw`px-6 pt-6 pb-4 relative`}>
-              <TouchableOpacity
-                onPress={() => setShowStreakModal(false)}
-                style={[
-                  tw`absolute top-4 right-4 w-8 h-8 rounded-full items-center justify-center`,
-                  { backgroundColor: '#f1f5f9' }
-                ]}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="close" size={18} color="#64748b" />
-              </TouchableOpacity>
-
-              <View style={tw`items-center`}>
-                <View style={[
-                  tw`w-14 h-14 rounded-full items-center justify-center mb-3`,
-                  { backgroundColor: '#f0f9ff' }
-                ]}>
-                  <Ionicons name="analytics" size={28} color="#0ea5e9" />
-                </View>
-                <Text style={tw`text-xl font-semibold text-gray-900 mb-1`}>
-                  Your Progress
-                </Text>
-                <Text style={tw`text-gray-500 text-sm text-center`}>
-                  Keep up the great work!
-                </Text>
+        <View style={tw`flex-1 bg-gray-100`}>
+          {/* iOS Navigation Header */}
+          <SafeAreaView style={tw`bg-gray-100`}>
+            <View style={tw`px-4 py-2 border-b border-gray-200 bg-gray-100`}>
+              <View style={tw`flex-row items-center justify-between`}>
+                <TouchableOpacity onPress={() => setShowStreakModal(false)} style={tw`py-2`}>
+                  <Text style={tw`text-lg text-blue-500`}>Done</Text>
+                </TouchableOpacity>
+                
+                <Text style={tw`text-lg font-semibold text-black`}>Statistics</Text>
+                
+                <View style={tw`w-16`} />
               </View>
             </View>
+          </SafeAreaView>
 
-            {/* Compact Stats */}
-            <View style={tw`px-6 pb-6`}>
-              {/* Main Streak Highlight */}
-              <View style={[
-                tw`rounded-2xl p-5 mb-4 items-center`,
-                { backgroundColor: streak > 0 ? '#fef3c7' : '#f0f9ff' }
-              ]}>
-                <Text style={tw`text-4xl font-bold ${streak > 0 ? 'text-amber-600' : 'text-blue-600'} mb-2`}>
+          <ScrollView style={tw`flex-1`}>
+            {/* Current Streak Section */}
+            <View style={tw`mt-6`}>
+              <View style={tw`bg-white px-4 py-6 border-b border-gray-200 items-center`}>
+                <Text style={tw`text-6xl font-bold ${streak > 0 ? 'text-orange-500' : 'text-blue-500'} mb-2`}>
                   {streak}
                 </Text>
-                <Text style={tw`${streak > 0 ? 'text-amber-800' : 'text-blue-800'} font-medium text-base mb-1`}>
+                <Text style={tw`text-xl font-medium text-black mb-1`}>
                   Day Streak {streak > 0 ? '🔥' : '📖'}
                 </Text>
-                <Text style={tw`${streak > 0 ? 'text-amber-700' : 'text-blue-700'} text-sm text-center`}>
+                <Text style={tw`text-base text-gray-500 text-center`}>
                   {streak > 0 
-                    ? 'Amazing! Keep building this habit'
+                    ? 'Keep up the amazing work!'
                     : 'Start reading today to begin your streak'
                   }
                 </Text>
               </View>
+            </View>
 
-              {/* Compact Stats Row */}
-              <View style={[
-                tw`rounded-2xl p-4 mb-4`,
-                { backgroundColor: '#f8fafc' }
-              ]}>
-                <View style={tw`flex-row justify-between`}>
-                  <View style={tw`items-center flex-1`}>
-                    <Text style={tw`text-2xl font-bold text-green-600 mb-1`}>
-                      {totalDaysRead}
-                    </Text>
-                    <Text style={tw`text-gray-600 text-xs font-medium`}>
-                      Total Days
-                    </Text>
-                  </View>
-                  
-                  <View style={tw`w-px bg-gray-300 mx-3`} />
-                  
-                  <View style={tw`items-center flex-1`}>
-                    <Text style={tw`text-2xl font-bold text-purple-600 mb-1`}>
-                      {longestStreak}
-                    </Text>
-                    <Text style={tw`text-gray-600 text-xs font-medium`}>
-                      Best Streak
-                    </Text>
+            {/* Stats Section */}
+            <View style={tw`mt-8`}>
+              <SectionHeader title="Reading Statistics" />
+              <View style={tw`bg-white border-t border-gray-200`}>
+                <View style={tw`px-4 py-3 border-b border-gray-200`}>
+                  <View style={tw`flex-row justify-between items-center`}>
+                    <Text style={tw`text-base text-black`}>Total Days Read</Text>
+                    <Text style={tw`text-base text-gray-500 font-medium`}>{totalDaysRead}</Text>
                   </View>
                 </View>
+                <View style={tw`px-4 py-3 border-b border-gray-200`}>
+                  <View style={tw`flex-row justify-between items-center`}>
+                    <Text style={tw`text-base text-black`}>Best Streak</Text>
+                    <Text style={tw`text-base text-gray-500 font-medium`}>{longestStreak} days</Text>
+                  </View>
+                </View>
+                {lastReadPage && (
+                  <View style={tw`px-4 py-3`}>
+                    <View style={tw`flex-row justify-between items-center`}>
+                      <Text style={tw`text-base text-black`}>Last Read</Text>
+                      <Text style={tw`text-base text-gray-500 font-medium`}>{lastReadPage.name}</Text>
+                    </View>
+                  </View>
+                )}
               </View>
+            </View>
 
-              {/* Mini Activity Chart */}
-              <View style={[
-                tw`rounded-2xl p-4`,
-                { backgroundColor: '#f8fafc' }
-              ]}>
-                <Text style={tw`text-gray-900 font-medium text-sm mb-3 text-center`}>
-                  This Week
-                </Text>
-                
-                <View style={tw`flex-row justify-between items-end h-12 mb-3`}>
+            {/* Weekly Activity Section */}
+            <View style={tw`mt-8`}>
+              <SectionHeader title="This Week" />
+              <View style={tw`bg-white border-t border-gray-200 px-4 py-6`}>
+                <View style={tw`flex-row justify-between items-end h-16 mb-4`}>
                   {last7DaysData.map((day, index) => (
                     <View key={index} style={tw`items-center flex-1`}>
                       <View
                         style={[
-                          tw`w-6 rounded-lg mb-2`,
+                          tw`w-8 rounded-lg mb-3`,
                           day.hasRead
-                            ? [tw`bg-green-500`, { height: 32 }]
+                            ? [tw`bg-green-500`, { height: 40 }]
                             : day.isToday
-                              ? [tw`bg-blue-400`, { height: 20 }]
-                              : [tw`bg-gray-300`, { height: 8 }],
+                              ? [tw`bg-blue-400`, { height: 24 }]
+                              : [tw`bg-gray-300`, { height: 12 }],
                         ]}
                       />
-                      <Text style={tw`text-xs text-gray-500 font-medium`}>
-                        {day.dayName.slice(0, 1)}
+                      <Text style={tw`text-sm text-gray-600 font-medium`}>
+                        {day.dayName.slice(0, 3)}
                       </Text>
                     </View>
                   ))}
                 </View>
-
-                <View style={tw`flex-row justify-center items-center space-x-4`}>
+                
+                <View style={tw`flex-row justify-center items-center mt-4 space-x-6`}>
                   <View style={tw`flex-row items-center`}>
-                    <View style={tw`w-2 h-2 bg-green-500 rounded-full mr-1`} />
-                    <Text style={tw`text-xs text-gray-600`}>Done</Text>
+                    <View style={tw`w-3 h-3 bg-green-500 rounded-full mr-2`} />
+                    <Text style={tw`text-sm text-gray-600`}>Completed</Text>
                   </View>
                   <View style={tw`flex-row items-center`}>
-                    <View style={tw`w-2 h-2 bg-blue-400 rounded-full mr-1`} />
-                    <Text style={tw`text-xs text-gray-600`}>Today</Text>
+                    <View style={tw`w-3 h-3 bg-blue-400 rounded-full mr-2`} />
+                    <Text style={tw`text-sm text-gray-600`}>Today</Text>
+                  </View>
+                  <View style={tw`flex-row items-center`}>
+                    <View style={tw`w-3 h-3 bg-gray-300 rounded-full mr-2`} />
+                    <Text style={tw`text-sm text-gray-600`}>Missed</Text>
                   </View>
                 </View>
               </View>
             </View>
-          </View>
+          </ScrollView>
         </View>
       </Modal>
 
-      {/* Apple-Style Support Modal */}
+      {/* iOS-Style Support Modal */}
       <Modal
         visible={showSupportModal}
         transparent
-        animationType="fade"
+        animationType="slide"
         onRequestClose={() => setShowSupportModal(false)}
       >
-        <View style={tw`flex-1 justify-center items-center px-6`}>
-          {/* Backdrop */}
-          <View style={[
-            tw`absolute inset-0`,
-            { backgroundColor: 'rgba(0,0,0,0.4)' }
-          ]} />
-          
-          {/* Apple Card Container */}
-          <View style={[
-            tw`bg-white rounded-3xl overflow-hidden w-full max-w-sm`,
-            {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 15 },
-              shadowOpacity: 0.25,
-              shadowRadius: 20,
-              elevation: 20,
-            }
-          ]}>
-            {/* Clean Header */}
-            <View style={tw`px-6 pt-6 pb-4 relative`}>
-              <TouchableOpacity
-                onPress={() => setShowSupportModal(false)}
-                style={[
-                  tw`absolute top-4 right-4 w-8 h-8 rounded-full items-center justify-center`,
-                  { backgroundColor: '#f1f5f9' }
-                ]}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="close" size={18} color="#64748b" />
-              </TouchableOpacity>
-
-              <View style={tw`items-center`}>
-                <View style={[
-                  tw`w-14 h-14 rounded-full items-center justify-center mb-3`,
-                  { backgroundColor: '#f0f9ff' }
-                ]}>
-                  <Ionicons name="help-circle" size={28} color="#0ea5e9" />
-                </View>
-                <Text style={tw`text-xl font-semibold text-gray-900 mb-1`}>
-                  Help & Support
-                </Text>
-                <Text style={tw`text-gray-500 text-sm text-center`}>
-                  We're here to help you
-                </Text>
+        <View style={tw`flex-1 bg-gray-100`}>
+          {/* iOS Navigation Header */}
+          <SafeAreaView style={tw`bg-gray-100`}>
+            <View style={tw`px-4 py-2 border-b border-gray-200 bg-gray-100`}>
+              <View style={tw`flex-row items-center justify-between`}>
+                <TouchableOpacity onPress={() => setShowSupportModal(false)} style={tw`py-2`}>
+                  <Text style={tw`text-lg text-blue-500`}>Done</Text>
+                </TouchableOpacity>
+                
+                <Text style={tw`text-lg font-semibold text-black`}>Help & Support</Text>
+                
+                <View style={tw`w-16`} />
               </View>
             </View>
+          </SafeAreaView>
 
-            {/* Support Options */}
-            <View style={tw`px-6 pb-6`}>
-              {/* WhatsApp Option */}
-              <TouchableOpacity
-                onPress={handleWhatsAppSupport}
-                style={[
-                  tw`rounded-2xl p-4 mb-3 flex-row items-center`,
-                  { backgroundColor: '#f0fdf4' }
-                ]}
-                activeOpacity={0.6}
-              >
-                <View style={[
-                  tw`w-12 h-12 rounded-2xl items-center justify-center mr-4`,
-                  { backgroundColor: '#16a34a' }
-                ]}>
-                  <Ionicons name="logo-whatsapp" size={24} color="white" />
-                </View>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-gray-900 text-base font-semibold mb-1`}>
-                    WhatsApp Chat
-                  </Text>
-                  <Text style={tw`text-gray-600 text-sm`}>
-                    Quick responses • Usually within minutes
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
-              </TouchableOpacity>
-
-              {/* Email Option */}
-              <TouchableOpacity
-                onPress={handleEmailSupport}
-                style={[
-                  tw`rounded-2xl p-4 mb-4 flex-row items-center`,
-                  { backgroundColor: '#f0f9ff' }
-                ]}
-                activeOpacity={0.6}
-              >
-                <View style={[
-                  tw`w-12 h-12 rounded-2xl items-center justify-center mr-4`,
-                  { backgroundColor: '#0ea5e9' }
-                ]}>
-                  <Ionicons name="mail" size={24} color="white" />
-                </View>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-gray-900 text-base font-semibold mb-1`}>
-                    Email Support
-                  </Text>
-                  <Text style={tw`text-gray-600 text-sm`}>
-                    Detailed help • Response within 24 hours
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
-              </TouchableOpacity>
-
-              {/* Info Card */}
-              <View style={[
-                tw`rounded-2xl p-4`,
-                { backgroundColor: '#f8fafc' }
-              ]}>
-                <View style={tw`flex-row items-center`}>
+          <ScrollView style={tw`flex-1`}>
+            {/* Contact Methods Section */}
+            <View style={tw`mt-6`}>
+              <SectionHeader title="Get Help" />
+              <View style={tw`bg-white border-t border-gray-200`}>
+                <TouchableOpacity
+                  onPress={handleWhatsAppSupport}
+                  style={tw`px-4 py-3 border-b border-gray-200 flex-row items-center`}
+                  activeOpacity={0.3}
+                >
                   <View style={[
-                    tw`w-8 h-8 rounded-full items-center justify-center mr-3`,
-                    { backgroundColor: '#e2e8f0' }
+                    tw`w-7 h-7 rounded-lg items-center justify-center mr-3`,
+                    { backgroundColor: '#25D366' }
                   ]}>
-                    <Ionicons name="information" size={16} color="#64748b" />
+                    <Ionicons name="logo-whatsapp" size={18} color="white" />
                   </View>
-                  <Text style={tw`text-gray-600 text-sm flex-1 leading-relaxed`}>
-                    Our team is dedicated to making your Quran reading experience better
+                  <View style={tw`flex-1`}>
+                    <Text style={tw`text-base text-black`}>WhatsApp Support</Text>
+                    <Text style={tw`text-sm text-gray-500 mt-0.5`}>
+                      Quick responses • Usually within minutes
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleEmailSupport}
+                  style={tw`px-4 py-3 flex-row items-center`}
+                  activeOpacity={0.3}
+                >
+                  <View style={[
+                    tw`w-7 h-7 rounded-lg items-center justify-center mr-3`,
+                    { backgroundColor: '#007AFF' }
+                  ]}>
+                    <Ionicons name="mail" size={18} color="white" />
+                  </View>
+                  <View style={tw`flex-1`}>
+                    <Text style={tw`text-base text-black`}>Email Support</Text>
+                    <Text style={tw`text-sm text-gray-500 mt-0.5`}>
+                      Detailed help • Response within 24 hours
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Contact Info Section */}
+            <View style={tw`mt-8`}>
+              <SectionHeader title="Contact Information" />
+              <View style={tw`bg-white border-t border-gray-200`}>
+                <View style={tw`px-4 py-3 border-b border-gray-200`}>
+                  <Text style={tw`text-base text-black mb-1`}>WhatsApp</Text>
+                  <Text style={tw`text-sm text-gray-500`}>+91 8217003676</Text>
+                </View>
+                <View style={tw`px-4 py-3`}>
+                  <Text style={tw`text-base text-black mb-1`}>Email</Text>
+                  <Text style={tw`text-sm text-gray-500`}>bayees1@gmail.com</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* About Support Section */}
+            <View style={tw`mt-8`}>
+              <SectionHeader title="Support Hours" />
+              <View style={tw`bg-white border-t border-gray-200`}>
+                <View style={tw`px-4 py-3`}>
+                  <Text style={tw`text-base text-black mb-2`}>We're here to help</Text>
+                  <Text style={tw`text-sm text-gray-600 leading-relaxed`}>
+                    Our support team is dedicated to making your Quran reading experience better. We typically respond to WhatsApp messages within minutes and emails within 24 hours.
                   </Text>
                 </View>
               </View>
             </View>
-          </View>
+          </ScrollView>
         </View>
       </Modal>
     </SafeAreaView>

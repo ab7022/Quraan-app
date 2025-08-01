@@ -4,12 +4,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import tw from 'twrnc';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSelector } from 'react-redux';
 
 const DAILY_TARGET_STORAGE_KEY = 'daily_target_data';
 
 export default function HifzCard({ navigation }) {
   const [targetData, setTargetData] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Get current reading progress from Redux store
+  const lastReadPage = useSelector(state => state.streak.lastReadPage);
+  const currentPage = lastReadPage?.pageNumber || 1;
 
   useEffect(() => {
     loadTargetData();
@@ -103,6 +108,20 @@ export default function HifzCard({ navigation }) {
     };
   };
 
+  const getOverallProgress = () => {
+    const totalPages = 604;
+    const todayProgress = getTodayProgress();
+    const pagesCompleted = todayProgress.completed;
+    const progressPercentage = Math.min((pagesCompleted / totalPages) * 100, 100);
+    return {
+      currentPage: pagesCompleted,
+      totalPages,
+      percentage: progressPercentage,
+      pagesRead: pagesCompleted,
+      pagesRemaining: totalPages - pagesCompleted
+    };
+  };
+
   if (loading) {
     return (
       <View style={tw`bg-white rounded-2xl p-4 mb-4 border border-blue-200`}>
@@ -154,11 +173,12 @@ export default function HifzCard({ navigation }) {
   const todayProgress = getTodayProgress();
   const streakInfo = getStreakInfo();
   const completionInfo = calculateCompletionInfo();
+  const overallProgress = getOverallProgress();
 
   return (
     <TouchableOpacity
       onPress={() => navigation.navigate('Hifz')}
-      style={tw`mb-4`}
+      style={tw`mb-0`}
       activeOpacity={0.8}
     >
       <LinearGradient
@@ -181,22 +201,36 @@ export default function HifzCard({ navigation }) {
           <Ionicons name="chevron-forward" size={20} color="white" />
         </View>
 
-        {/* Progress */}
+      
+   
+
+        {/* Overall Quran Progress */}
         <View style={tw`mb-3`}>
           <View style={tw`flex-row justify-between items-center mb-2`}>
+            <View style={tw`flex-row items-center`}>
+              <Ionicons name="book" size={16} color="white" style={tw`mr-2`} />
+              <Text style={tw`text-white font-semibold`}>Overall Progress</Text>
+            </View>
             <Text style={tw`text-white font-semibold`}>
-              {todayProgress.completed} / {targetData.dailyTarget} pages
-            </Text>
-            <Text style={tw`text-white font-semibold`}>
-              {todayProgress.percentage.toFixed(0)}%
+              {overallProgress.percentage.toFixed(1)}%
             </Text>
           </View>
 
-          <View style={tw`bg-white/20 rounded-full h-2`}>
-            <View
+          <View style={tw`flex-row justify-between items-center mb-2`}>
+            <Text style={tw`text-white/90 text-sm`}>
+              Page {overallProgress.currentPage} of {overallProgress.totalPages}
+            </Text>
+            <Text style={tw`text-white/90 text-sm`}>
+              {overallProgress.pagesRemaining} pages left
+            </Text>
+          </View>
+
+          <View style={tw`bg-white/20 rounded-full h-3`}>
+            <LinearGradient
+              colors={['#ffffff', '#c4cccaff', '#d6d6d6ff']}
               style={[
-                tw`bg-white rounded-full h-2`,
-                { width: `${todayProgress.percentage}%` },
+                tw`rounded-full h-3`,
+                { width: `${Math.max(overallProgress.percentage, 2)}%` },
               ]}
             />
           </View>
@@ -204,7 +238,7 @@ export default function HifzCard({ navigation }) {
 
         {/* Completion Date */}
         {completionInfo && (
-          <View style={tw`bg-white/10 rounded-xl p-3 mb-3`}>
+          <View style={tw`bg-white/10 rounded-xl p-3 mb-1`}>
             <View style={tw`flex-row items-center justify-between`}>
               <View style={tw`flex-row items-center`}>
                 <Ionicons
@@ -221,28 +255,6 @@ export default function HifzCard({ navigation }) {
             </View>
           </View>
         )}
-
-        {/* Stats */}
-        <View style={tw`flex-row justify-between`}>
-          <View style={tw`flex-1 mr-2`}>
-            <Text style={tw`text-white/90 text-xs`}>Today's Goal</Text>
-            <Text style={tw`text-white font-semibold`}>
-              {targetData.dailyTarget} pages
-            </Text>
-          </View>
-          <View style={tw`flex-1 mx-1`}>
-            <Text style={tw`text-white/90 text-xs`}>Current Streak</Text>
-            <Text style={tw`text-white font-semibold`}>
-              {streakInfo.current} days
-            </Text>
-          </View>
-          <View style={tw`flex-1 ml-2`}>
-            <Text style={tw`text-white/90 text-xs`}>Best Streak</Text>
-            <Text style={tw`text-white font-semibold`}>
-              {streakInfo.best} days
-            </Text>
-          </View>
-        </View>
       </LinearGradient>
     </TouchableOpacity>
   );

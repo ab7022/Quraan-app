@@ -15,15 +15,81 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import tw from 'twrnc';
-import { LinearGradient } from 'expo-linear-gradient';
 import { getMushafStyle, saveMushafStyle, getMushafImageUrl } from '../services/mushafService';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import analytics from '../services/analyticsService';
 
 const { width } = Dimensions.get('window');
 
+const SectionHeader = ({ title }) => (
+  <View style={tw`px-4 py-2 bg-gray-100`}>
+    <Text style={tw`text-sm text-gray-500 uppercase font-normal tracking-wide`}>
+      {title}
+    </Text>
+  </View>
+);
+
+const StyleItem = ({
+  styleNumber,
+  isSelected,
+  onPress,
+  styleName,
+  isLoading,
+  onImageLoadStart,
+  onImageLoadEnd,
+  onImageError,
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={[
+      tw`bg-white px-4 py-4 border-b border-gray-200`,
+      isSelected && tw`bg-blue-50`
+    ]}
+    activeOpacity={0.3}
+  >
+    <View style={tw`flex-row items-center`}>
+      {/* Style Preview Thumbnail */}
+      <View style={tw`w-16 h-20 rounded-lg overflow-hidden bg-gray-100 mr-4 border border-gray-200`}>
+        {isLoading && (
+          <View style={tw`absolute inset-0 bg-gray-100 items-center justify-center z-10`}>
+            <ActivityIndicator size="small" color="#007AFF" />
+          </View>
+        )}
+        <Image
+          source={{ uri: getMushafImageUrl(22, styleNumber) }}
+          style={{ width: '100%', height: '100%' }}
+          resizeMode="cover"
+          onLoadStart={onImageLoadStart}
+          onLoadEnd={onImageLoadEnd}
+          onError={onImageError}
+        />
+      </View>
+
+      {/* Style Info */}
+      <View style={tw`flex-1`}>
+        <Text style={tw`text-base font-medium text-black mb-1`}>
+          {styleName}
+        </Text>
+        <Text style={tw`text-sm text-gray-500`}>
+          Style {styleNumber}
+        </Text>
+        {isSelected && (
+          <Text style={tw`text-sm text-blue-500 mt-1 font-medium`}>
+            Currently Selected
+          </Text>
+        )}
+      </View>
+
+      {/* Selection Indicator */}
+      {isSelected ? (
+        <Ionicons name="checkmark-circle" size={22} color="#007AFF" />
+      ) : (
+        <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+      )}
+    </View>
+  </TouchableOpacity>
+);
+
 export default function MushafStyleScreen() {
-      const insets = useSafeAreaInsets();
-  
   const navigation = useNavigation();
   const [selectedStyle, setSelectedStyle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -31,6 +97,10 @@ export default function MushafStyleScreen() {
 
   // Load saved mushaf style preference
   useEffect(() => {
+    console.log('[MUSHAF STYLE SCREEN] Component mounted');
+    analytics.trackScreenView('MushafStyleScreen', {
+      current_style: selectedStyle,
+    });
     loadMushafPreference();
   }, []);
 
@@ -53,17 +123,18 @@ export default function MushafStyleScreen() {
       console.log('[MUSHAF STYLE SCREEN] Save result:', success);
       
       if (success) {
+        analytics.trackUserAction('mushaf_style_changed', {
+          old_style: selectedStyle,
+          new_style: styleNumber,
+        });
+        
         Alert.alert(
-          '✅ Style Selected',
-          `Mushaf style ${styleNumber} saved successfully!`,
+          'Style Updated',
+          `${getStyleName(styleNumber)} has been selected as your Mushaf style.`,
           [{ 
             text: 'OK',
             onPress: () => {
-              // Navigate to Home immediately after user presses OK
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Home' }],
-              });
+              navigation.goBack();
             }
           }]
         );
@@ -81,13 +152,11 @@ export default function MushafStyleScreen() {
   };
 
   const handleStyleSelect = (styleNumber) => {
+    if (selectedStyle === styleNumber) return; // Already selected
+    
     console.log('[MUSHAF STYLE SCREEN] Style selected:', styleNumber);
     setSelectedStyle(styleNumber);
     saveMushafPreference(styleNumber);
-  };
-
-  const getPreviewImageUrl = (styleNumber) => {
-    return getMushafImageUrl(22, styleNumber); // Use page 22 for preview
   };
 
   const handleImageLoadStart = (styleNumber) => {
@@ -114,263 +183,135 @@ export default function MushafStyleScreen() {
 
   const getStyleName = (styleNumber) => {
     const styleNames = {
-      1: 'Classic Style',
-      2: 'Modern Style',
-      3: 'Traditional Style',
-      4: 'Elegant Style',
-      5: 'Simple Style',
-      6: 'Bold Style',
-      7: 'Clean Style',
-      8: 'Refined Style',
-      9: 'Standard Style',
-      10: 'Premium Style',
-      11: 'Deluxe Style',
+      1: 'Classic',
+      2: 'Modern',
+      3: 'Traditional',
+      4: 'Elegant',
+      5: 'Simple',
+      6: 'Bold',
+      7: 'Clean',
+      8: 'Refined',
+      9: 'Standard',
+      10: 'Premium',
+      11: 'Deluxe',
     };
     return styleNames[styleNumber] || `Style ${styleNumber}`;
   };
 
+  const handleBackPress = () => {
+    navigation.goBack();
+  };
+
   if (loading) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-white`} edges={['bottom', 'left', 'right']}>
-        <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
+      <SafeAreaView style={tw`flex-1 bg-gray-100`}>
+        <StatusBar backgroundColor="#f3f4f6" barStyle="dark-content" />
         <View style={tw`flex-1 items-center justify-center`}>
-          <ActivityIndicator size="large" color="#8B5CF6" />
-          <Text style={tw`text-gray-600 mt-4`}>Loading Mushaf Styles...</Text>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={tw`text-gray-600 mt-4 text-base`}>Loading Mushaf Styles...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[tw`flex-1 bg-gray-50`]}>
-      {/* Header */}
-      <View style={tw`bg-white px-6 py-4 border-b border-gray-200`}>
+    <SafeAreaView style={tw`flex-1 bg-gray-100`}>
+      {/* iOS-Style Header */}
+      <View style={tw`bg-gray-100 px-4 py-2`}>
         <View style={tw`flex-row items-center justify-between`}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={tw`flex-row items-center`}
+            onPress={handleBackPress}
+            style={tw`py-2`}
+            accessibilityLabel="Go back"
           >
-            <Ionicons name="arrow-back" size={24} color="#374151" />
-            <Text style={tw`text-lg font-semibold text-gray-900 ml-2`}>
-              Back
-            </Text>
+            <View style={tw`flex-row items-center`}>
+              <Ionicons name="chevron-back" size={28} color="#007AFF" />
+              <Text style={tw`text-lg text-blue-500 ml-1`}>Settings</Text>
+            </View>
           </TouchableOpacity>
 
-          <View style={tw`items-center`}>
-            <Text style={tw`text-xl font-bold text-gray-900`}>
-              Mushaf Styles
-            </Text>
-            <Text style={tw`text-sm text-gray-600`}>
-              Choose your preferred style
-            </Text>
-          </View>
+          <Text style={tw`text-lg font-semibold text-black`}>
+            Mushaf Style
+          </Text>
 
-          <View style={tw`w-16`} />
+          <View style={tw`w-20`} />
         </View>
       </View>
 
-      {/* Content */}
-      <ScrollView
-        style={tw`flex-1`}
-        contentContainerStyle={tw`p-6`}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Description */}
-        <View
-          style={tw`bg-blue-50 rounded-2xl p-4 mb-6 border border-blue-200`}
-        >
-          <View style={tw`flex-row items-start`}>
-            <View
-              style={tw`w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3`}
-            >
-              <Ionicons name="information-circle" size={20} color="#3B82F6" />
-            </View>
-            <View style={tw`flex-1`}>
-              <Text style={tw`text-blue-900 font-semibold text-base mb-2`}>
-                Select Your Mushaf Style
-              </Text>
-              <Text style={tw`text-blue-800 text-sm leading-5`}>
-                Choose from different Mushaf styles below. Each style has a
-                unique layout and design. Your selection will be applied to all
-                Quran reading sessions.
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Current Selection */}
+      <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false}>
+        {/* Current Selection Section */}
         {selectedStyle && (
-          <View
-            style={tw`bg-emerald-50 rounded-2xl p-4 mb-6 border border-emerald-200`}
-          >
-            <View style={tw`flex-row items-center`}>
-              <View
-                style={tw`w-10 h-10 bg-emerald-100 rounded-full items-center justify-center mr-3`}
-              >
-                <Ionicons name="checkmark-circle" size={20} color="#059669" />
-              </View>
-              <View style={tw`flex-1`}>
-                <Text style={tw`text-emerald-900 font-semibold text-base`}>
-                  Currently Selected
-                </Text>
-                <Text style={tw`text-emerald-800 text-sm`}>
-                  {getStyleName(selectedStyle)} (Style {selectedStyle})
-                </Text>
+          <>
+            <View style={tw`mt-6`}>
+              <SectionHeader title="Current Selection" />
+              <View style={tw`bg-white border-t border-gray-200`}>
+                <View style={tw`px-4 py-4 border-b border-gray-200`}>
+                  <View style={tw`flex-row items-center`}>
+                    <View style={tw`w-16 h-20 rounded-lg overflow-hidden bg-gray-100 mr-4 border border-gray-200`}>
+                      <Image
+                        source={{ uri: getMushafImageUrl(22, selectedStyle) }}
+                        style={{ width: '100%', height: '100%' }}
+                        resizeMode="cover"
+                      />
+                    </View>
+                    <View style={tw`flex-1`}>
+                      <Text style={tw`text-lg font-medium text-black mb-1`}>
+                        {getStyleName(selectedStyle)}
+                      </Text>
+                      <Text style={tw`text-base text-gray-500 mb-2`}>
+                        Style {selectedStyle}
+                      </Text>
+                      <View style={tw`flex-row items-center`}>
+                        <Ionicons name="checkmark-circle" size={16} color="#34C759" />
+                        <Text style={tw`text-sm text-green-600 ml-1 font-medium`}>
+                          Currently Active
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
               </View>
             </View>
-          </View>
+          </>
         )}
 
-        {/* Mushaf Styles Grid */}
-        <View style={tw`gap-6`}>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(styleNumber => (
-            <View
-              key={styleNumber}
-              style={[
-                tw`bg-white rounded-2xl p-4 border-2`,
-                selectedStyle === styleNumber
-                  ? tw`border-emerald-500 bg-emerald-50`
-                  : tw`border-gray-200`,
-              ]}
-            >
-              {/* Style Header */}
-              <View style={tw`flex-row items-center justify-between mb-4`}>
-                <View style={tw`flex-row items-center`}>
-                  <View
-                    style={[
-                      tw`w-8 h-8 rounded-full items-center justify-center mr-3`,
-                      selectedStyle === styleNumber
-                        ? tw`bg-emerald-500`
-                        : tw`bg-gray-200`,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        tw`text-sm font-bold`,
-                        selectedStyle === styleNumber
-                          ? tw`text-white`
-                          : tw`text-gray-600`,
-                      ]}
-                    >
-                      {styleNumber}
-                    </Text>
-                  </View>
-                  <View>
-                    <Text style={tw`text-lg font-bold text-gray-900`}>
-                      {getStyleName(styleNumber)}
-                    </Text>
-                    <Text style={tw`text-sm text-gray-600`}>
-                      Style {styleNumber}
-                    </Text>
-                  </View>
-                </View>
-
-                {selectedStyle === styleNumber && (
-                  <View style={tw`bg-emerald-100 rounded-full px-3 py-1`}>
-                    <Text style={tw`text-emerald-700 text-xs font-semibold`}>
-                      Selected
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              {/* Preview Image */}
-              <View style={tw`relative mb-4`}>
-                <View
-                  style={[
-                    tw`rounded-xl overflow-hidden border border-gray-200`,
-                    { height: width * 0.8 }, // Maintain aspect ratio
-                  ]}
-                >
-                  {imageLoadingStates[styleNumber] && (
-                    <View
-                      style={tw`absolute inset-0 bg-gray-100 items-center justify-center z-10`}
-                    >
-                      <ActivityIndicator size="large" color="#8B5CF6" />
-                      <Text style={tw`text-gray-600 mt-2 text-sm`}>
-                        Loading preview...
-                      </Text>
-                    </View>
-                  )}
-
-                  <Image
-                    source={{ uri: getPreviewImageUrl(styleNumber) }}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor: '#f9fafb',
-                    }}
-                    resizeMode="contain"
-                    onLoadStart={() => handleImageLoadStart(styleNumber)}
-                    onLoadEnd={() => handleImageLoadEnd(styleNumber)}
-                    onError={() => handleImageError(styleNumber)}
-                  />
-                </View>
-              </View>
-
-              {/* Select Button */}
-              <TouchableOpacity
+        {/* Available Styles Section */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="Available Styles" />
+          <View style={tw`bg-white border-t border-gray-200`}>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((styleNumber, index) => (
+              <StyleItem
+                key={styleNumber}
+                styleNumber={styleNumber}
+                styleName={getStyleName(styleNumber)}
+                isSelected={selectedStyle === styleNumber}
+                isLoading={imageLoadingStates[styleNumber]}
                 onPress={() => handleStyleSelect(styleNumber)}
-                disabled={selectedStyle === styleNumber}
-                activeOpacity={0.8}
-              >
-                {selectedStyle === styleNumber ? (
-                  <LinearGradient
-                    colors={['#10B981', '#059669']}
-                    style={tw`py-3 rounded-xl items-center justify-center flex-row`}
-                  >
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={20}
-                      color="white"
-                      style={tw`mr-2`}
-                    />
-                    <Text style={tw`text-white font-bold text-base`}>
-                      Selected
-                    </Text>
-                  </LinearGradient>
-                ) : (
-                  <LinearGradient
-                    colors={['#8B5CF6', '#7C3AED']}
-                    style={tw`py-3 rounded-xl items-center justify-center flex-row`}
-                  >
-                    <Ionicons
-                      name="download-outline"
-                      size={20}
-                      color="white"
-                      style={tw`mr-2`}
-                    />
-                    <Text style={tw`text-white font-bold text-base`}>
-                      Select This Mushaf
-                    </Text>
-                  </LinearGradient>
-                )}
-              </TouchableOpacity>
-            </View>
-          ))}
+                onImageLoadStart={() => handleImageLoadStart(styleNumber)}
+                onImageLoadEnd={() => handleImageLoadEnd(styleNumber)}
+                onImageError={() => handleImageError(styleNumber)}
+              />
+            ))}
+          </View>
         </View>
 
-        {/* Bottom Info */}
-        <View style={tw`bg-gray-100 rounded-2xl p-4 mt-6 mb-12`}>
-          <View style={tw`flex-row items-start`}>
-            <Ionicons
-              name="bulb-outline"
-              size={20}
-              color="#6B7280"
-              style={tw`mr-2 mt-0.5`}
-            />
-            <View style={tw`flex-1`}>
-              <Text style={tw`text-gray-800 font-semibold text-sm mb-1`}>
-                Tip
+        {/* About Section */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="About Mushaf Styles" />
+          <View style={tw`bg-white border-t border-gray-200`}>
+            <View style={tw`px-4 py-4`}>
+              <Text style={tw`text-base text-black mb-3 font-medium`}>
+                Choose Your Reading Experience
               </Text>
-              <Text style={tw`text-gray-700 text-sm leading-5`}>
-                Try different styles to find the one that's most comfortable for
-                your reading experience. You can change this anytime from your
-                profile settings.
+              <Text style={tw`text-sm text-gray-600 leading-relaxed`}>
+                Each Mushaf style provides a unique layout and design for your Quran reading experience. The style you select will be applied to all your reading sessions. You can change this setting anytime.
               </Text>
             </View>
           </View>
         </View>
+
+        {/* Bottom Spacing */}
+        <View style={tw`h-20`} />
       </ScrollView>
     </SafeAreaView>
   );

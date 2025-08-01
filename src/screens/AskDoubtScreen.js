@@ -11,6 +11,8 @@ import {
   Platform,
   FlatList,
   StatusBar,
+  Keyboard,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
@@ -18,23 +20,148 @@ import Markdown from 'react-native-markdown-display';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import rateLimitService from '../services/rateLimitService';
 import RateLimitStatus from '../components/RateLimitStatus';
+import analytics from '../services/analyticsService';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 // Maximum number of chat messages to keep in history
 const MAX_CHAT_MESSAGES = 20;
 
+const SectionHeader = ({ title }) => (
+  <View style={tw`px-4 py-3 bg-gray-100`}>
+    <Text style={tw`text-sm font-medium text-gray-500 uppercase tracking-wide`}>
+      {title}
+    </Text>
+  </View>
+);
+
+const QuickQuestionItem = ({ question, onPress }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={tw`bg-white px-4 py-4 border-b border-gray-200`}
+    activeOpacity={0.3}
+  >
+    <View style={tw`flex-row items-center`}>
+      <View style={tw`w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3`}>
+        <Ionicons name="help-circle" size={20} color="#007AFF" />
+      </View>
+      <Text style={tw`text-base text-black flex-1 leading-5`}>
+        {question}
+      </Text>
+      <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+    </View>
+  </TouchableOpacity>
+);
+
 export default function AskDoubtScreen() {
-    const insets = useSafeAreaInsets();
-  
   const [message, setMessage] = useState('');
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+  
   const [chatMessages, setChatMessages] = useState([]);
   const [isSending, setIsSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showChat, setShowChat] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [screenHeight, setScreenHeight] = useState(Dimensions.get('window').height);
   const flatListRef = useRef(null);
+
+  // Hide/show tab bar based on chat state
+  useEffect(() => {
+    const parent = navigation.getParent();
+    if (parent) {
+      parent.setOptions({
+        tabBarStyle: {
+          display: (showChat || chatMessages.length > 1) ? 'none' : 'flex',
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: 'rgba(248, 248, 248, 0.94)',
+          borderTopWidth: 0.5,
+          borderTopColor: 'rgba(60, 60, 67, 0.12)',
+          height: 83,
+          paddingBottom: 20,
+          paddingTop: 8,
+          paddingHorizontal: 0,
+          shadowColor: 'rgba(0, 0, 0, 0.3)',
+          shadowOffset: {
+            width: 0,
+            height: -0.5,
+          },
+          shadowOpacity: 0.1,
+          shadowRadius: 0,
+          elevation: 0,
+        },
+      });
+    }
+
+    // Cleanup function to restore tab bar when component unmounts
+    return () => {
+      const parent = navigation.getParent();
+      if (parent) {
+        parent.setOptions({
+          tabBarStyle: {
+            display: 'flex',
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: 'rgba(248, 248, 248, 0.94)',
+            borderTopWidth: 0.5,
+            borderTopColor: 'rgba(60, 60, 67, 0.12)',
+            height: 83,
+            paddingBottom: 20,
+            paddingTop: 8,
+            paddingHorizontal: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.3)',
+            shadowOffset: {
+              width: 0,
+              height: -0.5,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 0,
+            elevation: 0,
+          },
+        });
+      }
+    };
+  }, [showChat, chatMessages.length, navigation]);
+
+  // Keyboard listeners for dynamic positioning
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (event) => {
+        setKeyboardHeight(event.endCoordinates.height);
+      }
+    );
+
+    const keyboardWillHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    const dimensionListener = Dimensions.addEventListener('change', ({ window }) => {
+      setScreenHeight(window.height);
+    });
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+      dimensionListener?.remove();
+    };
+  }, []);
 
   // Load chat history on component mount
   useEffect(() => {
+    console.log('[ASK DOUBT SCREEN] Component mounted');
+    analytics.trackScreenView('AskDoubtScreen', {
+      has_chat_history: chatMessages.length > 0,
+    });
     loadChatHistory();
   }, []);
 
@@ -255,7 +382,7 @@ export default function AskDoubtScreen() {
               'Thank you for your question. Let me provide you with an Islamic perspective on this matter...',
             isUser: false,
             timestamp: new Date().toISOString(),
-            sender: 'Abdul Bayees AI', // Updated to match your backend
+            sender: 'AI', // Updated to match your backend
           };
 
           setIsTyping(false);
@@ -296,84 +423,92 @@ export default function AskDoubtScreen() {
     });
   };
 
-  // Markdown styles for Islamic content
+  // iOS-optimized Markdown styles
   const markdownStyles = {
     body: {
-      color: '#92400e', // amber-800
+      color: '#000000',
       fontSize: 16,
-      lineHeight: 24,
+      lineHeight: 22,
+      fontFamily: 'System',
     },
     heading1: {
-      color: '#92400e',
+      color: '#000000',
       fontSize: 20,
-      fontWeight: 'bold',
+      fontWeight: '600',
       marginBottom: 8,
       marginTop: 12,
+      lineHeight: 26,
     },
     heading2: {
-      color: '#92400e',
+      color: '#000000',
       fontSize: 18,
-      fontWeight: 'bold',
+      fontWeight: '600',
       marginBottom: 6,
       marginTop: 10,
+      lineHeight: 24,
     },
     heading3: {
-      color: '#92400e',
+      color: '#000000',
       fontSize: 16,
-      fontWeight: 'bold',
+      fontWeight: '600',
       marginBottom: 4,
       marginTop: 8,
+      lineHeight: 22,
     },
     paragraph: {
-      color: '#92400e',
+      color: '#000000',
       fontSize: 16,
-      lineHeight: 24,
+      lineHeight: 22,
       marginBottom: 8,
     },
     strong: {
-      fontWeight: 'bold',
-      color: '#78350f', // amber-900
+      fontWeight: '600',
+      color: '#000000',
     },
     em: {
       fontStyle: 'italic',
-      color: '#059669', // green-600
+      color: '#1F2937',
     },
     listItem: {
-      color: '#92400e',
+      color: '#000000',
       fontSize: 16,
       lineHeight: 22,
       marginBottom: 4,
     },
     bullet_list: {
       marginBottom: 8,
+      marginLeft: 16,
     },
     ordered_list: {
       marginBottom: 8,
+      marginLeft: 16,
     },
     blockquote: {
-      backgroundColor: '#f0fdf4', // green-50
-      borderLeftWidth: 4,
-      borderLeftColor: '#10b981', // green-500
+      backgroundColor: '#F0F9FF',
+      borderLeftWidth: 3,
+      borderLeftColor: '#007AFF',
       paddingLeft: 12,
       paddingVertical: 8,
       marginVertical: 8,
-      borderRadius: 4,
+      borderRadius: 8,
     },
     code_inline: {
-      backgroundColor: '#fef3c7', // amber-100
-      color: '#92400e',
-      paddingHorizontal: 4,
+      backgroundColor: '#F3F4F6',
+      color: '#374151',
+      paddingHorizontal: 6,
       paddingVertical: 2,
       borderRadius: 4,
       fontSize: 14,
+      fontFamily: 'Menlo',
     },
     fence: {
-      backgroundColor: '#fef3c7',
-      color: '#92400e',
+      backgroundColor: '#F3F4F6',
+      color: '#374151',
       padding: 12,
-      borderRadius: 6,
+      borderRadius: 8,
       fontSize: 14,
       marginVertical: 8,
+      fontFamily: 'Menlo',
     },
   };
 
@@ -389,21 +524,19 @@ export default function AskDoubtScreen() {
           style={[
             tw`max-w-[80%] rounded-2xl px-4 py-3`,
             item.isUser
-              ? tw`bg-amber-600 ml-4`
+              ? tw`bg-blue-500`
               : item.isError
-                ? tw`bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 mr-4`
-                : tw`bg-white dark:bg-gray-800 border border-amber-200 dark:border-gray-600 mr-4`,
+                ? tw`bg-red-50 border border-red-200`
+                : tw`bg-gray-100 border border-gray-200`,
           ]}
         >
           {!item.isUser && (
-            <Text
-              style={tw`text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1`}
-            >
-              {item.sender}
+            <Text style={tw`text-xs font-medium text-gray-500 mb-2`}>
+              {item.sender || 'Islamic Scholar'}
             </Text>
           )}
           {item.isUser ? (
-            <Text style={[tw`text-base leading-6 text-white`]}>
+            <Text style={tw`text-base leading-5 text-white`}>
               {item.text}
             </Text>
           ) : (
@@ -413,8 +546,8 @@ export default function AskDoubtScreen() {
             style={[
               tw`text-xs mt-2`,
               item.isUser
-                ? tw`text-amber-100`
-                : tw`text-amber-500 dark:text-amber-500`,
+                ? tw`text-blue-200 text-right`
+                : tw`text-gray-400 text-right`,
             ]}
           >
             {formatTime(item.timestamp)}
@@ -425,139 +558,238 @@ export default function AskDoubtScreen() {
   );
 
 
-  return (
-    <SafeAreaView style={[tw`flex-1 bg-gray-50`, { paddingTop: insets.top }]}>
-      <View style={tw`flex-1 bg-amber-50 dark:bg-gray-900`}>
-        <View
-          style={tw`bg-white dark:bg-gray-800 border-b border-amber-200 dark:border-gray-700 px-4 py-3`}
-        >
-          <View style={tw`flex-row items-center`}>
-            <View
-              style={tw`w-10 h-10 bg-amber-600 rounded-full items-center justify-center mr-3`}
-            >
-              <Ionicons name="person" size={20} color="white" />
-            </View>
-            <View style={tw`flex-1`}>
-              <Text
-                style={tw`text-lg font-bold text-amber-900 dark:text-amber-100`}
+  const handleStartChat = () => {
+    setShowChat(true);
+    analytics.trackUserAction('start_chat', {
+      timestamp: new Date().toISOString(),
+    });
+  };
+
+  const handleQuickQuestion = (question) => {
+    setMessage(question);
+    setShowChat(true);
+  };
+
+  const handleClearChat = () => {
+    Alert.alert(
+      'Clear Chat History',
+      'Are you sure you want to clear all chat messages? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: clearChatHistory,
+        },
+      ]
+    );
+  };
+
+  if (showChat || chatMessages.length > 0) {
+    return (
+      <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['left', 'right']}>
+        <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
+          {/* iOS-Style Navigation Header */}
+          <View style={tw`bg-gray-100 `}>
+            <View style={tw`flex-row items-center justify-between px-4 py-3
+`}>
+ </View>
+ </View>
+        <View style={tw`flex-1 bg-white`}>
+          {/* iOS-Style Navigation Header */}
+          <View style={tw`bg-gray-100 border-b border-gray-200`}>
+            <View style={tw`flex-row items-center justify-between px-4 py-3`}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Home')}
+                style={tw`flex-row items-center py-1`}
+                activeOpacity={0.3}
               >
-                AI Assistant
+                <Ionicons name="chevron-back" size={24} color="#007AFF" />
+                <Text style={tw`text-lg text-blue-500 ml-1 font-normal`}>Home</Text>
+              </TouchableOpacity>
+
+              <Text style={tw`text-lg font-semibold text-black`}>
+                Islamic Q&A
               </Text>
-              <Text style={tw`text-sm text-amber-600 dark:text-amber-400`}>
-                Ask your Islamic questions
-              </Text>
+
+              <TouchableOpacity
+                onPress={handleClearChat}
+                style={tw`p-2 -mr-2`}
+                activeOpacity={0.3}
+              >
+                <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              onPress={() => {
-                Alert.alert(
-                  'Clear Chat History',
-                  'Are you sure you want to clear all chat messages? This action cannot be undone.',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Clear',
-                      style: 'destructive',
-                      onPress: clearChatHistory,
-                    },
-                  ]
-                );
-              }}
-              style={tw`w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-full items-center justify-center mr-2`}
-            >
-              <Ionicons name="trash-outline" size={16} color="#92400e" />
-            </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Chat Messages */}
-        {isLoading ? (
-          <View style={tw`flex-1 items-center justify-center`}>
-            <View style={tw`animate-spin`}>
-              <Ionicons name="hourglass" size={32} color="#92400e" />
-            </View>
-            <Text style={tw`text-amber-800 mt-2`}>Loading chat history...</Text>
+          {/* Chat Messages */}
+          <View 
+            style={[
+              tw`flex-1 bg-white`,
+              { 
+                marginBottom: keyboardHeight > 0 
+                  ? keyboardHeight + 80 // Input height + padding when keyboard is open
+                  : 80 // Just input height when keyboard is closed
+              }
+            ]}
+          >
+            {isLoading ? (
+              <View style={tw`flex-1 items-center justify-center`}>
+                <View style={tw`w-12 h-12 items-center justify-center mb-3`}>
+                  <Ionicons name="hourglass-outline" size={32} color="#8E8E93" />
+                </View>
+                <Text style={tw`text-gray-600 text-base`}>Loading messages...</Text>
+              </View>
+            ) : (
+              <FlatList
+                ref={flatListRef}
+                data={chatMessages}
+                renderItem={renderMessage}
+                keyExtractor={item => item.id}
+                style={tw`flex-1`}
+                contentContainerStyle={tw`py-4`}
+                showsVerticalScrollIndicator={false}
+              />
+            )}
           </View>
-        ) : (
-          <FlatList
-            ref={flatListRef}
-            data={chatMessages}
-            renderItem={renderMessage}
-            keyExtractor={item => item.id}
-            style={tw`flex-1`}
-            contentContainerStyle={tw`py-4`}
-            showsVerticalScrollIndicator={false}
-            ListFooterComponent={ null}
-          />
-        )}
 
-        {/* Quick Questions */}
-        <View style={tw`px-4 py-2`}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={tw`flex-row gap-2`}>
-              {[
-                'Prayer times',
-                'Wudu steps',
-                'Quran recitation',
-                'Zakat calculation',
-                'Hajj rituals',
-              ].map(question => (
-                <TouchableOpacity
-                  key={question}
-                  onPress={() => setMessage(question)}
-                  style={tw`bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-full px-3 py-2`}
-                >
-                  <Text style={tw`text-amber-800 dark:text-amber-200 text-sm`}>
-                    {question}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
-        </View>
-
-        {/* Message Input */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-        >
-          <View
-            style={tw`bg-white dark:bg-gray-800 border-t border-amber-200 dark:border-gray-700 px-4 py-3 pb-24`}
+          {/* Message Input - Positioned absolutely to stay above keyboard */}
+          <View 
+            style={[
+              tw`absolute left-0 right-0 bg-gray-100 border-t border-gray-200 px-4 py-3`,
+              { 
+                bottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom + 12
+              }
+            ]}
           >
             <View style={tw`flex-row items-end`}>
-              <View
-                style={tw`flex-1 bg-amber-50 dark:bg-gray-700 rounded-2xl border border-amber-200 dark:border-gray-600 mr-3`}
-              >
+              <View style={tw`flex-1 bg-white rounded-2xl border border-gray-300 mr-3 px-4 py-3`}>
                 <TextInput
-                  style={tw`px-4 py-3 text-amber-900 dark:text-amber-100 text-base max-h-24`}
+                  style={tw`text-black text-base max-h-24 leading-5`}
                   placeholder="Ask your Islamic question..."
-                  placeholderTextColor="#92400e"
+                  placeholderTextColor="#8E8E93"
                   value={message}
                   onChangeText={setMessage}
                   multiline
                   textAlignVertical="top"
                   maxLength={1000}
+                  selectionColor="#007AFF"
                 />
               </View>
               <TouchableOpacity
                 onPress={sendMessage}
                 disabled={isSending || !message.trim()}
                 style={[
-                  tw`w-12 h-12 bg-amber-600 rounded-full items-center justify-center`,
-                  (isSending || !message.trim()) && tw`opacity-50`,
+                  tw`w-12 h-12 bg-blue-500 rounded-full items-center justify-center`,
+                  (isSending || !message.trim()) && tw`opacity-40`,
                 ]}
+                activeOpacity={0.3}
               >
                 {isSending ? (
-                  <View style={tw`animate-spin`}>
-                    <Ionicons name="hourglass" size={24} color="white" />
-                  </View>
+                  <Ionicons name="hourglass-outline" size={20} color="white" />
                 ) : (
-                  <Ionicons name="send" size={24} color="white" />
+                  <Ionicons name="send" size={18} color="white" />
                 )}
               </TouchableOpacity>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </View>
+      </SafeAreaView>
+    );
+    } 
+     return (
+    <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['left', 'right']}>
+      <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
+
+      {/* iOS-Style Status Bar */}
+      <View style={tw`bg-gray-100 px-4 py-2 border-b border-gray-200`}>
+        <View style={tw`flex-row items-center justify-between`}>
+          <View style={tw`flex-row items-center`}>
+            <Ionicons name="help-circle" size={16} color="#007AFF" />
+            <Text style={tw`text-sm text-gray-600 font-medium ml-2`}>Ask Islamic Questions</Text>
+          </View>
+          <View style={tw`flex-row items-center`}>
+            <View style={tw`w-2 h-2 bg-green-500 rounded-full mr-2`} />
+            <Text style={tw`text-sm text-gray-500`}>Ready</Text>
+          </View>
+        </View>
       </View>
+
+      <ScrollView 
+        style={tw`flex-1`} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[tw`pb-6`, { paddingBottom: insets.bottom + 100 }]}
+      >
+        {/* Rate Limit Status */}
+        <View style={tw`px-4 pt-4 pb-2`}>
+          <RateLimitStatus service="quran/ask" />
+        </View>
+
+        {/* Start Chat Section */}
+        <View style={tw`mt-6`}>
+          <SectionHeader title="Ask Islamic Questions" />
+          <View style={tw`bg-white`}>
+            <TouchableOpacity
+              onPress={handleStartChat}
+              style={tw`px-4 py-4 border-b border-gray-200`}
+              activeOpacity={0.3}
+            >
+              <View style={tw`flex-row items-center`}>
+                <View style={tw`w-12 h-12 rounded-xl bg-blue-100 items-center justify-center mr-4`}>
+                  <Ionicons name="chatbubbles" size={24} color="#007AFF" />
+                </View>
+                <View style={tw`flex-1`}>
+                  <Text style={tw`text-lg font-medium text-black mb-1`}>
+                    Start New Conversation
+                  </Text>
+                  <Text style={tw`text-base text-gray-500 leading-5`}>
+                    Ask questions about Islam, Quran, and Islamic teachings
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Quick Questions Section */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="Popular Questions" />
+          <View style={tw`bg-white`}>
+            {[
+              'What are the 5 pillars of Islam?',
+              'How do I perform Wudu (ablution)?',
+              'What is the proper way to pray?',
+              'How do I calculate Zakat?',
+              'What are the conditions for Hajj?',
+              'How to recite Quran properly?',
+              'What is the significance of Ramadan?',
+              'How to seek forgiveness in Islam?'
+            ].map((question, index) => (
+              <QuickQuestionItem
+                key={index}
+                question={question}
+                onPress={() => handleQuickQuestion(question)}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* About Section */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="About" />
+          <View style={tw`bg-white`}>
+            <View style={tw`px-4 py-4`}>
+              <Text style={tw`text-base text-black mb-3 font-semibold`}>
+                Islamic AI Assistant
+              </Text>
+              <Text style={tw`text-sm text-gray-600 leading-5`}>
+                Get answers to your Islamic questions from our AI assistant trained on authentic Islamic sources. Ask about prayers, Quran, Islamic history, and daily Islamic practices.
+              </Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

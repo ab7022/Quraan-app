@@ -155,7 +155,7 @@ const getTimeBasedRecommendations = () => {
           type: 'dhikr',
           name: 'Morning Adhkar',
           description: 'Start your day with remembrance',
-          icon: 'sun',
+          icon: 'weather-sunny',
           content: DAILY_SCHEDULE.fajr.adhkar,
         },
         {

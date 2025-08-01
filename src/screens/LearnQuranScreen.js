@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,37 +6,95 @@ import {
   TouchableOpacity,
   Linking,
   Alert,
-  ImageBackground,
-  Dimensions,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  MaterialCommunityIcons,
-  Ionicons,
-  FontAwesome5,
-} from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
-import * as Animatable from 'react-native-animatable';
+import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
+import analytics from '../services/analyticsService';
 
-const { width, height } = Dimensions.get('window');
+const SectionHeader = ({ title }) => (
+  <View style={tw`px-4 py-3 bg-gray-100`}>
+    <Text style={tw`text-sm font-medium text-gray-500 uppercase tracking-wide`}>
+      {title}
+    </Text>
+  </View>
+);
+
+const FeatureItem = ({ icon, title, description, onPress, showChevron = true }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={tw`bg-white px-4 py-4 border-b border-gray-200`}
+    activeOpacity={0.3}
+  >
+    <View style={tw`flex-row items-center`}>
+      <View style={tw`w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3`}>
+        <Ionicons name={icon} size={20} color="#007AFF" />
+      </View>
+      <View style={tw`flex-1`}>
+        <Text style={tw`text-base font-medium text-black mb-1`}>
+          {title}
+        </Text>
+        <Text style={tw`text-sm text-gray-500 leading-5`}>
+          {description}
+        </Text>
+      </View>
+      {showChevron && <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />}
+    </View>
+  </TouchableOpacity>
+);
+
+const StatItem = ({ number, label, color = "#007AFF" }) => (
+  <View style={tw`flex-1 items-center`}>
+    <Text style={[tw`text-2xl font-bold mb-1`, { color }]}>
+      {number}
+    </Text>
+    <Text style={tw`text-sm text-gray-500 text-center`}>
+      {label}
+    </Text>
+  </View>
+);
+
+const ContactButton = ({ icon, title, subtitle, onPress, color = "#007AFF" }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={tw`bg-white px-4 py-4 border-b border-gray-200`}
+    activeOpacity={0.3}
+  >
+    <View style={tw`flex-row items-center`}>
+      <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-4`, { backgroundColor: `${color}20` }]}>
+        <Ionicons name={icon} size={24} color={color} />
+      </View>
+      <View style={tw`flex-1`}>
+        <Text style={tw`text-lg font-medium text-black mb-1`}>
+          {title}
+        </Text>
+        <Text style={tw`text-base text-gray-500`}>
+          {subtitle}
+        </Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+    </View>
+  </TouchableOpacity>
+);
 
 export default function LearnQuranScreen({ navigation }) {
-  const [activeTab, setActiveTab] = useState(0);
   const phoneNumber = '8217003676';
-  const customMessage =
-    'Hi! I am interested in learning Quran. Could you please share more details about the course?';
+  const customMessage = 'Hi! I am interested in learning Quran. Could you please share more details about the course?';
 
   const openWhatsApp = () => {
     const url = `whatsapp://send?phone=+91${phoneNumber}&text=${encodeURIComponent(customMessage)}`;
+    
+    analytics.trackUserAction('contact_whatsapp', {
+      source: 'learn_quran_screen',
+      timestamp: new Date().toISOString(),
+    });
 
     Linking.canOpenURL(url)
       .then(supported => {
         if (supported) {
           return Linking.openURL(url);
         } else {
-          // Fallback to web WhatsApp
           const webUrl = `https://wa.me/91${phoneNumber}?text=${encodeURIComponent(customMessage)}`;
           return Linking.openURL(webUrl);
         }
@@ -45,481 +103,320 @@ export default function LearnQuranScreen({ navigation }) {
         console.error('Error opening WhatsApp:', err);
         Alert.alert(
           'WhatsApp Not Available',
-          'Please install WhatsApp or contact us directly at: +91 ' +
-            phoneNumber,
+          'Please install WhatsApp or contact us directly at: +91 ' + phoneNumber,
           [{ text: 'OK' }]
         );
       });
   };
 
+  const makePhoneCall = () => {
+    const url = `tel:+91${phoneNumber}`;
+    
+    analytics.trackUserAction('contact_phone', {
+      source: 'learn_quran_screen',
+      timestamp: new Date().toISOString(),
+    });
+
+    Linking.canOpenURL(url)
+      .then(supported => {
+        if (supported) {
+          return Linking.openURL(url);
+        } else {
+          Alert.alert('Phone Not Available', 'Unable to make phone calls on this device');
+        }
+      })
+      .catch(err => {
+        console.error('Error making phone call:', err);
+        Alert.alert('Error', 'Unable to make phone call');
+      });
+  };
+
+  const handleBackPress = () => {
+    navigation.goBack?.();
+  };
+
   const features = [
     {
-      icon: 'book-open-variant',
+      icon: 'book',
       title: 'Perfect Tajweed',
-      description: 'Master the art of beautiful Quranic recitation',
-      color: '#10B981',
-      gradient: ['#10B981', '#059669'],
+      description: 'Master the art of beautiful Quranic recitation with expert guidance',
     },
     {
-      icon: 'account-voice',
-      title: 'Arabic Mastery',
-      description: 'Learn authentic Arabic pronunciation',
-      color: '#3B82F6',
-      gradient: ['#3B82F6', '#1D4ED8'],
+      icon: 'mic',
+      title: 'Arabic Pronunciation',
+      description: 'Learn authentic Arabic pronunciation from certified teachers',
     },
     {
-      icon: 'music-note',
+      icon: 'musical-notes',
       title: 'Melodious Recitation',
-      description: 'Develop your unique recitation style',
-      color: '#8B5CF6',
-      gradient: ['#8B5CF6', '#7C3AED'],
+      description: 'Develop your unique recitation style with personalized feedback',
     },
     {
-      icon: 'lightbulb-on',
+      icon: 'bulb',
       title: 'Deep Understanding',
-      description: 'Understand meanings and spiritual context',
-      color: '#EF4444',
-      gradient: ['#EF4444', '#DC2626'],
+      description: 'Understand meanings and spiritual context of Quranic verses',
     },
     {
       icon: 'heart',
       title: 'Spiritual Growth',
-      description: 'Strengthen your connection with Allah',
-      color: '#F59E0B',
-      gradient: ['#F59E0B', '#D97706'],
+      description: 'Strengthen your connection with Allah through guided learning',
     },
     {
       icon: 'trophy',
-      title: 'Achievement',
-      description: 'Earn recognition for your progress',
-      color: '#06B6D4',
-      gradient: ['#06B6D4', '#0891B2'],
+      title: 'Achievement Tracking',
+      description: 'Earn recognition and certificates for your progress',
     },
   ];
 
-  const testimonials = [
+  const benefits = [
     {
-      name: 'Aisha Rahman',
-      text: 'My recitation transformed completely! The teachers are incredibly patient and knowledgeable.',
-      rating: 5,
-      image:
-        'https://images.unsplash.com/photo-1494790108755-2616c96c48e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80',
-      course: 'Tajweed Mastery',
+      icon: 'people',
+      title: 'Expert Teachers',
+      description: 'Learn from certified Qaris with years of experience',
     },
     {
-      name: 'Muhammad Ali',
-      text: 'Best investment I made for my spiritual journey. Highly recommend to everyone!',
-      rating: 5,
-      image:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80',
-      course: 'Complete Quran Course',
+      icon: 'time',
+      title: 'Flexible Schedule',
+      description: 'Choose learning times that work perfectly for you',
     },
     {
-      name: 'Fatima Khan',
-      text: 'The 7-day trial convinced me. Now I can recite with confidence and beauty!',
-      rating: 5,
-      image:
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80',
-      course: 'Arabic Fundamentals',
+      icon: 'videocam',
+      title: 'One-on-One Sessions',
+      description: 'Get individual attention and customized feedback',
+    },
+    {
+      icon: 'shield-checkmark',
+      title: 'Proven Method',
+      description: 'Time-tested teaching methodology for effective learning',
     },
   ];
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
-      {/* Floating Header with Blur Effect */}
-      <BlurView
-        intensity={95}
-        tint="light"
-        style={tw`absolute top-0 left-0 right-0 z-50`}
-      >
-        <SafeAreaView>
-          <View style={tw`px-6 py-4 flex-row items-center`}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={tw`mr-4 p-2 rounded-full bg-white/20 backdrop-blur-sm`}
-            >
-              <Ionicons name="arrow-back" size={20} color="#374151" />
-            </TouchableOpacity>
-            <Text style={tw`text-xl font-bold text-gray-900 flex-1`}>
-              Learn Quran - For Everyone
-            </Text>
-            <TouchableOpacity style={tw`p-2 rounded-full bg-white/20`}>
-              <Ionicons name="heart-outline" size={20} color="#374151" />
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </BlurView>
-
-      <ScrollView
-        style={tw`flex-1 pt-20`}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={tw`pb-8`}
-      >
-        {/* Hero Section with Parallax Effect */}
-        <ImageBackground
-          source={{
-            uri: 'https://images.unsplash.com/photo-1542816417-0983c9c9ad53?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-          }}
-          style={tw`mx-6 mt-6 rounded-3xl overflow-hidden`}
-          imageStyle={tw`opacity-30`}
-        >
-          <LinearGradient
-            colors={[
-              'rgba(16, 185, 129, 0.9)',
-              'rgba(5, 150, 105, 0.95)',
-              'rgba(4, 120, 87, 1)',
-            ]}
-            style={tw`p-8`}
+    <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
+      <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
+      
+      {/* iOS-Style Navigation Header */}
+      <View style={tw`bg-gray-100 border-b border-gray-200`}>
+        <View style={tw`flex-row items-center justify-between px-4 py-3`}>
+          <TouchableOpacity
+            onPress={handleBackPress}
+            style={tw`flex-row items-center py-1`}
+            activeOpacity={0.3}
           >
-            <Animatable.View animation="fadeInUp" delay={200}>
-              <View style={tw`items-center mb-6`}>
-                <Animatable.View
-                  animation="pulse"
-                  iterationCount="infinite"
-                  style={tw`w-24 h-24 bg-white/20 rounded-full items-center justify-center mb-6 shadow-2xl`}
-                >
-                  <MaterialCommunityIcons
-                    name="book-open-variant"
-                    size={48}
-                    color="white"
-                  />
-                </Animatable.View>
-                <Text
-                  style={tw`text-3xl font-bold text-white text-center mb-3`}
-                >
-                  Transform Your
-                  <Text style={tw`text-yellow-300`}> Quran Journey</Text>
-                </Text>
-                <Text
-                  style={tw`text-white/90 text-center text-lg leading-7 max-w-sm`}
-                >
-                  Master the art of beautiful recitation with world-class
-                  teachers and personalized guidance
-                </Text>
-              </View>
+            <Ionicons name="chevron-back" size={24} color="#007AFF" />
+            <Text style={tw`text-lg text-blue-500 ml-1 font-normal`}>Back</Text>
+          </TouchableOpacity>
 
-              {/* Floating Stats */}
-              <View style={tw`flex-row justify-between mt-6`}>
-                {[
-                  { number: '1k+', label: 'Students' },
-                  { number: '50+', label: 'Teachers' },
-                  { number: '4.9★', label: 'Rating' },
-                ].map((stat, index) => (
-                  <Animatable.View
-                    key={stat.label}
-                    animation="fadeInUp"
-                    delay={400 + index * 100}
-                    style={tw`bg-white/15 backdrop-blur-sm rounded-2xl p-4 flex-1 mx-1 items-center`}
-                  >
-                    <Text style={tw`text-2xl font-bold text-white`}>
-                      {stat.number}
-                    </Text>
-                    <Text style={tw`text-white/80 text-sm`}>{stat.label}</Text>
-                  </Animatable.View>
-                ))}
-              </View>
-            </Animatable.View>
-          </LinearGradient>
-        </ImageBackground>
+          <Text style={tw`text-lg font-semibold text-black`}>
+            Learn Quran
+          </Text>
 
-        {/* Free Trial Banner with Animation */}
-        <Animatable.View animation="fadeInUp" delay={600}>
-          <TouchableOpacity onPress={openWhatsApp} activeOpacity={0.9}>
-            <View style={tw`mx-6 mt-6 rounded-3xl overflow-hidden shadow-2xl`}>
-              <LinearGradient
-                colors={['#6366F1', '#8B5CF6', '#EC4899']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={tw`p-6`}
-              >
-                <View style={tw`flex-row items-center`}>
-                  <Animatable.View
-                    animation="rotate"
-                    iterationCount="infinite"
-                    duration={3000}
-                    style={tw`w-16 h-16 bg-white/20 rounded-full items-center justify-center mr-4`}
-                  >
-                    <MaterialCommunityIcons
-                      name="gift"
-                      size={32}
-                      color="white"
-                    />
-                  </Animatable.View>
-                  <View style={tw`flex-1`}>
-                    <View style={tw`flex-row items-center mb-2`}>
-                      <Text style={tw`text-xl font-bold text-white mr-2`}>
-                        FREE Trial
-                      </Text>
-                      <View style={tw`bg-yellow-400 px-3 py-1 rounded-full`}>
-                        <Text style={tw`text-xs font-bold text-gray-900`}>
-                          7 DAYS
-                        </Text>
-                      </View>
-                    </View>
-                    <Text style={tw`text-white/90 text-base font-medium`}>
-                      Experience premium quality at zero cost!
+          <View style={tw`w-16`} />
+        </View>
+      </View>
+
+      <ScrollView 
+        style={tw`flex-1`} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={tw`pb-6`}
+      >
+        {/* Hero Section */}
+        <View style={tw`mt-6`}>
+          <SectionHeader title="Transform Your Journey" />
+          <View style={tw`bg-white px-4 py-6`}>
+            <View style={tw`items-center mb-6`}>
+              <View style={tw`w-20 h-20 rounded-full bg-green-100 items-center justify-center mb-4`}>
+                <Ionicons name="book" size={40} color="#34C759" />
+              </View>
+              <Text style={tw`text-xl font-bold text-black text-center mb-2`}>
+                Master Beautiful Recitation
+              </Text>
+              <Text style={tw`text-base text-gray-500 text-center leading-6`}>
+                Learn authentic Quran recitation with world-class teachers and personalized guidance
+              </Text>
+            </View>
+            
+            {/* Stats */}
+            <View style={tw`flex-row border-t border-gray-200 pt-4`}>
+              <StatItem number="1000+" label="Students" color="#007AFF" />
+              <StatItem number="50+" label="Teachers" color="#34C759" />
+              <StatItem number="4.9★" label="Rating" color="#FF8C00" />
+            </View>
+          </View>
+        </View>
+
+        {/* Free Trial Banner */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="Special Offer" />
+          <TouchableOpacity
+            onPress={openWhatsApp}
+            style={tw`bg-white px-4 py-4 border-b border-gray-200`}
+            activeOpacity={0.3}
+          >
+            <View style={tw`flex-row items-center`}>
+              <View style={tw`w-12 h-12 rounded-xl bg-purple-100 items-center justify-center mr-4`}>
+                <Ionicons name="gift" size={24} color="#8B5CF6" />
+              </View>
+              <View style={tw`flex-1`}>
+                <View style={tw`flex-row items-center mb-1`}>
+                  <Text style={tw`text-lg font-bold text-black mr-2`}>
+                    7-Day Free Trial
+                  </Text>
+                  <View style={tw`bg-orange-100 px-2 py-1 rounded-md`}>
+                    <Text style={tw`text-xs font-bold text-orange-600`}>
+                      LIMITED
                     </Text>
                   </View>
-                  <Animatable.View
-                    animation="pulse"
-                    iterationCount="infinite"
-                    duration={1500}
-                  >
-                    <MaterialCommunityIcons
-                      name="arrow-right-circle"
-                      size={32}
-                      color="white"
-                    />
-                  </Animatable.View>
                 </View>
-              </LinearGradient>
+                <Text style={tw`text-base text-gray-500`}>
+                  Experience premium quality at zero cost
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
             </View>
           </TouchableOpacity>
-        </Animatable.View>
+        </View>
 
-        {/* Interactive Features Grid */}
-        <View style={tw`mx-6 mt-8`}>
-          <Text style={tw`text-2xl font-bold text-gray-900 mb-6`}>
-            What You'll Master
-          </Text>
-          <View style={tw`flex-row flex-wrap -mx-2`}>
+        {/* What You'll Learn */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="What You'll Learn" />
+          <View style={tw`bg-white`}>
             {features.map((feature, index) => (
-              <Animatable.View
+              <FeatureItem
                 key={feature.title}
-                animation="fadeInUp"
-                delay={800 + index * 100}
-                style={tw`w-1/2 px-2 mb-4`}
-              >
-                <TouchableOpacity
-                  style={tw`bg-white rounded-3xl p-4 border border-gray-100 h-44`}
-                  activeOpacity={0.9}
-                >
-                  <LinearGradient
-                    colors={feature.gradient}
-                    style={tw`w-12 h-12 rounded-xl items-center justify-center mb-3`}
-                  >
-                    <MaterialCommunityIcons
-                      name={feature.icon}
-                      size={24}
-                      color="white"
-                    />
-                  </LinearGradient>
-                  <Text
-                    style={tw`text-base font-bold text-gray-900 mb-2 leading-tight`}
-                    numberOfLines={2}
-                  >
-                    {feature.title}
-                  </Text>
-                  <Text
-                    style={tw`text-xs text-gray-600 leading-4`}
-                    numberOfLines={3}
-                  >
-                    {feature.description}
-                  </Text>
-                </TouchableOpacity>
-              </Animatable.View>
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+                onPress={() => {}}
+                showChevron={false}
+              />
             ))}
           </View>
         </View>
 
-        {/* Why Choose Us with Icons */}
-        <View style={tw`mx-6 mt-12`}>
-          <Text style={tw`text-2xl font-bold text-gray-900 mb-6`}>
-            Why We're Different
-          </Text>
-          <View style={tw`bg-white rounded-3xl p-6 border border-gray-100`}>
-            {[
-              {
-                icon: 'account-star',
-                text: 'World-Class Expert Teachers',
-                color: '#10B981',
-                desc: 'Learn from certified Qaris with years of experience',
-              },
-              {
-                icon: 'clock-fast',
-                text: 'Flexible Learning Schedule',
-                color: '#3B82F6',
-                desc: 'Choose times that work perfectly for you',
-              },
-              {
-                icon: 'video-account',
-                text: 'Personal One-on-One Sessions',
-                color: '#8B5CF6',
-                desc: 'Get individual attention and customized feedback',
-              },
-              {
-                icon: 'trophy-award',
-                text: 'Achievement Recognition',
-                color: '#EF4444',
-                desc: 'Earn certificates and track your progress',
-              },
-              {
-                icon: 'heart-pulse',
-                text: 'Spiritual Growth Focus',
-                color: '#F59E0B',
-                desc: 'Connect deeply with the Quran and your faith',
-              },
-            ].map((item, index) => (
-              <Animatable.View
-                key={item.text}
-                animation="fadeInRight"
-                delay={1000 + index * 150}
-              >
-                <View
-                  style={tw`flex-row items-start mb-6 ${index < 4 ? 'border-b border-gray-100 pb-6' : ''}`}
-                >
-                  <LinearGradient
-                    colors={[item.color, item.color + '80']}
-                    style={tw`w-12 h-12 rounded-xl items-center justify-center mr-4`}
-                  >
-                    <MaterialCommunityIcons
-                      name={item.icon}
-                      size={24}
-                      color="white"
-                    />
-                  </LinearGradient>
-                  <View style={tw`flex-1`}>
-                    <Text style={tw`text-base font-bold text-gray-900 mb-1`}>
-                      {item.text}
-                    </Text>
-                    <Text style={tw`text-sm text-gray-600 leading-5`}>
-                      {item.desc}
-                    </Text>
-                  </View>
-                  <Animatable.View
-                    animation="pulse"
-                    iterationCount="infinite"
-                    duration={2000}
-                  >
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={24}
-                      color="#10B981"
-                    />
-                  </Animatable.View>
+        {/* Why Choose Us */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="Why Choose Us" />
+          <View style={tw`bg-white`}>
+            {benefits.map((benefit, index) => (
+              <FeatureItem
+                key={benefit.title}
+                icon={benefit.icon}
+                title={benefit.title}
+                description={benefit.description}
+                onPress={() => {}}
+                showChevron={false}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Contact Methods */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="Get Started Today" />
+          <View style={tw`bg-white`}>
+            <ContactButton
+              icon="logo-whatsapp"
+              title="WhatsApp"
+              subtitle="Quick response via messaging"
+              onPress={openWhatsApp}
+              color="#25D366"
+            />
+            <ContactButton
+              icon="call"
+              title="Phone Call"
+              subtitle={`+91 ${phoneNumber}`}
+              onPress={makePhoneCall}
+              color="#007AFF"
+            />
+          </View>
+        </View>
+
+        {/* Course Information */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="Course Details" />
+          <View style={tw`bg-white`}>
+            <View style={tw`px-4 py-4 border-b border-gray-200`}>
+              <View style={tw`flex-row items-start`}>
+                <View style={tw`w-6 h-6 rounded-full bg-green-100 items-center justify-center mr-3 mt-0.5`}>
+                  <Ionicons name="checkmark" size={14} color="#34C759" />
                 </View>
-              </Animatable.View>
-            ))}
+                <View style={tw`flex-1`}>
+                  <Text style={tw`text-base font-medium text-black mb-1`}>
+                    Personalized Learning Path
+                  </Text>
+                  <Text style={tw`text-sm text-gray-500 leading-5`}>
+                    Customized curriculum based on your current level and goals
+                  </Text>
+                </View>
+              </View>
+            </View>
+            
+            <View style={tw`px-4 py-4 border-b border-gray-200`}>
+              <View style={tw`flex-row items-start`}>
+                <View style={tw`w-6 h-6 rounded-full bg-blue-100 items-center justify-center mr-3 mt-0.5`}>
+                  <Ionicons name="time" size={14} color="#007AFF" />
+                </View>
+                <View style={tw`flex-1`}>
+                  <Text style={tw`text-base font-medium text-black mb-1`}>
+                    Flexible Timing
+                  </Text>
+                  <Text style={tw`text-sm text-gray-500 leading-5`}>
+                    Schedule classes at your convenience, 7 days a week
+                  </Text>
+                </View>
+              </View>
+            </View>
+            
+            <View style={tw`px-4 py-4`}>
+              <View style={tw`flex-row items-start`}>
+                <View style={tw`w-6 h-6 rounded-full bg-purple-100 items-center justify-center mr-3 mt-0.5`}>
+                  <Ionicons name="ribbon" size={14} color="#8B5CF6" />
+                </View>
+                <View style={tw`flex-1`}>
+                  <Text style={tw`text-base font-medium text-black mb-1`}>
+                    Certification
+                  </Text>
+                  <Text style={tw`text-sm text-gray-500 leading-5`}>
+                    Receive recognized certificates upon course completion
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
         </View>
 
-        {/* Modern Contact Section */}
-        <View style={tw`mx-6 mt-12`}>
-          <View style={tw`text-center mb-8`}>
-            <Text style={tw`text-3xl font-bold text-gray-900 mb-3`}>
-              Ready to Transform?
+        {/* Call to Action */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="Ready to Start?" />
+          <View style={tw`bg-white px-4 py-6`}>
+            <Text style={tw`text-lg font-bold text-black text-center mb-2`}>
+              Begin Your Quran Journey Today
             </Text>
-            <Text style={tw`text-gray-600 text-lg leading-7`}>
-              Join thousands learning beautiful Quran recitation
+            <Text style={tw`text-base text-gray-500 text-center mb-6 leading-6`}>
+              Join thousands of students who transformed their recitation with our expert guidance
             </Text>
-          </View>
-
-          {/* Main CTA Card */}
-          <View style={tw`bg-gradient-to-br rounded-3xl overflow-hidden mb-6`}>
-            <LinearGradient
-              colors={['#10B981', '#059669', '#047857']}
-              style={tw`p-8`}
+            
+            <TouchableOpacity
+              onPress={openWhatsApp}
+              style={tw`bg-green-500 rounded-xl py-4 px-6 mb-3`}
+              activeOpacity={0.8}
             >
-              <View style={tw`items-center`}>
-                <View style={tw`bg-white/20 rounded-full p-4 mb-6`}>
-                  <MaterialCommunityIcons
-                    name="whatsapp"
-                    size={32}
-                    color="white"
-                  />
-                </View>
-
-                <Text
-                  style={tw`text-2xl font-bold text-white text-center mb-2`}
-                >
-                  Start Your Journey Today
-                </Text>
-                <Text
-                  style={tw`text-white/90 text-center mb-6 text-base leading-6`}
-                >
-                  Connect instantly with our expert teachers on WhatsApp
-                </Text>
-
-                <TouchableOpacity
-                  onPress={openWhatsApp}
-                  style={tw`bg-white rounded-2xl px-8 py-4 mb-4`}
-                  activeOpacity={0.9}
-                >
-                  <View style={tw`flex-row items-center`}>
-                    <FontAwesome5
-                      name="whatsapp"
-                      size={24}
-                      color="#25D366"
-                      style={tw`mr-3`}
-                    />
-                    <Text style={tw`text-gray-900 font-bold text-lg`}>
-                      Contact Us Now
-                    </Text>
-                    <Animatable.View
-                      animation="bounceIn"
-                      iterationCount="infinite"
-                      duration={2000}
-                      style={tw`ml-3`}
-                    >
-                      <Ionicons
-                        name="arrow-forward"
-                        size={20}
-                        color="#10B981"
-                      />
-                    </Animatable.View>
-                  </View>
-                </TouchableOpacity>
-                <Text style={tw`text-white/90 text-sm text-center`}>
-                  Or call us at:{' '}
-                  <Text style={tw`text-white font-bold`}>
-                    +91 {phoneNumber}
-                  </Text>
+              <View style={tw`flex-row items-center justify-center`}>
+                <Ionicons name="logo-whatsapp" size={20} color="white" />
+                <Text style={tw`text-white font-bold text-lg ml-2`}>
+                  Start Free Trial
                 </Text>
               </View>
-            </LinearGradient>
-          </View>
-
-          {/* Quick Info Cards */}
-          <View style={tw`flex-row gap-3 mb-20`}>
-            {[
-              {
-                icon: 'clock-time-four',
-                text: '7-Day Free Trial',
-                color: '#3B82F6',
-              },
-              { icon: 'shield-check', text: '100% Secure', color: '#10B981' },
-              {
-                icon: 'account-heart',
-                text: '1000+ Students',
-                color: '#EF4444',
-              },
-            ].map((item, index) => (
-              <Animatable.View
-                key={item.text}
-                animation="fadeInUp"
-                delay={200 * index}
-                style={tw`flex-1 bg-white rounded-2xl p-4 border border-gray-100 items-center`}
-              >
-                <LinearGradient
-                  colors={[item.color, item.color + '80']}
-                  style={tw`w-10 h-10 rounded-full items-center justify-center mb-2`}
-                >
-                  <MaterialCommunityIcons
-                    name={item.icon}
-                    size={20}
-                    color="white"
-                  />
-                </LinearGradient>
-                <Text
-                  style={tw`text-xs font-semibold text-gray-700 text-center`}
-                >
-                  {item.text}
-                </Text>
-              </Animatable.View>
-            ))}
+            </TouchableOpacity>
+            
+            <Text style={tw`text-sm text-gray-500 text-center`}>
+              No credit card required • 7-day free access
+            </Text>
           </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+         

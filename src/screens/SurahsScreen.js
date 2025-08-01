@@ -8,13 +8,48 @@ import {
   StatusBar,
   TextInput,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
-import SurahCard from '../components/SurahCard';
-import Shimmer from '../components/Shimmer';
 import { useNavigation } from '@react-navigation/native';
 import analytics from '../services/analyticsService';
+
+const SectionHeader = ({ title }) => (
+  <View style={tw`px-4 py-2 bg-gray-100`}>
+    <Text style={tw`text-sm text-gray-500 uppercase font-normal tracking-wide`}>
+      {title}
+    </Text>
+  </View>
+);
+
+const SurahItem = ({ item, onPress }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={tw`bg-white px-4 py-4 border-b border-gray-200`}
+    activeOpacity={0.3}
+  >
+    <View style={tw`flex-row items-center`}>
+      {/* Surah Number */}
+      <View style={tw`w-12 h-12 rounded-lg bg-gray-100 items-center justify-center mr-3`}>
+        <Text style={tw`text-lg font-semibold text-gray-700`}>
+          {item.number}
+        </Text>
+      </View>
+
+      {/* Surah Info */}
+      <View style={tw`flex-1`}>
+        <Text style={tw`text-base font-medium text-black mb-1`}>
+          {item.englishName}
+        </Text>
+        <Text style={tw`text-sm text-gray-500`}>
+          {item.name} • {item.numberOfAyahs} verses
+        </Text>
+      </View>
+
+      {/* Chevron */}
+      <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+    </View>
+  </TouchableOpacity>
+);
 
 // Mapping of Surah number to starting page in Mushaf
 const surahToPageMapping = {
@@ -194,176 +229,79 @@ export default function SurahsScreen() {
   };
 
   return (
-    <SafeAreaView style={[tw`flex-1`, { backgroundColor: '#f2f2f7' }]}>
-      <StatusBar backgroundColor="#f2f2f7" barStyle="dark-content" />
+    <SafeAreaView style={tw`flex-1 bg-gray-100`}>
+      <StatusBar backgroundColor="#f3f4f6" barStyle="dark-content" />
 
-      {/* Apple-Style Header */}
-      <View style={tw`px-4 pt-4 pb-4`}>
-        <View style={tw`flex flex-row justify-between align-center items-center mb-2 pl-4`}>
-          <Text style={[tw`text-3xl font-bold text-gray-700 mb-0`, { letterSpacing: -0.5 }]}>
-            Surahs
-          </Text>
-          <Text style={tw`text-gray-500 text-base font-medium`}>
-            114 Chapters
-          </Text>
-        </View>
-
-        {/* Apple Search Bar */}
-        <View style={[
-          tw`bg-white rounded-2xl px-4 py-3 flex-row items-center mx-2`,
-          {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.05,
-            shadowRadius: 2,
-            elevation: 2,
-          }
-        ]}>
-          <Ionicons name="search" size={18} color="#8e8e93" style={tw`mr-3`} />
+      {/* Search Section */}
+      <View style={tw`px-4 py-3 bg-gray-100`}>
+        <View style={tw`bg-white rounded-xl border border-gray-200 px-4 py-3 flex-row items-center`}>
+          <Ionicons name="search" size={18} color="#8E8E93" style={tw`mr-3`} />
           <TextInput
-            style={[tw`flex-1 text-gray-900 text-base`, { fontSize: 17 }]}
-            placeholder="Search"
-            placeholderTextColor="#8e8e93"
+            style={tw`flex-1 text-black text-base`}
+            placeholder="Search Surahs"
+            placeholderTextColor="#8E8E93"
             value={searchText}
             onChangeText={handleSearch}
             selectionColor="#007AFF"
           />
           {searchText.length > 0 && (
             <TouchableOpacity onPress={() => handleSearch('')} style={tw`ml-2`}>
-              <Ionicons name="close-circle-outline" size={20} color="#8e8e93" />
+              <Ionicons name="close-circle" size={20} color="#8E8E93" />
             </TouchableOpacity>
           )}
         </View>
       </View>
 
-      {/* Apple-Style Content */}
-      <View style={tw`flex-1 px-4 mb-12`}>
-        {loading ? (
-          <View style={tw`flex-1`}>
+      {loading ? (
+        <View style={tw`flex-1`}>
+          <SectionHeader title="Loading Surahs" />
+          <View style={tw`bg-white border-t border-gray-200`}>
             {Array.from({ length: 8 }).map((_, idx) => (
-              <View key={idx} style={[
-                tw`bg-white rounded-2xl p-4 mb-3 mx-2`,
-                {
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 2,
-                  elevation: 1,
-                }
-              ]}>
-                <Shimmer height={60} style={tw`rounded-xl`} />
+              <View key={idx} style={tw`px-4 py-4 border-b border-gray-200`}>
+                <View style={tw`flex-row items-center`}>
+                  <View style={tw`w-12 h-12 rounded-lg bg-gray-200 mr-3`} />
+                  <View style={tw`flex-1`}>
+                    <View style={tw`h-4 bg-gray-200 rounded mb-2 w-2/3`} />
+                    <View style={tw`h-3 bg-gray-200 rounded w-1/2`} />
+                  </View>
+                </View>
               </View>
             ))}
           </View>
-        ) : (
+        </View>
+      ) : (
+        <View style={tw`flex-1`}>
+          <SectionHeader title={`${filteredSurahs.length} Surahs`} />
           <FlatList
             data={filteredSurahs}
-            keyExtractor={(item, index) => `surah-${item.number || index}`}
+            keyExtractor={item => item.number.toString()}
             renderItem={({ item }) => (
-              <TouchableOpacity
+              <SurahItem
+                item={item}
                 onPress={() => handleSurahPress(item)}
-                style={tw`mb-3 mx-2`}
-                activeOpacity={0.6}
-              >
-                <View style={[
-                  tw`bg-white rounded-2xl overflow-hidden `,
-                  {
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  }
-                ]}>
-                  <View style={tw`px-4 py-4 `}>
-                    <View style={tw`flex-row items-center`}>
-                      {/* Apple-Style Number Circle */}
-                      <View style={[
-                        tw`w-10 h-10 rounded-full items-center justify-center mr-4`,
-                        { backgroundColor: '#007AFF' }
-                      ]}>
-                        <Text style={[tw`text-white font-semibold`, { fontSize: 15 }]}>
-                          {item.number}
-                        </Text>
-                      </View>
-
-                      {/* Content */}
-                      <View style={tw`flex-1`}>
-                        <View style={tw`flex-row items-center justify-between mb-1`}>
-                          <Text style={[
-                            tw`text-gray-900 font-semibold`,
-                            { fontSize: 17, letterSpacing: -0.3 }
-                          ]}>
-                            {item.englishName}
-                          </Text>
-                          <Text style={tw`text-gray-400 text-sm font-medium`}>
-                            {item.numberOfAyahs} verses
-                          </Text>
-                        </View>
-                        
-                        <View style={tw`flex-row items-center justify-between`}>
-                          <Text style={tw`text-gray-500 text-sm font-medium`}>
-                            {item.englishNameTranslation}
-                          </Text>
-                          <View style={tw`flex-row items-center`}>
-                            <View style={[
-                              tw`px-2 py-1 rounded-lg mr-2`,
-                              { backgroundColor: item.revelationType === 'Meccan' ? '#fff3e0' : '#e8f5e8' }
-                            ]}>
-                              <Text style={[
-                                tw`text-xs font-medium`,
-                                { color: item.revelationType === 'Meccan' ? '#f57c00' : '#388e3c' }
-                              ]}>
-                                {item.revelationType === 'Meccan' ? 'Meccan' : 'Medinan'}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-
-                        {/* Arabic Name */}
-                        <Text style={[
-                          tw`text-gray-600 mt-2 text-right`,
-                          { fontSize: 16, fontFamily: 'System' }
-                        ]}>
-                          {item.name}
-                        </Text>
-                      </View>
-
-                      {/* Apple-Style Chevron */}
-                      <View style={tw`ml-3`}>
-                        <Ionicons name="chevron-forward" size={18} color="#c7c7cc" />
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </TouchableOpacity>
+              />
             )}
+            style={tw`bg-white border-t border-gray-200`}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={tw`pb-6`}
+            contentContainerStyle={tw`pb-20`}
             ListEmptyComponent={
               searchText.length > 0 ? (
-                <View style={tw`items-center justify-center py-16`}>
-                  <View style={[
-                    tw`w-16 h-16 rounded-full items-center justify-center mb-4`,
-                    { backgroundColor: '#f2f2f7' }
-                  ]}>
-                    <Ionicons name="search-outline" size={32} color="#8e8e93" />
+                <View style={tw`items-center justify-center py-16 px-4`}>
+                  <View style={tw`w-16 h-16 rounded-full bg-gray-100 items-center justify-center mb-4`}>
+                    <Ionicons name="search" size={32} color="#8E8E93" />
                   </View>
-                  <Text style={[
-                    tw`text-gray-900 font-semibold text-lg mb-2`,
-                    { letterSpacing: -0.3 }
-                  ]}>
+                  <Text style={tw`text-lg font-semibold text-black mb-2`}>
                     No Results
                   </Text>
-                  <Text style={tw`text-gray-500 text-center px-8`}>
+                  <Text style={tw`text-gray-500 text-center`}>
                     Try a different search term or check your spelling.
                   </Text>
                 </View>
               ) : null
             }
           />
-        )}
-      </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

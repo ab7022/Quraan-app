@@ -4,26 +4,94 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
   Modal,
   TextInput,
   StatusBar,
-  Platform,
-  Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
-import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const { width } = Dimensions.get('window');
 
 const DAILY_TARGET_STORAGE_KEY = 'daily_target_data';
 
+const SectionHeader = ({ title }) => (
+  <View style={tw`px-4 py-3 bg-gray-100`}>
+    <Text style={tw`text-sm font-medium text-gray-500 uppercase tracking-wide`}>
+      {title}
+    </Text>
+  </View>
+);
+
+const StatCard = ({ title, value, subtitle, icon, color = "#007AFF" }) => (
+  <View style={tw`bg-white px-4 py-4 border-b border-gray-200`}>
+    <View style={tw`flex-row items-center`}>
+      <View style={[tw`w-10 h-10 rounded-full items-center justify-center mr-3`, { backgroundColor: `${color}20` }]}>
+        <Ionicons name={icon} size={20} color={color} />
+      </View>
+      <View style={tw`flex-1`}>
+        <Text style={tw`text-sm text-gray-500 font-medium uppercase tracking-wide mb-1`}>
+          {title}
+        </Text>
+        <Text style={tw`text-2xl font-light text-black mb-1`}>
+          {value}
+        </Text>
+        {subtitle && (
+          <Text style={tw`text-sm text-gray-500`}>
+            {subtitle}
+          </Text>
+        )}
+      </View>
+    </View>
+  </View>
+);
+
+const ProgressBar = ({ progress, total, color = "#007AFF" }) => {
+  const percentage = total > 0 ? (progress / total) * 100 : 0;
+  return (
+    <View style={tw`flex-1`}>
+      <View style={tw`h-2 bg-gray-200 rounded-full overflow-hidden`}>
+        <View 
+          style={[
+            tw`h-full rounded-full`,
+            { backgroundColor: color, width: `${Math.min(percentage, 100)}%` }
+          ]} 
+        />
+      </View>
+      <Text style={tw`text-xs text-gray-500 mt-1 text-center`}>
+        {percentage.toFixed(0)}%
+      </Text>
+    </View>
+  );
+};
+
+const ActionButton = ({ icon, title, subtitle, onPress, color = "#007AFF" }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={tw`bg-white px-4 py-4 border-b border-gray-200`}
+    activeOpacity={0.3}
+  >
+    <View style={tw`flex-row items-center`}>
+      <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-4`, { backgroundColor: `${color}20` }]}>
+        <Ionicons name={icon} size={24} color={color} />
+      </View>
+      <View style={tw`flex-1`}>
+        <Text style={tw`text-lg font-medium text-black mb-1`}>
+          {title}
+        </Text>
+        {subtitle && (
+          <Text style={tw`text-base text-gray-500`}>
+            {subtitle}
+          </Text>
+        )}
+      </View>
+      <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+    </View>
+  </TouchableOpacity>
+);
+
 export default function HifzScreen({ navigation }) {
-  const insets = useSafeAreaInsets();
   const [targetData, setTargetData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -317,85 +385,75 @@ export default function HifzScreen({ navigation }) {
     };
   };
 
-  const renderStartingOption = (isFresh, title, description) => (
+  const renderStartingOption = (isFresh, title, description, icon) => (
     <TouchableOpacity
       onPress={() => setIsStartingFresh(isFresh)}
-      style={[
-        tw`p-4 rounded-xl border-2 mb-3`,
-        isStartingFresh === isFresh
-          ? tw`border-blue-500 bg-blue-50`
-          : tw`border-gray-200`,
-      ]}
+      style={tw`bg-white px-4 py-4 border-b border-gray-200`}
+      activeOpacity={0.3}
     >
-      <View style={tw`flex-row items-center mb-1`}>
-        <Ionicons
-          name={isFresh ? 'play-circle' : 'bookmark'}
-          size={24}
-          color={isStartingFresh === isFresh ? '#3B82F6' : '#6B7280'}
-          style={tw`mr-3`}
+      <View style={tw`flex-row items-center`}>
+        <View style={[
+          tw`w-6 h-6 rounded-full border-2 mr-4 items-center justify-center`,
+          { borderColor: isStartingFresh === isFresh ? '#007AFF' : '#C7C7CC' }
+        ]}>
+          {isStartingFresh === isFresh && (
+            <View style={[tw`w-3 h-3 rounded-full`, { backgroundColor: '#007AFF' }]} />
+          )}
+        </View>
+        <Ionicons 
+          name={icon} 
+          size={20} 
+          color={isStartingFresh === isFresh ? '#007AFF' : '#8E8E93'} 
+          style={tw`mr-3`} 
         />
-        <Text
-          style={tw`text-lg font-semibold ${isStartingFresh === isFresh ? 'text-blue-600' : 'text-gray-700'}`}
-        >
-          {title}
-        </Text>
+        <View style={tw`flex-1`}>
+          <Text style={tw`text-lg font-medium text-black mb-1`}>
+            {title}
+          </Text>
+          <Text style={tw`text-sm text-gray-500`}>
+            {description}
+          </Text>
+        </View>
+        {isStartingFresh === isFresh && (
+          <Ionicons name="checkmark" size={20} color="#007AFF" />
+        )}
       </View>
-      <Text style={tw`text-sm text-gray-500 ml-9`}>{description}</Text>
     </TouchableOpacity>
   );
 
   if (isLoading) {
     return (
-      <View style={[tw`flex-1`, { backgroundColor: '#f8fafc' }]}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
-        <SafeAreaView style={tw`flex-1 justify-center items-center`}>
-          <View style={tw`items-center`}>
-            <View style={[
-              tw`w-20 h-20 rounded-full mb-6`,
-              { backgroundColor: '#e2e8f0' }
-            ]} />
-            <Text style={tw`text-gray-600 text-lg font-light`}>Loading your journey...</Text>
+      <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
+        <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
+        <View style={tw`flex-1 justify-center items-center`}>
+          <View style={tw`w-16 h-16 rounded-full bg-blue-100 items-center justify-center mb-4`}>
+            <Ionicons name="book" size={24} color="#007AFF" />
           </View>
-        </SafeAreaView>
-      </View>
+          <Text style={tw`text-lg font-medium text-black`}>Loading your journey...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[tw`flex-1 bg-gray-50`, { paddingTop: insets.top }]}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#f8fafc"
-        translucent
-      />
-      {/* Top Status Header */}
-      <LinearGradient
-        colors={['#007AFF', '#0051D5', '#003d82']}
-        style={tw`px-6 py-4`}
-      >
-        <View style={tw`flex-row items-center justify-between`}>
-          <View style={tw`flex-row items-center flex-1`}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={[
-                tw`w-10 h-10 rounded-full items-center justify-center mr-4`,
-                { backgroundColor: 'rgba(255,255,255,0.2)' },
-              ]}
-            >
-              <Ionicons name="arrow-back" size={20} color="#ffffff" />
-            </TouchableOpacity>
+    <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
+      <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
+      
+      {/* iOS-Style Navigation Header */}
+      <View style={tw`bg-gray-100 border-b border-gray-200`}>
+        <View style={tw`flex-row items-center justify-between px-4 py-3`}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={tw`flex-row items-center py-1`}
+            activeOpacity={0.3}
+          >
+            <Ionicons name="chevron-back" size={24} color="#007AFF" />
+            <Text style={tw`text-lg text-blue-500 ml-1 font-normal`}>Back</Text>
+          </TouchableOpacity>
 
-            <View style={tw`flex-1`}>
-              <Text style={tw`text-white text-xl font-bold`}>
-                📖 Daily Quran Journey
-              </Text>
-              <Text style={tw`text-blue-100 text-sm`}>
-                {targetData
-                  ? 'May Allah bless your progress'
-                  : 'Begin your blessed journey'}
-              </Text>
-            </View>
-          </View>
+          <Text style={tw`text-lg font-semibold text-black`}>
+            Daily Quran
+          </Text>
 
           {targetData && (
             <TouchableOpacity
@@ -403,16 +461,15 @@ export default function HifzScreen({ navigation }) {
                 setDailyTarget(targetData.dailyTarget.toString());
                 setShowEditModal(true);
               }}
-              style={[
-                tw`w-10 h-10 rounded-full items-center justify-center`,
-                { backgroundColor: 'rgba(255,255,255,0.2)' },
-              ]}
+              style={tw`p-1`}
+              activeOpacity={0.3}
             >
-              <Ionicons name="ellipsis-horizontal" size={20} color="#ffffff" />
+              <Ionicons name="ellipsis-horizontal-circle" size={24} color="#007AFF" />
             </TouchableOpacity>
           )}
+          {!targetData && <View style={tw`w-6`} />}
         </View>
-      </LinearGradient>
+      </View>
 
       <ScrollView
         style={tw`flex-1`}
@@ -420,630 +477,466 @@ export default function HifzScreen({ navigation }) {
         contentContainerStyle={tw`pb-8`}
       >
         {!targetData ? (
-          // Apple-style Setup Flow - Light Mode
-          <View style={tw`px-6`}>
+          // iOS-Style Setup Flow
+          <View>
             {/* Hero Section */}
-            <View style={tw`items-center mb-12 mt-8`}>
-              <View
-                style={[
-                  tw`w-24 h-24 rounded-3xl items-center justify-center mb-8`,
-                  { backgroundColor: '#007AFF' },
-                ]}
-              >
-                <Ionicons name="book-outline" size={40} color="#ffffff" />
+            <View style={tw`mt-6`}>
+              <SectionHeader title="Set Up Your Journey" />
+              <View style={tw`bg-white px-4 py-6`}>
+                <View style={tw`items-center mb-6`}>
+                  <View style={tw`w-20 h-20 rounded-full bg-blue-100 items-center justify-center mb-4`}>
+                    <Ionicons name="book" size={40} color="#007AFF" />
+                  </View>
+                  <Text style={tw`text-xl font-bold text-black text-center mb-2`}>
+                    Daily Quran Reading
+                  </Text>
+                  <Text style={tw`text-base text-gray-500 text-center leading-6`}>
+                    Build a consistent reading habit with personalized daily goals
+                  </Text>
+                </View>
               </View>
-
-              <Text
-                style={tw`text-gray-900 text-4xl font-bold text-center mb-4`}
-              >
-                Daily Quran
-              </Text>
-              <Text
-                style={tw`text-gray-600 text-lg text-center leading-7 px-4`}
-              >
-                Build a consistent reading habit with personalized daily goals
-              </Text>
             </View>
 
-            {/* Setup Card */}
-            <View
-              style={[
-                tw`rounded-3xl p-8 mb-6 shadow-lg`,
-                { backgroundColor: '#ffffff' },
-              ]}
-            >
-              {/* Progress Indicator */}
-              <View style={tw`flex-row mb-8`}>
-                <View
-                  style={[
-                    tw`h-1 flex-1 rounded-full mr-2`,
-                    {
-                      backgroundColor:
-                        isStartingFresh !== null ? '#007AFF' : '#e2e8f0',
-                    },
-                  ]}
-                />
-                <View
-                  style={[
-                    tw`h-1 flex-1 rounded-full mr-2`,
-                    {
-                      backgroundColor:
-                        dailyTarget && isStartingFresh !== null
-                          ? '#007AFF'
-                          : '#e2e8f0',
-                    },
-                  ]}
-                />
-                <View
-                  style={[
-                    tw`h-1 flex-1 rounded-full`,
-                    {
-                      backgroundColor:
-                        dailyTarget &&
-                        isStartingFresh !== null &&
-                        (isStartingFresh || pagesAlreadyRead)
-                          ? '#007AFF'
-                          : '#e2e8f0',
-                    },
-                  ]}
-                />
+            {/* Starting Point Selection */}
+            <View style={tw`mt-8`}>
+              <SectionHeader title="Starting Point" />
+              <View style={tw`bg-white`}>
+                {renderStartingOption(
+                  true, 
+                  'Fresh Start', 
+                  'Beginning from page 1',
+                  'play-circle'
+                )}
+                {renderStartingOption(
+                  false, 
+                  'Continue Reading', 
+                  'I have already made progress',
+                  'bookmark'
+                )}
               </View>
+            </View>
 
-              {/* Starting Point */}
-              <View style={tw`mb-8`}>
-                <Text style={tw`text-gray-900 text-xl font-semibold mb-6`}>
-                  Starting point
-                </Text>
-
-                <TouchableOpacity
-                  onPress={() => setIsStartingFresh(true)}
-                  style={[
-                    tw`rounded-2xl p-5 mb-4 border`,
-                    isStartingFresh === true
-                      ? { backgroundColor: '#eff6ff', borderColor: '#007AFF' }
-                      : {
-                          backgroundColor: '#f8fafc',
-                          borderColor: '#e2e8f0',
-                        },
-                  ]}
-                >
-                  <View style={tw`flex-row items-center`}>
-                    <View
-                      style={[
-                        tw`w-6 h-6 rounded-full border-2 mr-4 items-center justify-center`,
-                        {
-                          borderColor:
-                            isStartingFresh === true ? '#007AFF' : '#94a3b8',
-                        },
-                      ]}
-                    >
-                      {isStartingFresh === true && (
-                        <View
-                          style={[
-                            tw`w-3 h-3 rounded-full`,
-                            { backgroundColor: '#007AFF' },
-                          ]}
-                        />
-                      )}
-                    </View>
-                    <View style={tw`flex-1`}>
-                      <Text style={tw`text-gray-900 text-lg font-medium mb-1`}>
-                        Fresh start
-                      </Text>
-                      <Text style={tw`text-gray-500 text-sm`}>
-                        Beginning from page 1
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => setIsStartingFresh(false)}
-                  style={[
-                    tw`rounded-2xl p-5 border`,
-                    isStartingFresh === false
-                      ? { backgroundColor: '#eff6ff', borderColor: '#007AFF' }
-                      : {
-                          backgroundColor: '#f8fafc',
-                          borderColor: '#e2e8f0',
-                        },
-                  ]}
-                >
-                  <View style={tw`flex-row items-center`}>
-                    <View
-                      style={[
-                        tw`w-6 h-6 rounded-full border-2 mr-4 items-center justify-center`,
-                        {
-                          borderColor:
-                            isStartingFresh === false ? '#007AFF' : '#94a3b8',
-                        },
-                      ]}
-                    >
-                      {isStartingFresh === false && (
-                        <View
-                          style={[
-                            tw`w-3 h-3 rounded-full`,
-                            { backgroundColor: '#007AFF' },
-                          ]}
-                        />
-                      )}
-                    </View>
-                    <View style={tw`flex-1`}>
-                      <Text style={tw`text-gray-900 text-lg font-medium mb-1`}>
-                        Continue reading
-                      </Text>
-                      <Text style={tw`text-gray-500 text-sm`}>
-                        I've already made progress
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              </View>
-
-              {/* Pages Already Read */}
-              {isStartingFresh === false && (
-                <View style={tw`mb-8`}>
-                  <Text style={tw`text-gray-900 text-xl font-semibold mb-4`}>
-                    Current progress
+            {/* Pages Already Read */}
+            {isStartingFresh === false && (
+              <View style={tw`mt-8`}>
+                <SectionHeader title="Current Progress" />
+                <View style={tw`bg-white px-4 py-4`}>
+                  <Text style={tw`text-base font-medium text-black mb-3`}>
+                    Pages Completed (0-603)
                   </Text>
-                  <View
-                    style={[
-                      tw`rounded-2xl border`,
-                      { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
-                    ]}
-                  >
+                  <View style={tw`bg-gray-50 rounded-xl border border-gray-200`}>
                     <TextInput
-                      style={tw`px-5 py-4 text-gray-900 text-lg`}
-                      placeholder="Pages completed (0-603)"
-                      placeholderTextColor="#94a3b8"
+                      style={tw`px-4 py-3 text-lg text-black`}
+                      placeholder="Enter pages completed"
+                      placeholderTextColor="#8E8E93"
                       value={pagesAlreadyRead}
                       onChangeText={setPagesAlreadyRead}
                       keyboardType="numeric"
                     />
                   </View>
                 </View>
-              )}
+              </View>
+            )}
 
-              {/* Daily Target */}
-              {isStartingFresh !== null && (
-                <View style={tw`mb-8`}>
-                  <Text style={tw`text-gray-900 text-xl font-semibold mb-4`}>
-                    Daily goal
+            {/* Daily Target */}
+            {isStartingFresh !== null && (
+              <View style={tw`mt-8`}>
+                <SectionHeader title="Daily Goal" />
+                <View style={tw`bg-white px-4 py-4`}>
+                  <Text style={tw`text-base font-medium text-black mb-3`}>
+                    Pages Per Day
                   </Text>
-                  <View
-                    style={[
-                      tw`rounded-2xl border`,
-                      { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
-                    ]}
-                  >
+                  <View style={tw`bg-gray-50 rounded-xl border border-gray-200`}>
                     <TextInput
-                      style={tw`px-5 py-4 text-gray-900 text-lg`}
-                      placeholder="Pages per day"
-                      placeholderTextColor="#94a3b8"
+                      style={tw`px-4 py-3 text-lg text-black`}
+                      placeholder="Enter daily target"
+                      placeholderTextColor="#8E8E93"
                       value={dailyTarget}
                       onChangeText={setDailyTarget}
                       keyboardType="numeric"
                     />
                   </View>
-                  <Text style={tw`text-gray-500 text-sm mt-2 ml-1`}>
+                  <Text style={tw`text-sm text-gray-500 mt-2`}>
                     Recommended: 1-5 pages daily
                   </Text>
                 </View>
-              )}
+              </View>
+            )}
 
-              {/* Completion Preview */}
-              {dailyTarget && isStartingFresh !== null && (
-                <View
-                  style={[
-                    tw`rounded-2xl p-5 mb-8`,
-                    { backgroundColor: '#eff6ff' },
-                  ]}
-                >
+            {/* Completion Preview */}
+            {dailyTarget && isStartingFresh !== null && (
+              <View style={tw`mt-8`}>
+                <SectionHeader title="Completion Forecast" />
+                <View style={tw`bg-white px-4 py-4`}>
                   {(() => {
-                    const alreadyRead = isStartingFresh
-                      ? 0
-                      : parseInt(pagesAlreadyRead) || 0;
+                    const alreadyRead = isStartingFresh ? 0 : parseInt(pagesAlreadyRead) || 0;
                     const target = parseInt(dailyTarget) || 0;
                     if (target > 0) {
-                      const completion = calculateCompletionInfo(
-                        target,
-                        alreadyRead
-                      );
+                      const completion = calculateCompletionInfo(target, alreadyRead);
                       return (
                         <View>
-                          <Text
-                            style={tw`text-blue-600 text-sm font-medium mb-2`}
-                          >
-                            COMPLETION FORECAST
-                          </Text>
-                          <Text
-                            style={tw`text-gray-900 text-lg font-semibold mb-1`}
-                          >
-                            {completion.completionDate}
-                          </Text>
-                          <Text style={tw`text-blue-500 text-sm`}>
-                            {completion.daysNeeded} days •{' '}
-                            {completion.remainingPages} pages remaining
-                          </Text>
+                          <View style={tw`flex-row items-center mb-3`}>
+                            <View style={tw`w-10 h-10 rounded-full bg-green-100 items-center justify-center mr-3`}>
+                              <Ionicons name="calendar" size={20} color="#34C759" />
+                            </View>
+                            <View style={tw`flex-1`}>
+                              <Text style={tw`text-lg font-semibold text-black`}>
+                                {completion.completionDate}
+                              </Text>
+                              <Text style={tw`text-sm text-gray-500`}>
+                                Expected completion date
+                              </Text>
+                            </View>
+                          </View>
+                          <View style={tw`bg-gray-50 rounded-xl p-4`}>
+                            <View style={tw`flex-row justify-between mb-2`}>
+                              <Text style={tw`text-sm text-gray-500`}>Days needed</Text>
+                              <Text style={tw`text-sm font-medium text-black`}>{completion.daysNeeded}</Text>
+                            </View>
+                            <View style={tw`flex-row justify-between`}>
+                              <Text style={tw`text-sm text-gray-500`}>Pages remaining</Text>
+                              <Text style={tw`text-sm font-medium text-black`}>{completion.remainingPages}</Text>
+                            </View>
+                          </View>
                         </View>
                       );
                     }
                     return null;
                   })()}
                 </View>
-              )}
+              </View>
+            )}
 
-              {/* Start Button */}
+            {/* Start Button */}
+            <View style={tw`mt-8 px-4 pb-6`}>
               <TouchableOpacity
                 onPress={handleSetupSubmit}
-                disabled={
-                  !(
-                    dailyTarget &&
-                    isStartingFresh !== null &&
-                    (isStartingFresh || pagesAlreadyRead)
-                  )
-                }
+                disabled={!(dailyTarget && isStartingFresh !== null && (isStartingFresh || pagesAlreadyRead))}
                 style={[
-                  tw`rounded-2xl py-4 items-center`,
-                  dailyTarget &&
-                  isStartingFresh !== null &&
-                  (isStartingFresh || pagesAlreadyRead)
+                  tw`rounded-xl py-4 items-center`,
+                  dailyTarget && isStartingFresh !== null && (isStartingFresh || pagesAlreadyRead)
                     ? { backgroundColor: '#007AFF' }
-                    : { backgroundColor: '#e2e8f0' },
+                    : { backgroundColor: '#C7C7CC' }
                 ]}
+                activeOpacity={0.8}
               >
-                <Text
-                  style={[
-                    tw`text-lg font-semibold`,
-                    dailyTarget &&
-                    isStartingFresh !== null &&
-                    (isStartingFresh || pagesAlreadyRead)
-                      ? tw`text-white`
-                      : tw`text-gray-400`,
-                  ]}
-                >
+                <Text style={[
+                  tw`text-lg font-semibold`,
+                  dailyTarget && isStartingFresh !== null && (isStartingFresh || pagesAlreadyRead)
+                    ? tw`text-white`
+                    : tw`text-gray-500`
+                ]}>
                   Begin Journey
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
         ) : (
-          // Apple-style Dashboard - Light Mode
-          <View style={tw`px-6`}>
-            {/* Main Title */}
-            <View style={tw`mb-8 mt-4`}>
-              <Text style={tw`text-gray-900 text-3xl font-bold mb-2`}>
-                Daily Quran
-              </Text>
-              <Text style={tw`text-gray-600 text-lg`}>
-                Keep up the great work
-              </Text>
-            </View>
-
-            {/* Today's Progress - Large Card */}
-            <View
-              style={[
-                tw`rounded-3xl p-8 mb-6 shadow-lg`,
-                { backgroundColor: '#ffffff' },
-              ]}
-            >
-              <View style={tw`flex-row items-center justify-between mb-6`}>
-                <Text style={tw`text-gray-900 text-xl font-semibold`}>
-                  Today
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setShowTodayModal(true)}
-                  style={[
-                    tw`px-4 py-2 rounded-full`,
-                    { backgroundColor: '#007AFF' },
-                  ]}
-                >
-                  <Text style={tw`text-white font-medium`}>Add</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Progress Circle */}
-              <View style={tw`items-center mb-8`}>
-                <View style={tw`items-center justify-center mb-4`}>
-                  <Text style={tw`text-gray-900 text-5xl font-light mb-2`}>
-                    {getTodayProgress().completed}
+          // iOS-Style Dashboard
+          <View>
+            {/* Welcome Section */}
+            <View style={tw`mt-6`}>
+              <SectionHeader title="Your Progress" />
+              <View style={tw`bg-white px-4 py-6`}>
+                <View style={tw`items-center mb-6`}>
+                  <Text style={tw`text-3xl font-light text-black mb-2`}>
+                    Keep up the great work
                   </Text>
-                  <Text style={tw`text-gray-500 text-lg`}>
-                    of {targetData.dailyTarget} pages
-                  </Text>
-                </View>
-
-                {/* Progress Bar */}
-                <View style={tw`w-full`}>
-                  <View
-                    style={[
-                      tw`h-2 rounded-full`,
-                      { backgroundColor: '#e2e8f0' },
-                    ]}
-                  >
-                    <View
-                      style={[
-                        tw`h-2 rounded-full`,
-                        {
-                          backgroundColor: '#007AFF',
-                          width: `${Math.min(getTodayProgress().percentage, 100)}%`,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text style={tw`text-gray-500 text-sm text-center mt-2`}>
-                    {getTodayProgress().percentage.toFixed(0)}% complete
+                  <Text style={tw`text-base text-gray-500 text-center`}>
+                    May Allah bless your reading journey
                   </Text>
                 </View>
               </View>
             </View>
 
-            {/* Stats Grid */}
-            <View style={tw`flex-row mb-6`}>
-              <View
-                style={[
-                  tw`flex-1 rounded-2xl p-6 mr-3 shadow-sm`,
-                  { backgroundColor: '#ffffff' },
-                ]}
-              >
-                <Text style={tw`text-gray-500 text-sm font-medium mb-2`}>
-                  CURRENT STREAK
-                </Text>
-                <Text style={tw`text-gray-900 text-3xl font-light mb-1`}>
-                  {getStreakInfo().current}
-                </Text>
-                <Text style={tw`text-gray-500 text-sm`}>days</Text>
-              </View>
+            
 
-              <View
-                style={[
-                  tw`flex-1 rounded-2xl p-6 shadow-sm`,
-                  { backgroundColor: '#ffffff' },
-                ]}
-              >
-                <Text style={tw`text-gray-500 text-sm font-medium mb-2`}>
-                  TOTAL PAGES
-                </Text>
-                <Text style={tw`text-gray-900 text-3xl font-light mb-1`}>
-                  {targetData.totalCompleted}
-                </Text>
-                <Text style={tw`text-gray-500 text-sm`}>completed</Text>
+            {/* Statistics */}
+            <View style={tw`mt-8`}>
+              <SectionHeader title="Statistics" />
+              <View style={tw`bg-white`}>
+                <StatCard
+                  title="Current Streak"
+                  value={getStreakInfo().current}
+                  subtitle="days"
+                  icon="flame"
+                  color="#FF8C00"
+                />
+                <StatCard
+                  title="Best Streak"
+                  value={getStreakInfo().best}
+                  subtitle="days"
+                  icon="trophy"
+                  color="#FFD700"
+                />
+                <StatCard
+                  title="Total Pages"
+                  value={targetData.totalCompleted}
+                  subtitle="completed"
+                  icon="book"
+                  color="#34C759"
+                />
               </View>
             </View>
 
             {/* Journey Overview */}
-            <View
-              style={[
-                tw`rounded-2xl p-6 mb-6 shadow-sm`,
-                { backgroundColor: '#ffffff' },
-              ]}
-            >
-              <Text style={tw`text-gray-900 text-lg font-semibold mb-4`}>
-                Journey Overview
-              </Text>
+            <View style={tw`mt-8`}>
+              <SectionHeader title="Journey Overview" />
+              <View style={tw`bg-white px-4 py-4`}>
+                {(() => {
+                  const completion = calculateCompletionInfo(targetData.dailyTarget, targetData.totalCompleted);
+                  const progressPercent = (targetData.totalCompleted / 604) * 100;
 
-              {(() => {
-                const completion = calculateCompletionInfo(
-                  targetData.dailyTarget,
-                  targetData.totalCompleted
-                );
-                const progressPercent = (targetData.totalCompleted / 604) * 100;
-
-                return (
-                  <View>
-                    <View style={tw`mb-4`}>
-                      <View
-                        style={tw`flex-row justify-between items-center mb-2`}
-                      >
-                        <Text style={tw`text-gray-500 text-sm`}>Progress</Text>
-                        <Text style={tw`text-gray-500 text-sm`}>
-                          {progressPercent.toFixed(1)}%
-                        </Text>
+                  return (
+                    <View>
+                      <View style={tw`mb-6`}>
+                        <View style={tw`flex-row justify-between items-center mb-3`}>
+                          <Text style={tw`text-lg font-semibold text-black`}>
+                            Overall Progress
+                          </Text>
+                          <Text style={tw`text-sm text-gray-500`}>
+                            {progressPercent.toFixed(1)}%
+                          </Text>
+                        </View>
+                        <View style={tw`h-3 bg-gray-200 rounded-full overflow-hidden`}>
+                          <View 
+                            style={[
+                              tw`h-full rounded-full`,
+                              { backgroundColor: '#34C759', width: `${progressPercent}%` }
+                            ]} 
+                          />
+                        </View>
                       </View>
-                      <View
-                        style={[
-                          tw`h-2 rounded-full`,
-                          { backgroundColor: '#e2e8f0' },
-                        ]}
-                      >
-                        <View
-                          style={[
-                            tw`h-2 rounded-full`,
-                            {
-                              backgroundColor: '#34C759',
-                              width: `${progressPercent}%`,
-                            },
-                          ]}
-                        />
+
+                      <View style={tw`bg-gray-50 rounded-xl p-4`}>
+                        <View style={tw`flex-row justify-between items-center mb-3`}>
+                          <Text style={tw`text-sm text-gray-500`}>Pages remaining</Text>
+                          <Text style={tw`text-sm font-medium text-black`}>{completion.remainingPages}</Text>
+                        </View>
+                        <View style={tw`flex-row justify-between items-center mb-3`}>
+                          <Text style={tw`text-sm text-gray-500`}>Days remaining</Text>
+                          <Text style={tw`text-sm font-medium text-black`}>{completion.daysNeeded}</Text>
+                        </View>
+                        <View style={tw`flex-row justify-between items-center`}>
+                          <Text style={tw`text-sm text-gray-500`}>Expected completion</Text>
+                          <Text style={tw`text-sm font-medium text-black`}>{completion.completionDate}</Text>
+                        </View>
                       </View>
                     </View>
-
-                    <View style={tw`space-y-3`}>
-                      <View style={tw`flex-row justify-between`}>
-                        <Text style={tw`text-gray-500`}>Pages remaining</Text>
-                        <Text style={tw`text-gray-900 font-medium`}>
-                          {completion.remainingPages}
-                        </Text>
-                      </View>
-
-                      <View style={tw`flex-row justify-between`}>
-                        <Text style={tw`text-gray-500`}>
-                          Expected completion
-                        </Text>
-                        <Text style={tw`text-gray-900 font-medium`}>
-                          {completion.completionDate}
-                        </Text>
-                      </View>
-
-                      <View style={tw`flex-row justify-between`}>
-                        <Text style={tw`text-gray-500`}>Best streak</Text>
-                        <Text style={tw`text-gray-900 font-medium`}>
-                          {getStreakInfo().best} days
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                );
-              })()}
+                  );
+                })()}
+              </View>
             </View>
 
-            {/* Settings */}
-            <TouchableOpacity
-              onPress={deleteTargetData}
-              style={[
-                tw`rounded-2xl p-4 items-center`,
-                { backgroundColor: '#fef2f2' },
-              ]}
-            >
-              <Text style={tw`text-red-500 font-medium`}>Reset Journey</Text>
-            </TouchableOpacity>
+            {/* Actions */}
+            <View style={tw`mt-8`}>
+              <SectionHeader title="Actions" />
+              <View style={tw`bg-white`}>
+                <ActionButton
+                  icon="add-circle"
+                  title="Add Today's Progress"
+                  subtitle="Log pages read today"
+                  onPress={() => setShowTodayModal(true)}
+                  color="#007AFF"
+                />
+                <ActionButton
+                  icon="settings"
+                  title="Edit Daily Goal"
+                  subtitle="Change your target pages"
+                  onPress={() => {
+                    setDailyTarget(targetData.dailyTarget.toString());
+                    setShowEditModal(true);
+                  }}
+                  color="#8E8E93"
+                />
+              </View>
+            </View>
+
+            {/* Reset Journey */}
+            <View style={tw`mt-8 mb-6`}>
+              <SectionHeader title="Journey Settings" />
+              <View style={tw`bg-white`}>
+                <TouchableOpacity
+                  onPress={deleteTargetData}
+                  style={tw`px-4 py-4`}
+                  activeOpacity={0.3}
+                >
+                  <View style={tw`flex-row items-center`}>
+                    <View style={tw`w-10 h-10 rounded-full bg-red-100 items-center justify-center mr-3`}>
+                      <Ionicons name="trash" size={20} color="#FF3B30" />
+                    </View>
+                    <Text style={tw`text-lg font-medium text-red-500`}>
+                      Reset Journey
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         )}
       </ScrollView>
 
-      {/* Add Progress Modal - Apple Style Light Mode */}
+      {/* iOS-Style Add Progress Modal */}
       <Modal
         visible={showTodayModal}
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <View style={[tw`flex-1`, { backgroundColor: '#f8fafc' }]}>
-          <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
-          <SafeAreaView style={tw`flex-1`}>
-            <View style={tw`px-6 py-4 border-b border-gray-200`}>
-              <View style={tw`flex-row items-center justify-between`}>
-                <TouchableOpacity
-                  onPress={() => setShowTodayModal(false)}
-                  style={tw`p-2`}
-                >
-                  <Text style={tw`text-blue-500 text-lg`}>Cancel</Text>
-                </TouchableOpacity>
+        <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
+          <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
+          
+          {/* Modal Header */}
+          <View style={tw`bg-gray-100 border-b border-gray-200`}>
+            <View style={tw`flex-row items-center justify-between px-4 py-3`}>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowTodayModal(false);
+                  setTodayProgress('');
+                }}
+                style={tw`py-1`}
+                activeOpacity={0.3}
+              >
+                <Text style={tw`text-lg text-blue-500`}>Cancel</Text>
+              </TouchableOpacity>
 
-                <Text style={tw`text-gray-900 text-lg font-semibold`}>
-                  Add Progress
+              <Text style={tw`text-lg font-semibold text-black`}>
+                Add Progress
+              </Text>
+
+              <TouchableOpacity
+                onPress={handleTodaySubmit}
+                disabled={!todayProgress}
+                style={tw`py-1`}
+                activeOpacity={0.3}
+              >
+                <Text style={[
+                  tw`text-lg font-semibold`,
+                  todayProgress ? tw`text-blue-500` : tw`text-gray-400`
+                ]}>
+                  Done
                 </Text>
-
-                <TouchableOpacity
-                  onPress={handleTodaySubmit}
-                  disabled={!todayProgress}
-                  style={tw`p-2`}
-                >
-                  <Text
-                    style={[
-                      tw`text-lg font-semibold`,
-                      todayProgress ? tw`text-blue-500` : tw`text-gray-400`,
-                    ]}
-                  >
-                    Done
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             </View>
+          </View>
 
-            <View style={tw`flex-1 px-6 py-8`}>
-              <Text style={tw`text-gray-900 text-2xl font-bold mb-2`}>
+          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 py-6`}>
+            <View style={tw`items-center mb-8`}>
+              <View style={tw`w-16 h-16 rounded-full bg-blue-100 items-center justify-center mb-4`}>
+                <Ionicons name="add" size={32} color="#007AFF" />
+              </View>
+              <Text style={tw`text-2xl font-bold text-black text-center mb-2`}>
                 Today's Reading
               </Text>
-              <Text style={tw`text-gray-500 text-lg mb-8`}>
-                How many pages did you complete?
-              </Text>
-
-              <View
-                style={[
-                  tw`rounded-2xl border`,
-                  { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-                ]}
-              >
-                <TextInput
-                  style={tw`px-5 py-4 text-gray-900 text-xl text-center`}
-                  placeholder="0"
-                  placeholderTextColor="#94a3b8"
-                  value={todayProgress}
-                  onChangeText={setTodayProgress}
-                  keyboardType="numeric"
-                  autoFocus
-                />
-              </View>
-
-              <Text style={tw`text-gray-500 text-sm text-center mt-3`}>
-                Pages completed today
+              <Text style={tw`text-base text-gray-500 text-center`}>
+                How many pages did you complete today?
               </Text>
             </View>
-          </SafeAreaView>
-        </View>
+
+            <View style={tw`bg-white rounded-xl`}>
+              <View style={tw`px-4 py-4`}>
+                <Text style={tw`text-base font-medium text-black mb-3`}>
+                  Pages Completed
+                </Text>
+                <View style={tw`bg-gray-50 rounded-xl border border-gray-200`}>
+                  <TextInput
+                    style={tw`px-4 py-3 text-xl text-black text-center`}
+                    placeholder="0"
+                    placeholderTextColor="#8E8E93"
+                    value={todayProgress}
+                    onChangeText={setTodayProgress}
+                    keyboardType="numeric"
+                    autoFocus
+                  />
+                </View>
+                <Text style={tw`text-sm text-gray-500 mt-2 text-center`}>
+                  Enter the number of pages you read today
+                </Text>
+              </View>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
       </Modal>
 
-      {/* Edit Modal - Apple Style Light Mode */}
+      {/* iOS-Style Edit Goal Modal */}
       <Modal
         visible={showEditModal}
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <View style={[tw`flex-1`, { backgroundColor: '#f8fafc' }]}>
-          <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
-          <SafeAreaView style={tw`flex-1`}>
-            <View style={tw`px-6 py-4 border-b border-gray-200`}>
-              <View style={tw`flex-row items-center justify-between`}>
-                <TouchableOpacity
-                  onPress={() => setShowEditModal(false)}
-                  style={tw`p-2`}
-                >
-                  <Text style={tw`text-blue-500 text-lg`}>Cancel</Text>
-                </TouchableOpacity>
+        <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
+          <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
+          
+          {/* Modal Header */}
+          <View style={tw`bg-gray-100 border-b border-gray-200`}>
+            <View style={tw`flex-row items-center justify-between px-4 py-3`}>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowEditModal(false);
+                  resetForm();
+                }}
+                style={tw`py-1`}
+                activeOpacity={0.3}
+              >
+                <Text style={tw`text-lg text-blue-500`}>Cancel</Text>
+              </TouchableOpacity>
 
-                <Text style={tw`text-gray-900 text-lg font-semibold`}>
-                  Edit Goal
+              <Text style={tw`text-lg font-semibold text-black`}>
+                Edit Goal
+              </Text>
+
+              <TouchableOpacity
+                onPress={handleEditSubmit}
+                disabled={!dailyTarget}
+                style={tw`py-1`}
+                activeOpacity={0.3}
+              >
+                <Text style={[
+                  tw`text-lg font-semibold`,
+                  dailyTarget ? tw`text-blue-500` : tw`text-gray-400`
+                ]}>
+                  Save
                 </Text>
-
-                <TouchableOpacity
-                  onPress={handleEditSubmit}
-                  disabled={!dailyTarget}
-                  style={tw`p-2`}
-                >
-                  <Text
-                    style={[
-                      tw`text-lg font-semibold`,
-                      dailyTarget ? tw`text-blue-500` : tw`text-gray-400`,
-                    ]}
-                  >
-                    Save
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             </View>
+          </View>
 
-            <View style={tw`flex-1 px-6 py-8`}>
-              <Text style={tw`text-gray-900 text-2xl font-bold mb-2`}>
+          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 py-6`}>
+            <View style={tw`items-center mb-8`}>
+              <View style={tw`w-16 h-16 rounded-full bg-blue-100 items-center justify-center mb-4`}>
+                <Ionicons name="target" size={32} color="#007AFF" />
+              </View>
+              <Text style={tw`text-2xl font-bold text-black text-center mb-2`}>
                 Daily Goal
               </Text>
-              <Text style={tw`text-gray-500 text-lg mb-8`}>
+              <Text style={tw`text-base text-gray-500 text-center`}>
                 How many pages would you like to read daily?
               </Text>
-
-              <View
-                style={[
-                  tw`rounded-2xl border`,
-                  { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-                ]}
-              >
-                <TextInput
-                  style={tw`px-5 py-4 text-gray-900 text-xl text-center`}
-                  placeholder="5"
-                  placeholderTextColor="#94a3b8"
-                  value={dailyTarget}
-                  onChangeText={setDailyTarget}
-                  keyboardType="numeric"
-                  autoFocus
-                />
-              </View>
-
-              <Text style={tw`text-gray-500 text-sm text-center mt-3`}>
-                Pages per day
-              </Text>
             </View>
-          </SafeAreaView>
-        </View>
+
+            <View style={tw`bg-white rounded-xl`}>
+              <View style={tw`px-4 py-4`}>
+                <Text style={tw`text-base font-medium text-black mb-3`}>
+                  Pages Per Day
+                </Text>
+                <View style={tw`bg-gray-50 rounded-xl border border-gray-200`}>
+                  <TextInput
+                    style={tw`px-4 py-3 text-xl text-black text-center`}
+                    placeholder="5"
+                    placeholderTextColor="#8E8E93"
+                    value={dailyTarget}
+                    onChangeText={setDailyTarget}
+                    keyboardType="numeric"
+                    autoFocus
+                  />
+                </View>
+                <Text style={tw`text-sm text-gray-500 mt-2 text-center`}>
+                  Recommended: 1-5 pages daily for consistency
+                </Text>
+              </View>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
