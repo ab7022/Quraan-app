@@ -14,6 +14,7 @@ import SurahDetailScreen from '../screens/SurahDetailScreen';
 import JuzScreen from '../screens/JuzScreen';
 import JuzDetailScreen from '../screens/JuzDetailScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import MushafStyleScreen from '../screens/MushafStyleScreen';
 import AskDoubtScreen from '../screens/AskDoubtScreen';
 import HifzScreen from '../screens/HifzScreen';
 import LearnQuranScreen from '../screens/LearnQuranScreen';
@@ -120,6 +121,7 @@ function QuranNavigator() {
         <Stack.Screen name="SurahDetail" component={SurahDetailScreen} />
         <Stack.Screen name="JuzDetail" component={JuzDetailScreen} />
         <Stack.Screen name="QuranPage" component={QuranPageScreen} />
+        <Stack.Screen name="MushafStyle" component={MushafStyleScreen} />
       </Stack.Navigator>
     </SafeAreaView>
   );
@@ -145,6 +147,21 @@ function getTabBarDisplay(route) {
   }
 
   return 'flex'; // Show tab bar on all other screens
+}
+
+// Profile Stack Navigator for Profile section
+function ProfileNavigator() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: 'white' },
+      }}
+    >
+      <Stack.Screen name="ProfileMain" component={ProfileScreen} />
+      <Stack.Screen name="MushafStyle" component={MushafStyleScreen} />
+    </Stack.Navigator>
+  );
 }
 
 const tabIcons = {
@@ -317,7 +334,7 @@ export default function MainNavigator() {
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileNavigator}
         listeners={({ navigation, route }) => ({
           tabPress: () => console.log('[TAB] Profile tab pressed'),
           focus: () => console.log('[TAB] Profile tab focused'),

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Learn Quran",
+    "name": "Quran Kareem",
     "slug": "quran-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,9 +10,9 @@
       "url": "https://u.expo.dev/1607f79d-b140-4b17-9f12-a91de51d7e88"
     },
     "description": "Learn Quran with ease",
-    "icon": "./assets/logo2.jpg",
+    "icon": "./assets/logo2.png",
     "splash": {
-      "image": "./assets/logo2.jpg",
+      "image": "./assets/logo2.png",
       "resizeMode": "cover",
       "backgroundColor": "#FAF3E7"
     },
@@ -25,7 +25,7 @@
     "android": {
       "allowBackup": false,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo2.jpg",
+        "foregroundImage": "./assets/logo2.png",
         "backgroundColor": "#FAF3E7"
       },
       "package": "com.quranapp.mobile"

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Animated,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,6 +22,8 @@ import ContinueReading from '../components/ContinueReading';
 import DailyRecommendations from '../components/DailyRecommendations';
 import LearnQuranCard from '../components/LearnQuranCard';
 import HifzCard from '../components/HifzCard';
+import QuickActions from '../components/QuickActions';
+import MostReadSurahs from '../components/MostReadSurahs';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -37,7 +40,6 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [hifzRefreshKey, setHifzRefreshKey] = useState(0);
   const [userName, setUserName] = useState('');
-  const colorAnimation = useRef(new Animated.Value(0)).current;
 
   // Get last 7 days streak data
   const last7Days = getLast7DaysStreak(readingHistory);
@@ -67,26 +69,6 @@ export default function HomeScreen() {
     };
 
     markDailyStreak();
-
-    // Start color animation
-    const startColorAnimation = () => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(colorAnimation, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: false,
-          }),
-          Animated.timing(colorAnimation, {
-            toValue: 0,
-            duration: 1000,
-            useNativeDriver: false,
-          }),
-        ])
-      ).start();
-    };
-
-    startColorAnimation();
 
     return () => {
       console.log('[HOME SCREEN] Component unmounting');
@@ -146,48 +128,7 @@ export default function HomeScreen() {
     navigation.navigate('Streak');
   };
 
-  const handleQuranPress = () => {
-    console.log('[HOME SCREEN] Quran button pressed');
-
-    // Track navigation event
-    analytics.trackNavigationEvent('HomeScreen', 'QuranScreen', 'button_tap');
-    analytics.trackUserAction('start_reading', { from_screen: 'home' });
-
-    navigation.navigate('Quran');
-  };
-
-  const handleSurahsPress = () => {
-    console.log('[HOME SCREEN] All Surahs button pressed');
-
-    // Track navigation event
-    analytics.trackNavigationEvent('HomeScreen', 'SurahsScreen', 'button_tap');
-    analytics.trackUserAction('browse_surahs', { from_screen: 'home' });
-
-    navigation.navigate('Quran', {
-      screen: 'QuranTabs',
-      params: { screen: 'SurahsList' },
-    });
-  };
-
-  const handleAskDoubtPress = () => {
-    console.log('[HOME SCREEN] Ask Doubt button pressed');
-
-    // Track navigation event
-    analytics.trackNavigationEvent(
-      'HomeScreen',
-      'AskDoubtScreen',
-      'button_tap'
-    );
-    analytics.trackUserAction('ask_doubt', { from_screen: 'home' });
-
-    navigation.navigate('AskDoubt');
-  };
-
-  // Interpolate background color
-  const animatedBackgroundColor = colorAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['rgb(236, 253, 245)', 'rgb(187, 247, 208)'], // emerald-50 to emerald-200
-  });
+  // Interpolate background color - removed since it's now in QuickActions component
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`}>
@@ -213,13 +154,15 @@ export default function HomeScreen() {
         <View style={tw`px-6 pt-4 mb-6`}>
           <View style={tw`flex-row items-center justify-between`}>
             <View style={tw`flex-row items-center flex-1`}>
-              <View
-                style={tw`w-12 h-12 bg-emerald-500 rounded-full items-center justify-center mr-3`}
+              <TouchableOpacity
+                style={tw`w-12 h-12  items-center justify-center mr-4 `}
+                onPress={() => navigation.navigate('Profile')}
+                activeOpacity={0.7}
               >
-                <Text style={tw`text-white font-semibold text-base`}>
-                  {getUserInitials(userName)}
-                </Text>
-              </View>
+                <View style={tw`w-11 h-11 rounded-full bg-gray-200 border-2 border-gray-300 items-center justify-center`}>
+                  <Ionicons name="person" size={24} color="#6B7280" />
+                </View>
+              </TouchableOpacity>
               <View style={tw`flex-1`}>
                 <Text style={tw`text-xl font-bold text-gray-900`}>
                   Assalamu Alaikum
@@ -262,7 +205,9 @@ export default function HomeScreen() {
               <View style={tw`flex-row items-center justify-between mb-2`}>
                 <View style={tw`flex-row items-center`}>
                   <View>
-                    <Text style={tw`text-base justify-center items-center font-bold text-gray-900`}>
+                    <Text
+                      style={tw`text-base justify-center items-center font-bold text-gray-900`}
+                    >
                       Reading Progress
                     </Text>
                   </View>
@@ -334,167 +279,20 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
         {/* Continue Reading Section */}
-        <View style={tw`px-6 mb-6`}>
-          <ContinueReading navigation={navigation} />
-        </View>
+
         {/* Quick Actions */}
-        <View style={tw`px-6 mb-6`}>
-          <Text style={tw`text-xl font-bold text-gray-900 mb-4`}>
-            Quick Actions
-          </Text>
+        <QuickActions navigation={navigation} />
 
-          {/* Main Actions Row */}
-          <View style={tw`flex-row gap-3 mb-3`}>
-            {/* Read Quran - Primary Action */}
-            <Animated.View
-              style={[
-                tw`flex-1 rounded-2xl p-2 border border-emerald-200 flex-row items-center`,
-                { backgroundColor: animatedBackgroundColor },
-              ]}
-            >
-              <TouchableOpacity
-                onPress={handleQuranPress}
-                style={tw`flex-1 flex-row items-center`}
-                accessibilityLabel="Read Quran Page by Page"
-                activeOpacity={0.8}
-              >
-                <View
-                  style={tw`w-12 h-12 bg-emerald-100 rounded-2xl items-center justify-center mr-3`}
-                >
-                  <Text style={tw`text-2xl`}>📖</Text>
-                </View>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-emerald-800 font-bold text-sm mb-1`}>
-                    Read Quran
-                  </Text>
-                  <Text style={tw`text-emerald-600 text-xs`}>Page by page</Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color="#059669"
-                  style={tw`opacity-60`}
-                />
-              </TouchableOpacity>
-            </Animated.View>
-
-            {/* Ask Doubt */}
-            <TouchableOpacity
-              onPress={handleAskDoubtPress}
-              style={tw`flex-1 bg-blue-50 rounded-2xl p-2 border border-blue-200 flex-row items-center`}
-              accessibilityLabel="Ask Islamic Questions"
-              activeOpacity={0.8}
-            >
-              <View
-                style={tw`w-12 h-12 bg-blue-100 rounded-2xl items-center justify-center mr-3`}
-              >
-                <Text style={tw`text-2xl`}>🤲</Text>
-              </View>
-              <View style={tw`flex-1`}>
-                <Text style={tw`text-blue-800 font-bold text-xs mb-1`}>
-                  Ask Doubt
-                </Text>
-                <Text style={tw`text-blue-600 text-xs`}>Islamic Q&A</Text>
-              </View>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color="#3B82F6"
-                style={tw`opacity-60`}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Secondary Actions Row */}
-          <View style={tw`flex-row gap-3`}>
-            {/* Learn Quran */}
-            <TouchableOpacity
-              onPress={() => navigation.navigate('LearnQuran')}
-              style={tw`flex-1 bg-orange-50 rounded-2xl p-4 border border-orange-200 flex-row items-center`}
-              accessibilityLabel="Learn Quran with Expert Teachers"
-              activeOpacity={0.8}
-            >
-              <View
-                style={tw`w-10 h-10 bg-orange-100 rounded-xl items-center justify-center mr-3`}
-              >
-                <Text style={tw`text-lg`}>🎓</Text>
-              </View>
-              <View style={tw`flex-1`}>
-                <Text style={tw`text-orange-800 font-semibold text-sm mb-1`}>
-                  Learn Quran
-                </Text>
-                <Text style={tw`text-orange-600 text-xs`}>With teachers</Text>
-              </View>
-            </TouchableOpacity>
-
-            {/* Progress */}
-            <TouchableOpacity
-              onPress={handleStreakPress}
-              style={tw`flex-1 bg-purple-50 rounded-2xl p-4 border border-purple-200 flex-row items-center`}
-              accessibilityLabel="View Reading Progress"
-              activeOpacity={0.8}
-            >
-              <View
-                style={tw`w-10 h-10 bg-purple-100 rounded-xl items-center justify-center mr-3`}
-              >
-                <Text style={tw`text-lg`}>📊</Text>
-              </View>
-              <View style={tw`flex-1`}>
-                <Text style={tw`text-purple-800 font-semibold text-sm mb-1`}>
-                  Progress
-                </Text>
-                <Text style={tw`text-purple-600 text-xs`}>View stats</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
         {/* Hifz Tracker Card */}
         <View style={tw`px-6 mb-6`}>
           <HifzCard key={hifzRefreshKey} navigation={navigation} />
         </View>
-        {/* Most Read Surahs */}
+
         <View style={tw`px-6 mb-6`}>
-          <Text style={tw`text-lg font-bold text-gray-900 mb-3`}>
-            Most Read
-          </Text>
-          <View
-            style={tw`bg-white rounded-2xl p-3 shadow-sm border border-gray-100`}
-          >
-            <View style={tw`flex-row flex-wrap justify-between`}>
-              {[
-                { name: "Al-Waqi'ah", page: 534, color: '#8B5CF6' },
-                { name: 'Al-Muzammil', page: 574, color: '#059669' },
-                { name: 'Ayat al-Kursi', page: 40, color: '#DC2626' },
-                { name: 'Ar-Rahman', page: 531, color: '#EA580C' },
-                { name: 'Yaseen', page: 440, color: '#7C3AED' },
-                { name: 'Al-Mulk', page: 562, color: '#0284C7' },
-                { name: 'As-Sajdah', page: 415, color: '#BE185D' },
-              ].map((surah, index) => (
-                <TouchableOpacity
-                  key={surah.name}
-                  onPress={() => {
-                    console.log('Navigating to page:', surah.page);
-                    navigation.navigate('Quran', {
-                      screen: 'QuranPage',
-                      params: { initialPage: surah.page },
-                    });
-                  }}
-                  style={[
-                    tw`px-3 py-2 rounded-lg mb-2 mr-2`,
-                    { backgroundColor: surah.color + '15' },
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={[tw`text-xs font-semibold`, { color: surah.color }]}
-                  >
-                    {surah.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+          <ContinueReading navigation={navigation} />
         </View>
+
+        <MostReadSurahs navigation={navigation} />
 
         {/* Daily Recommendations */}
         <View style={tw`px-6 mb-6`}>

@@ -10,12 +10,15 @@ import {
   TextInput,
   StatusBar,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const { width } = Dimensions.get('window');
 
 const DAILY_TARGET_STORAGE_KEY = 'daily_target_data';
 
@@ -58,7 +61,12 @@ export default function HifzScreen({ navigation }) {
       setTargetData(data);
     } catch (error) {
       console.error('Error saving target data:', error);
-      Alert.alert('Error', 'Failed to save data. Please try again.');
+      Alert.alert(
+        'Error', 
+        'Failed to save data. Please try again.',
+        [{ text: 'OK', style: 'default' }],
+        { userInterfaceStyle: 'light' }
+      );
     }
   };
 
@@ -66,7 +74,9 @@ export default function HifzScreen({ navigation }) {
     if (isStartingFresh === null) {
       Alert.alert(
         'Missing Information',
-        'Please select if you are starting fresh or have already read some pages.'
+        'Please select if you are starting fresh or have already read some pages.',
+        [{ text: 'OK', style: 'default' }],
+        { userInterfaceStyle: 'light' }
       );
       return;
     }
@@ -74,14 +84,21 @@ export default function HifzScreen({ navigation }) {
     if (!dailyTarget) {
       Alert.alert(
         'Missing Information',
-        'Please enter your daily pages target.'
+        'Please enter your daily pages target.',
+        [{ text: 'OK', style: 'default' }],
+        { userInterfaceStyle: 'light' }
       );
       return;
     }
 
     const target = parseInt(dailyTarget) || 0;
     if (target <= 0) {
-      Alert.alert('Invalid Input', 'Daily target must be greater than 0.');
+      Alert.alert(
+        'Invalid Input', 
+        'Daily target must be greater than 0.',
+        [{ text: 'OK', style: 'default' }],
+        { userInterfaceStyle: 'light' }
+      );
       return;
     }
 
@@ -90,7 +107,9 @@ export default function HifzScreen({ navigation }) {
       if (!pagesAlreadyRead) {
         Alert.alert(
           'Missing Information',
-          'Please enter how many pages you have already read.'
+          'Please enter how many pages you have already read.',
+          [{ text: 'OK', style: 'default' }],
+          { userInterfaceStyle: 'light' }
         );
         return;
       }
@@ -98,7 +117,9 @@ export default function HifzScreen({ navigation }) {
       if (alreadyRead < 0 || alreadyRead >= 604) {
         Alert.alert(
           'Invalid Input',
-          'Pages already read must be between 0 and 603.'
+          'Pages already read must be between 0 and 603.',
+          [{ text: 'OK', style: 'default' }],
+          { userInterfaceStyle: 'light' }
         );
         return;
       }
@@ -122,13 +143,23 @@ export default function HifzScreen({ navigation }) {
 
   const handleTodaySubmit = () => {
     if (!todayProgress) {
-      Alert.alert('Missing Information', "Please enter today's progress.");
+      Alert.alert(
+        'Missing Information', 
+        "Please enter today's progress.",
+        [{ text: 'OK', style: 'default' }],
+        { userInterfaceStyle: 'light' }
+      );
       return;
     }
 
     const progress = parseInt(todayProgress) || 0;
     if (progress < 0) {
-      Alert.alert('Invalid Input', 'Progress cannot be negative.');
+      Alert.alert(
+        'Invalid Input', 
+        'Progress cannot be negative.',
+        [{ text: 'OK', style: 'default' }],
+        { userInterfaceStyle: 'light' }
+      );
       return;
     }
 
@@ -152,14 +183,21 @@ export default function HifzScreen({ navigation }) {
     if (!dailyTarget) {
       Alert.alert(
         'Missing Information',
-        'Please enter your daily pages target.'
+        'Please enter your daily pages target.',
+        [{ text: 'OK', style: 'default' }],
+        { userInterfaceStyle: 'light' }
       );
       return;
     }
 
     const target = parseInt(dailyTarget) || 0;
     if (target <= 0) {
-      Alert.alert('Invalid Input', 'Daily target must be greater than 0.');
+      Alert.alert(
+        'Invalid Input', 
+        'Daily target must be greater than 0.',
+        [{ text: 'OK', style: 'default' }],
+        { userInterfaceStyle: 'light' }        
+      );
       return;
     }
 
@@ -185,12 +223,15 @@ export default function HifzScreen({ navigation }) {
 
   const deleteTargetData = () => {
     Alert.alert(
-      'Delete Target Data',
-      'Are you sure you want to delete all target data? This action cannot be undone.',
+      'Reset Journey',
+      'Are you sure you want to delete all your progress data? This action cannot be undone.',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Cancel', 
+          style: 'cancel' 
+        },
         {
-          text: 'Delete',
+          text: 'Reset',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -201,7 +242,11 @@ export default function HifzScreen({ navigation }) {
             }
           },
         },
-      ]
+      ],
+      { 
+        cancelable: true,
+        userInterfaceStyle: 'light' // Force light mode for iOS
+      }
     );
   };
 
@@ -251,31 +296,7 @@ export default function HifzScreen({ navigation }) {
     return { current: currentStreak, best: bestStreak };
   };
 
-  const getRecentActivity = () => {
-    if (!targetData) return [];
-
-    const last7Days = [];
-    const today = new Date();
-
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      const progress = targetData.dailyProgress[dateStr] || 0;
-      const isComplete = progress >= targetData.dailyTarget;
-
-      last7Days.push({
-        date: dateStr,
-        dayName: date.toLocaleDateString('en', { weekday: 'short' }),
-        progress,
-        isComplete,
-        isToday: i === 0,
-      });
-    }
-
-    return last7Days;
-  };
-
+  
   const calculateCompletionInfo = (dailyTarget, alreadyRead = 0) => {
     const totalPages = 604;
     const remainingPages = totalPages - alreadyRead;
@@ -325,16 +346,17 @@ export default function HifzScreen({ navigation }) {
 
   if (isLoading) {
     return (
-      <View style={[tw`flex-1 bg-white`, { paddingTop: insets.top }]}>
-        <StatusBar
-          barStyle="dark-content"
-          backgroundColor="#ffffff"
-          translucent
-        />
-        <View style={tw`flex-1 justify-center items-center`}>
-          <View style={tw`w-16 h-16 bg-gray-200 rounded-full mb-4`} />
-          <Text style={tw`text-gray-500`}>Loading...</Text>
-        </View>
+      <View style={[tw`flex-1`, { backgroundColor: '#f8fafc' }]}>
+        <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+        <SafeAreaView style={tw`flex-1 justify-center items-center`}>
+          <View style={tw`items-center`}>
+            <View style={[
+              tw`w-20 h-20 rounded-full mb-6`,
+              { backgroundColor: '#e2e8f0' }
+            ]} />
+            <Text style={tw`text-gray-600 text-lg font-light`}>Loading your journey...</Text>
+          </View>
+        </SafeAreaView>
       </View>
     );
   }
@@ -343,24 +365,28 @@ export default function HifzScreen({ navigation }) {
     <View style={[tw`flex-1 bg-gray-50`, { paddingTop: insets.top }]}>
       <StatusBar
         barStyle="dark-content"
-        backgroundColor="#f9fafb"
+        backgroundColor="#f8fafc"
         translucent
       />
-      {/* Header */}
+      {/* Top Status Header */}
       <LinearGradient
-        colors={['#0369A1', '#0284C7', '#0EA5E9']}
-        style={tw`px-4 py-4 border-b border-blue-200`}
+        colors={['#007AFF', '#0051D5', '#003d82']}
+        style={tw`px-6 py-4`}
       >
         <View style={tw`flex-row items-center justify-between`}>
           <View style={tw`flex-row items-center flex-1`}>
             <TouchableOpacity
               onPress={() => navigation.goBack()}
-              style={tw`mr-3 p-2 bg-white/20 rounded-full`}
+              style={[
+                tw`w-10 h-10 rounded-full items-center justify-center mr-4`,
+                { backgroundColor: 'rgba(255,255,255,0.2)' },
+              ]}
             >
-              <Ionicons name="arrow-back" size={24} color="white" />
+              <Ionicons name="arrow-back" size={20} color="#ffffff" />
             </TouchableOpacity>
+
             <View style={tw`flex-1`}>
-              <Text style={tw`text-xl font-bold text-white`}>
+              <Text style={tw`text-white text-xl font-bold`}>
                 📖 Daily Quran Journey
               </Text>
               <Text style={tw`text-blue-100 text-sm`}>
@@ -370,470 +396,653 @@ export default function HifzScreen({ navigation }) {
               </Text>
             </View>
           </View>
+
           {targetData && (
             <TouchableOpacity
               onPress={() => {
                 setDailyTarget(targetData.dailyTarget.toString());
                 setShowEditModal(true);
               }}
-              style={tw`p-2 bg-white/20 rounded-full ml-2`}
+              style={[
+                tw`w-10 h-10 rounded-full items-center justify-center`,
+                { backgroundColor: 'rgba(255,255,255,0.2)' },
+              ]}
             >
-              <Ionicons name="settings-outline" size={22} color="white" />
+              <Ionicons name="ellipsis-horizontal" size={20} color="#ffffff" />
             </TouchableOpacity>
           )}
         </View>
       </LinearGradient>
 
-      <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={tw`flex-1`}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={tw`pb-8`}
+      >
         {!targetData ? (
-          // Direct Setup View - No Modal
-          <LinearGradient
-            colors={['#F0F9FF', '#E0F2FE', '#BAE6FD']}
-            style={tw`flex-1`}
-          >
-            <View style={tw`p-6`}>
-              <LinearGradient
-                colors={['#FFFFFF', '#F8FAFC']}
-                style={tw`rounded-3xl p-8 mb-6 shadow-lg`}
+          // Apple-style Setup Flow - Light Mode
+          <View style={tw`px-6`}>
+            {/* Hero Section */}
+            <View style={tw`items-center mb-12 mt-8`}>
+              <View
+                style={[
+                  tw`w-24 h-24 rounded-3xl items-center justify-center mb-8`,
+                  { backgroundColor: '#007AFF' },
+                ]}
               >
-                <View style={tw`items-center mb-8`}>
-                  <LinearGradient
-                    colors={['#3B82F6', '#1D4ED8', '#1E40AF']}
-                    style={tw`w-24 h-24 rounded-full items-center justify-center mb-6`}
+                <Ionicons name="book-outline" size={40} color="#ffffff" />
+              </View>
+
+              <Text
+                style={tw`text-gray-900 text-4xl font-bold text-center mb-4`}
+              >
+                Daily Quran
+              </Text>
+              <Text
+                style={tw`text-gray-600 text-lg text-center leading-7 px-4`}
+              >
+                Build a consistent reading habit with personalized daily goals
+              </Text>
+            </View>
+
+            {/* Setup Card */}
+            <View
+              style={[
+                tw`rounded-3xl p-8 mb-6 shadow-lg`,
+                { backgroundColor: '#ffffff' },
+              ]}
+            >
+              {/* Progress Indicator */}
+              <View style={tw`flex-row mb-8`}>
+                <View
+                  style={[
+                    tw`h-1 flex-1 rounded-full mr-2`,
+                    {
+                      backgroundColor:
+                        isStartingFresh !== null ? '#007AFF' : '#e2e8f0',
+                    },
+                  ]}
+                />
+                <View
+                  style={[
+                    tw`h-1 flex-1 rounded-full mr-2`,
+                    {
+                      backgroundColor:
+                        dailyTarget && isStartingFresh !== null
+                          ? '#007AFF'
+                          : '#e2e8f0',
+                    },
+                  ]}
+                />
+                <View
+                  style={[
+                    tw`h-1 flex-1 rounded-full`,
+                    {
+                      backgroundColor:
+                        dailyTarget &&
+                        isStartingFresh !== null &&
+                        (isStartingFresh || pagesAlreadyRead)
+                          ? '#007AFF'
+                          : '#e2e8f0',
+                    },
+                  ]}
+                />
+              </View>
+
+              {/* Starting Point */}
+              <View style={tw`mb-8`}>
+                <Text style={tw`text-gray-900 text-xl font-semibold mb-6`}>
+                  Starting point
+                </Text>
+
+                <TouchableOpacity
+                  onPress={() => setIsStartingFresh(true)}
+                  style={[
+                    tw`rounded-2xl p-5 mb-4 border`,
+                    isStartingFresh === true
+                      ? { backgroundColor: '#eff6ff', borderColor: '#007AFF' }
+                      : {
+                          backgroundColor: '#f8fafc',
+                          borderColor: '#e2e8f0',
+                        },
+                  ]}
+                >
+                  <View style={tw`flex-row items-center`}>
+                    <View
+                      style={[
+                        tw`w-6 h-6 rounded-full border-2 mr-4 items-center justify-center`,
+                        {
+                          borderColor:
+                            isStartingFresh === true ? '#007AFF' : '#94a3b8',
+                        },
+                      ]}
+                    >
+                      {isStartingFresh === true && (
+                        <View
+                          style={[
+                            tw`w-3 h-3 rounded-full`,
+                            { backgroundColor: '#007AFF' },
+                          ]}
+                        />
+                      )}
+                    </View>
+                    <View style={tw`flex-1`}>
+                      <Text style={tw`text-gray-900 text-lg font-medium mb-1`}>
+                        Fresh start
+                      </Text>
+                      <Text style={tw`text-gray-500 text-sm`}>
+                        Beginning from page 1
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setIsStartingFresh(false)}
+                  style={[
+                    tw`rounded-2xl p-5 border`,
+                    isStartingFresh === false
+                      ? { backgroundColor: '#eff6ff', borderColor: '#007AFF' }
+                      : {
+                          backgroundColor: '#f8fafc',
+                          borderColor: '#e2e8f0',
+                        },
+                  ]}
+                >
+                  <View style={tw`flex-row items-center`}>
+                    <View
+                      style={[
+                        tw`w-6 h-6 rounded-full border-2 mr-4 items-center justify-center`,
+                        {
+                          borderColor:
+                            isStartingFresh === false ? '#007AFF' : '#94a3b8',
+                        },
+                      ]}
+                    >
+                      {isStartingFresh === false && (
+                        <View
+                          style={[
+                            tw`w-3 h-3 rounded-full`,
+                            { backgroundColor: '#007AFF' },
+                          ]}
+                        />
+                      )}
+                    </View>
+                    <View style={tw`flex-1`}>
+                      <Text style={tw`text-gray-900 text-lg font-medium mb-1`}>
+                        Continue reading
+                      </Text>
+                      <Text style={tw`text-gray-500 text-sm`}>
+                        I've already made progress
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Pages Already Read */}
+              {isStartingFresh === false && (
+                <View style={tw`mb-8`}>
+                  <Text style={tw`text-gray-900 text-xl font-semibold mb-4`}>
+                    Current progress
+                  </Text>
+                  <View
+                    style={[
+                      tw`rounded-2xl border`,
+                      { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
+                    ]}
                   >
-                    <Ionicons name="book" size={40} color="white" />
-                  </LinearGradient>
-                  <Text
-                    style={tw`text-3xl font-bold text-gray-900 mb-3 text-center`}
-                  >
-                    🌟 Start Your Sacred Journey
-                  </Text>
-                  <Text style={tw`text-gray-600 text-center text-lg leading-6`}>
-                    Set your daily Quran reading goal and witness the beautiful
-                    transformation in your spiritual life
-                  </Text>
-                </View>
-
-                {/* Starting Point Selection */}
-                <View style={tw`mb-6`}>
-                  <Text style={tw`text-lg font-semibold text-gray-900 mb-3`}>
-                    Are you starting fresh?
-                  </Text>
-
-                  {renderStartingOption(
-                    true,
-                    'Starting Fresh',
-                    "I'm beginning my Quran reading journey from page 1"
-                  )}
-                  {renderStartingOption(
-                    false,
-                    'Already Started',
-                    "I've already read some pages of the Quran"
-                  )}
-                </View>
-
-                {/* Pages Already Read Input */}
-                {isStartingFresh === false && (
-                  <View style={tw`mb-6`}>
-                    <Text style={tw`text-lg font-semibold text-gray-900 mb-3`}>
-                      Pages Already Read
-                    </Text>
                     <TextInput
-                      style={tw`border border-gray-300 rounded-xl px-4 py-3 text-lg text-center`}
-                      placeholder="How many pages have you read?"
+                      style={tw`px-5 py-4 text-gray-900 text-lg`}
+                      placeholder="Pages completed (0-603)"
+                      placeholderTextColor="#94a3b8"
                       value={pagesAlreadyRead}
                       onChangeText={setPagesAlreadyRead}
                       keyboardType="numeric"
                     />
-                    <Text style={tw`text-sm text-gray-500 text-center mt-2`}>
-                      Total Quran has 604 pages
-                    </Text>
                   </View>
-                )}
+                </View>
+              )}
 
-                {/* Daily Target Input */}
-                {isStartingFresh !== null && (
-                  <View style={tw`mb-6`}>
-                    <Text style={tw`text-lg font-semibold text-gray-900 mb-3`}>
-                      Daily Target (Pages)
-                    </Text>
+              {/* Daily Target */}
+              {isStartingFresh !== null && (
+                <View style={tw`mb-8`}>
+                  <Text style={tw`text-gray-900 text-xl font-semibold mb-4`}>
+                    Daily goal
+                  </Text>
+                  <View
+                    style={[
+                      tw`rounded-2xl border`,
+                      { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
+                    ]}
+                  >
                     <TextInput
-                      style={tw`border border-gray-300 rounded-xl px-4 py-4 text-lg text-center`}
-                      placeholder="Enter number of pages"
+                      style={tw`px-5 py-4 text-gray-900 text-lg`}
+                      placeholder="Pages per day"
+                      placeholderTextColor="#94a3b8"
                       value={dailyTarget}
                       onChangeText={setDailyTarget}
                       keyboardType="numeric"
                     />
-                    <Text style={tw`text-sm text-gray-500 text-center mt-2`}>
-                      Recommended: 1-5 pages per day
-                    </Text>
                   </View>
-                )}
+                  <Text style={tw`text-gray-500 text-sm mt-2 ml-1`}>
+                    Recommended: 1-5 pages daily
+                  </Text>
+                </View>
+              )}
 
-                {/* Completion Prediction */}
-                {dailyTarget && isStartingFresh !== null && (
-                  <View
-                    style={tw`bg-green-50 border border-green-200 rounded-xl p-4 mb-6`}
-                  >
-                    <View style={tw`flex-row items-center mb-2`}>
-                      <Ionicons
-                        name="calendar-outline"
-                        size={20}
-                        color="#059669"
-                        style={tw`mr-2`}
-                      />
-                      <Text style={tw`text-green-800 font-semibold`}>
-                        Completion Prediction
-                      </Text>
-                    </View>
-                    {(() => {
-                      const alreadyRead = isStartingFresh
-                        ? 0
-                        : parseInt(pagesAlreadyRead) || 0;
-                      const target = parseInt(dailyTarget) || 0;
-                      if (target > 0) {
-                        const completion = calculateCompletionInfo(
-                          target,
-                          alreadyRead
-                        );
-                        return (
-                          <View>
-                            <Text style={tw`text-green-700 text-sm`}>
-                              📖 You'll complete the Quran on{'\n'}
-                              <Text style={tw`font-bold`}>
-                                {completion.completionDate}
-                              </Text>
-                            </Text>
-                            <Text style={tw`text-green-600 text-xs mt-1`}>
-                              ({completion.daysNeeded} days •{' '}
-                              {completion.remainingPages} pages remaining)
-                            </Text>
-                          </View>
-                        );
-                      }
-                      return null;
-                    })()}
-                  </View>
-                )}
-
-                <TouchableOpacity
-                  onPress={handleSetupSubmit}
+              {/* Completion Preview */}
+              {dailyTarget && isStartingFresh !== null && (
+                <View
                   style={[
-                    tw`rounded-xl py-4 px-6`,
+                    tw`rounded-2xl p-5 mb-8`,
+                    { backgroundColor: '#eff6ff' },
+                  ]}
+                >
+                  {(() => {
+                    const alreadyRead = isStartingFresh
+                      ? 0
+                      : parseInt(pagesAlreadyRead) || 0;
+                    const target = parseInt(dailyTarget) || 0;
+                    if (target > 0) {
+                      const completion = calculateCompletionInfo(
+                        target,
+                        alreadyRead
+                      );
+                      return (
+                        <View>
+                          <Text
+                            style={tw`text-blue-600 text-sm font-medium mb-2`}
+                          >
+                            COMPLETION FORECAST
+                          </Text>
+                          <Text
+                            style={tw`text-gray-900 text-lg font-semibold mb-1`}
+                          >
+                            {completion.completionDate}
+                          </Text>
+                          <Text style={tw`text-blue-500 text-sm`}>
+                            {completion.daysNeeded} days •{' '}
+                            {completion.remainingPages} pages remaining
+                          </Text>
+                        </View>
+                      );
+                    }
+                    return null;
+                  })()}
+                </View>
+              )}
+
+              {/* Start Button */}
+              <TouchableOpacity
+                onPress={handleSetupSubmit}
+                disabled={
+                  !(
                     dailyTarget &&
                     isStartingFresh !== null &&
                     (isStartingFresh || pagesAlreadyRead)
-                      ? tw`bg-blue-500`
-                      : tw`bg-gray-300`,
+                  )
+                }
+                style={[
+                  tw`rounded-2xl py-4 items-center`,
+                  dailyTarget &&
+                  isStartingFresh !== null &&
+                  (isStartingFresh || pagesAlreadyRead)
+                    ? { backgroundColor: '#007AFF' }
+                    : { backgroundColor: '#e2e8f0' },
+                ]}
+              >
+                <Text
+                  style={[
+                    tw`text-lg font-semibold`,
+                    dailyTarget &&
+                    isStartingFresh !== null &&
+                    (isStartingFresh || pagesAlreadyRead)
+                      ? tw`text-white`
+                      : tw`text-gray-400`,
                   ]}
-                  disabled={
-                    !(
-                      dailyTarget &&
-                      isStartingFresh !== null &&
-                      (isStartingFresh || pagesAlreadyRead)
-                    )
-                  }
                 >
-                  <LinearGradient
-                    colors={
-                      dailyTarget &&
-                      isStartingFresh !== null &&
-                      (isStartingFresh || pagesAlreadyRead)
-                        ? ['#3B82F6', '#1D4ED8']
-                        : ['#D1D5DB', '#9CA3AF']
-                    }
-                    style={tw`rounded-2xl py-4 px-6 items-center`}
-                  >
-                    <Text style={tw`text-white font-bold text-center text-xl`}>
-                      🚀 Begin Your Journey
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </LinearGradient>
+                  Begin Journey
+                </Text>
+              </TouchableOpacity>
             </View>
-          </LinearGradient>
+          </View>
         ) : (
-          // Dashboard View
-          <View style={tw`p-6`}>
-            {/* Today's Progress Card */}
-            <View style={tw`bg-white rounded-2xl p-6 mb-6`}>
-              <View style={tw`flex-row items-center justify-between mb-4`}>
-                <Text style={tw`text-xl font-bold text-gray-900`}>
-                  Today's Progress
+          // Apple-style Dashboard - Light Mode
+          <View style={tw`px-6`}>
+            {/* Main Title */}
+            <View style={tw`mb-8 mt-4`}>
+              <Text style={tw`text-gray-900 text-3xl font-bold mb-2`}>
+                Daily Quran
+              </Text>
+              <Text style={tw`text-gray-600 text-lg`}>
+                Keep up the great work
+              </Text>
+            </View>
+
+            {/* Today's Progress - Large Card */}
+            <View
+              style={[
+                tw`rounded-3xl p-8 mb-6 shadow-lg`,
+                { backgroundColor: '#ffffff' },
+              ]}
+            >
+              <View style={tw`flex-row items-center justify-between mb-6`}>
+                <Text style={tw`text-gray-900 text-xl font-semibold`}>
+                  Today
                 </Text>
                 <TouchableOpacity
                   onPress={() => setShowTodayModal(true)}
-                  style={tw`bg-blue-500 rounded-full px-4 py-2`}
+                  style={[
+                    tw`px-4 py-2 rounded-full`,
+                    { backgroundColor: '#007AFF' },
+                  ]}
                 >
-                  <Text style={tw`text-white font-semibold text-sm`}>
-                    Add Progress
-                  </Text>
+                  <Text style={tw`text-white font-medium`}>Add</Text>
                 </TouchableOpacity>
               </View>
 
-              <View style={tw`mb-4`}>
-                <View style={tw`flex-row justify-between items-center mb-2`}>
-                  <Text style={tw`text-gray-600`}>
-                    {getTodayProgress().completed} / {targetData.dailyTarget}{' '}
-                    pages
+              {/* Progress Circle */}
+              <View style={tw`items-center mb-8`}>
+                <View style={tw`items-center justify-center mb-4`}>
+                  <Text style={tw`text-gray-900 text-5xl font-light mb-2`}>
+                    {getTodayProgress().completed}
                   </Text>
-                  <Text style={tw`font-semibold text-gray-900`}>
-                    {getTodayProgress().percentage.toFixed(0)}%
+                  <Text style={tw`text-gray-500 text-lg`}>
+                    of {targetData.dailyTarget} pages
                   </Text>
                 </View>
-                <View style={tw`bg-gray-200 rounded-full h-3`}>
+
+                {/* Progress Bar */}
+                <View style={tw`w-full`}>
                   <View
                     style={[
-                      tw`bg-blue-500 rounded-full h-3`,
-                      { width: `${getTodayProgress().percentage}%` },
+                      tw`h-2 rounded-full`,
+                      { backgroundColor: '#e2e8f0' },
                     ]}
-                  />
-                </View>
-              </View>
-
-              <View style={tw`flex-row justify-between`}>
-                <View style={tw`items-center flex-1`}>
-                  <Text style={tw`text-2xl font-bold text-blue-500`}>
-                    {getStreakInfo().current}
-                  </Text>
-                  <Text style={tw`text-sm text-gray-500`}>Current Streak</Text>
-                </View>
-                <View style={tw`items-center flex-1`}>
-                  <Text style={tw`text-2xl font-bold text-green-500`}>
-                    {getStreakInfo().best}
-                  </Text>
-                  <Text style={tw`text-sm text-gray-500`}>Best Streak</Text>
-                </View>
-                <View style={tw`items-center flex-1`}>
-                  <Text style={tw`text-2xl font-bold text-purple-500`}>
-                    {targetData.totalCompleted}
-                  </Text>
-                  <Text style={tw`text-sm text-gray-500`}>Total Pages</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Last 7 Days */}
-            <View style={tw`bg-white rounded-2xl p-6 mb-6`}>
-              <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
-                Last 7 Days
-              </Text>
-              <View style={tw`flex-row justify-between`}>
-                {getRecentActivity().map((day, index) => (
-                  <View key={day.date} style={tw`items-center flex-1`}>
-                    <Text style={tw`text-xs text-gray-500 mb-2`}>
-                      {day.dayName}
-                    </Text>
+                  >
                     <View
                       style={[
-                        tw`w-8 h-8 rounded-full items-center justify-center`,
-                        day.isComplete
-                          ? tw`bg-green-500`
-                          : day.isToday
-                            ? tw`bg-blue-100 border-2 border-blue-500`
-                            : tw`bg-gray-200`,
+                        tw`h-2 rounded-full`,
+                        {
+                          backgroundColor: '#007AFF',
+                          width: `${Math.min(getTodayProgress().percentage, 100)}%`,
+                        },
                       ]}
-                    >
-                      {day.isComplete ? (
-                        <Ionicons name="checkmark" size={16} color="white" />
-                      ) : day.isToday ? (
-                        <View style={tw`w-2 h-2 bg-blue-500 rounded-full`} />
-                      ) : null}
-                    </View>
-                    <Text style={tw`text-xs text-gray-500 mt-1`}>
-                      {day.progress}
-                    </Text>
+                    />
                   </View>
-                ))}
+                  <Text style={tw`text-gray-500 text-sm text-center mt-2`}>
+                    {getTodayProgress().percentage.toFixed(0)}% complete
+                  </Text>
+                </View>
               </View>
             </View>
 
-            {/* Target Info */}
-            <View style={tw`bg-white rounded-2xl p-6 mb-6`}>
-              <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
-                Your Target
-              </Text>
-              <View style={tw`space-y-3`}>
-                <View style={tw`flex-row justify-between`}>
-                  <Text style={tw`text-gray-600`}>Daily Goal</Text>
-                  <Text style={tw`font-semibold`}>
-                    {targetData.dailyTarget} pages
-                  </Text>
-                </View>
+            {/* Stats Grid */}
+            <View style={tw`flex-row mb-6`}>
+              <View
+                style={[
+                  tw`flex-1 rounded-2xl p-6 mr-3 shadow-sm`,
+                  { backgroundColor: '#ffffff' },
+                ]}
+              >
+                <Text style={tw`text-gray-500 text-sm font-medium mb-2`}>
+                  CURRENT STREAK
+                </Text>
+                <Text style={tw`text-gray-900 text-3xl font-light mb-1`}>
+                  {getStreakInfo().current}
+                </Text>
+                <Text style={tw`text-gray-500 text-sm`}>days</Text>
+              </View>
 
-                {/* Completion Prediction */}
-                {(() => {
-                  const completion = calculateCompletionInfo(
-                    targetData.dailyTarget,
-                    targetData.totalCompleted
-                  );
-                  return (
-                    <>
-                      <View style={tw`flex-row justify-between`}>
-                        <Text style={tw`text-gray-600`}>Pages Remaining</Text>
-                        <Text style={tw`font-semibold`}>
-                          {completion.remainingPages} pages
-                        </Text>
-                      </View>
-                      <View style={tw`flex-row justify-between`}>
-                        <Text style={tw`text-gray-600`}>Days to Complete</Text>
-                        <Text style={tw`font-semibold`}>
-                          {completion.daysNeeded} days
+              <View
+                style={[
+                  tw`flex-1 rounded-2xl p-6 shadow-sm`,
+                  { backgroundColor: '#ffffff' },
+                ]}
+              >
+                <Text style={tw`text-gray-500 text-sm font-medium mb-2`}>
+                  TOTAL PAGES
+                </Text>
+                <Text style={tw`text-gray-900 text-3xl font-light mb-1`}>
+                  {targetData.totalCompleted}
+                </Text>
+                <Text style={tw`text-gray-500 text-sm`}>completed</Text>
+              </View>
+            </View>
+
+            {/* Journey Overview */}
+            <View
+              style={[
+                tw`rounded-2xl p-6 mb-6 shadow-sm`,
+                { backgroundColor: '#ffffff' },
+              ]}
+            >
+              <Text style={tw`text-gray-900 text-lg font-semibold mb-4`}>
+                Journey Overview
+              </Text>
+
+              {(() => {
+                const completion = calculateCompletionInfo(
+                  targetData.dailyTarget,
+                  targetData.totalCompleted
+                );
+                const progressPercent = (targetData.totalCompleted / 604) * 100;
+
+                return (
+                  <View>
+                    <View style={tw`mb-4`}>
+                      <View
+                        style={tw`flex-row justify-between items-center mb-2`}
+                      >
+                        <Text style={tw`text-gray-500 text-sm`}>Progress</Text>
+                        <Text style={tw`text-gray-500 text-sm`}>
+                          {progressPercent.toFixed(1)}%
                         </Text>
                       </View>
                       <View
-                        style={tw`bg-green-50 border border-green-200 rounded-xl p-3 mt-2`}
+                        style={[
+                          tw`h-2 rounded-full`,
+                          { backgroundColor: '#e2e8f0' },
+                        ]}
                       >
-                        <View style={tw`flex-row items-center mb-1`}>
-                          <Ionicons
-                            name="calendar"
-                            size={16}
-                            color="#059669"
-                            style={tw`mr-2`}
-                          />
-                          <Text
-                            style={tw`text-green-800 font-semibold text-sm`}
-                          >
-                            Completion Date
-                          </Text>
-                        </View>
-                        <Text style={tw`text-green-700 font-bold`}>
+                        <View
+                          style={[
+                            tw`h-2 rounded-full`,
+                            {
+                              backgroundColor: '#34C759',
+                              width: `${progressPercent}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+                    </View>
+
+                    <View style={tw`space-y-3`}>
+                      <View style={tw`flex-row justify-between`}>
+                        <Text style={tw`text-gray-500`}>Pages remaining</Text>
+                        <Text style={tw`text-gray-900 font-medium`}>
+                          {completion.remainingPages}
+                        </Text>
+                      </View>
+
+                      <View style={tw`flex-row justify-between`}>
+                        <Text style={tw`text-gray-500`}>
+                          Expected completion
+                        </Text>
+                        <Text style={tw`text-gray-900 font-medium`}>
                           {completion.completionDate}
                         </Text>
                       </View>
-                    </>
-                  );
-                })()}
-              </View>
+
+                      <View style={tw`flex-row justify-between`}>
+                        <Text style={tw`text-gray-500`}>Best streak</Text>
+                        <Text style={tw`text-gray-900 font-medium`}>
+                          {getStreakInfo().best} days
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                );
+              })()}
             </View>
 
-            {/* Delete Button */}
+            {/* Settings */}
             <TouchableOpacity
               onPress={deleteTargetData}
-              style={tw`bg-red-50 border border-red-200 rounded-xl p-4 mb-6`}
+              style={[
+                tw`rounded-2xl p-4 items-center`,
+                { backgroundColor: '#fef2f2' },
+              ]}
             >
-              <View style={tw`flex-row items-center justify-center`}>
-                <Ionicons
-                  name="trash-outline"
-                  size={20}
-                  color="#DC2626"
-                  style={tw`mr-2`}
-                />
-                <Text style={tw`text-red-600 font-semibold`}>
-                  Delete All Data
-                </Text>
-              </View>
+              <Text style={tw`text-red-500 font-medium`}>Reset Journey</Text>
             </TouchableOpacity>
           </View>
         )}
       </ScrollView>
 
-      {/* Add Progress Modal */}
+      {/* Add Progress Modal - Apple Style Light Mode */}
       <Modal
         visible={showTodayModal}
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <SafeAreaView style={tw`flex-1 bg-white`}>
-          <StatusBar
-            barStyle="dark-content"
-            backgroundColor="#ffffff"
-            translucent
-          />
-          <View
-            style={tw`flex-row items-center justify-between p-6 border-b border-gray-100`}
-          >
-            <Text style={tw`text-xl font-bold text-gray-900`}>
-              Add Today's Progress
-            </Text>
-            <TouchableOpacity
-              onPress={() => setShowTodayModal(false)}
-              style={tw`p-2`}
-            >
-              <Ionicons name="close" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          </View>
+        <View style={[tw`flex-1`, { backgroundColor: '#f8fafc' }]}>
+          <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+          <SafeAreaView style={tw`flex-1`}>
+            <View style={tw`px-6 py-4 border-b border-gray-200`}>
+              <View style={tw`flex-row items-center justify-between`}>
+                <TouchableOpacity
+                  onPress={() => setShowTodayModal(false)}
+                  style={tw`p-2`}
+                >
+                  <Text style={tw`text-blue-500 text-lg`}>Cancel</Text>
+                </TouchableOpacity>
 
-          <View style={tw`flex-1 p-6`}>
-            <Text style={tw`text-lg font-semibold text-gray-900 mb-4`}>
-              How many pages did you complete today?
-            </Text>
-            <TextInput
-              style={tw`border border-gray-300 rounded-xl px-4 py-3 text-lg mb-6`}
-              placeholder="Number of pages"
-              value={todayProgress}
-              onChangeText={setTodayProgress}
-              keyboardType="numeric"
-            />
+                <Text style={tw`text-gray-900 text-lg font-semibold`}>
+                  Add Progress
+                </Text>
 
-            <TouchableOpacity
-              onPress={handleTodaySubmit}
-              style={[
-                tw`rounded-xl py-4 px-6`,
-                todayProgress ? tw`bg-blue-500` : tw`bg-gray-300`,
-              ]}
-              disabled={!todayProgress}
-            >
-              <Text style={tw`text-white font-semibold text-center text-lg`}>
-                Add Progress
+                <TouchableOpacity
+                  onPress={handleTodaySubmit}
+                  disabled={!todayProgress}
+                  style={tw`p-2`}
+                >
+                  <Text
+                    style={[
+                      tw`text-lg font-semibold`,
+                      todayProgress ? tw`text-blue-500` : tw`text-gray-400`,
+                    ]}
+                  >
+                    Done
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={tw`flex-1 px-6 py-8`}>
+              <Text style={tw`text-gray-900 text-2xl font-bold mb-2`}>
+                Today's Reading
               </Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
+              <Text style={tw`text-gray-500 text-lg mb-8`}>
+                How many pages did you complete?
+              </Text>
+
+              <View
+                style={[
+                  tw`rounded-2xl border`,
+                  { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
+                ]}
+              >
+                <TextInput
+                  style={tw`px-5 py-4 text-gray-900 text-xl text-center`}
+                  placeholder="0"
+                  placeholderTextColor="#94a3b8"
+                  value={todayProgress}
+                  onChangeText={setTodayProgress}
+                  keyboardType="numeric"
+                  autoFocus
+                />
+              </View>
+
+              <Text style={tw`text-gray-500 text-sm text-center mt-3`}>
+                Pages completed today
+              </Text>
+            </View>
+          </SafeAreaView>
+        </View>
       </Modal>
 
-      {/* Edit Modal */}
+      {/* Edit Modal - Apple Style Light Mode */}
       <Modal
         visible={showEditModal}
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <SafeAreaView style={tw`flex-1 bg-white`}>
-          <StatusBar
-            barStyle="dark-content"
-            backgroundColor="#ffffff"
-            translucent
-          />
-          <View
-            style={tw`flex-row items-center justify-between p-6 border-b border-gray-100`}
-          >
-            <Text style={tw`text-xl font-bold text-gray-900`}>
-              Edit Daily Target
-            </Text>
-            <TouchableOpacity
-              onPress={() => setShowEditModal(false)}
-              style={tw`p-2`}
-            >
-              <Ionicons name="close" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          </View>
+        <View style={[tw`flex-1`, { backgroundColor: '#f8fafc' }]}>
+          <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+          <SafeAreaView style={tw`flex-1`}>
+            <View style={tw`px-6 py-4 border-b border-gray-200`}>
+              <View style={tw`flex-row items-center justify-between`}>
+                <TouchableOpacity
+                  onPress={() => setShowEditModal(false)}
+                  style={tw`p-2`}
+                >
+                  <Text style={tw`text-blue-500 text-lg`}>Cancel</Text>
+                </TouchableOpacity>
 
-          <View style={tw`flex-1 p-6`}>
-            <Text style={tw`text-lg font-semibold text-gray-900 mb-4`}>
-              Daily Pages Target
-            </Text>
-            <TextInput
-              style={tw`border border-gray-300 rounded-xl px-4 py-3 text-lg mb-6`}
-              placeholder="How many pages per day?"
-              value={dailyTarget}
-              onChangeText={setDailyTarget}
-              keyboardType="numeric"
-            />
+                <Text style={tw`text-gray-900 text-lg font-semibold`}>
+                  Edit Goal
+                </Text>
 
-            <TouchableOpacity
-              onPress={handleEditSubmit}
-              style={[
-                tw`rounded-xl py-4 px-6`,
-                dailyTarget ? tw`bg-blue-500` : tw`bg-gray-300`,
-              ]}
-              disabled={!dailyTarget}
-            >
-              <Text style={tw`text-white font-semibold text-center text-lg`}>
-                Update Target
+                <TouchableOpacity
+                  onPress={handleEditSubmit}
+                  disabled={!dailyTarget}
+                  style={tw`p-2`}
+                >
+                  <Text
+                    style={[
+                      tw`text-lg font-semibold`,
+                      dailyTarget ? tw`text-blue-500` : tw`text-gray-400`,
+                    ]}
+                  >
+                    Save
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={tw`flex-1 px-6 py-8`}>
+              <Text style={tw`text-gray-900 text-2xl font-bold mb-2`}>
+                Daily Goal
               </Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
+              <Text style={tw`text-gray-500 text-lg mb-8`}>
+                How many pages would you like to read daily?
+              </Text>
+
+              <View
+                style={[
+                  tw`rounded-2xl border`,
+                  { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
+                ]}
+              >
+                <TextInput
+                  style={tw`px-5 py-4 text-gray-900 text-xl text-center`}
+                  placeholder="5"
+                  placeholderTextColor="#94a3b8"
+                  value={dailyTarget}
+                  onChangeText={setDailyTarget}
+                  keyboardType="numeric"
+                  autoFocus
+                />
+              </View>
+
+              <Text style={tw`text-gray-500 text-sm text-center mt-3`}>
+                Pages per day
+              </Text>
+            </View>
+          </SafeAreaView>
+        </View>
       </Modal>
     </View>
   );

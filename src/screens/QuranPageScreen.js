@@ -15,6 +15,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import * as Animatable from 'react-native-animatable';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
@@ -28,6 +29,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '../services/analyticsService';
 import rateLimitService from '../services/rateLimitService';
 import RateLimitStatus from '../components/RateLimitStatus';
+import { getMushafStyle, getMushafImageUrl } from '../services/mushafService';
 
 const { width, height } = Dimensions.get('window');
 
@@ -47,10 +49,13 @@ export default function QuranPageScreen({ route }) {
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
+  const [analysisStep, setAnalysisStep] = useState(0);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('english');
   const [totalPages] = useState(604); // Standard Mushaf has 604 pages
   const [preloadedPages, setPreloadedPages] = useState(new Set()); // Track preloaded pages
   const [isTransitioning, setIsTransitioning] = useState(false); // Prevent multiple transitions
+  const [mushafStyle, setMushafStyle] = useState(9); // Default to style 9
 
   // Animation refs
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -216,6 +221,9 @@ export default function QuranPageScreen({ route }) {
       total_pages: 604,
     });
 
+    // Load mushaf style preference
+    loadMushafStyle();
+
     // Reset animation values to default
     slideAnim.setValue(0);
     fadeAnim.setValue(1);
@@ -223,10 +231,40 @@ export default function QuranPageScreen({ route }) {
     // Update streak when component mounts
     dispatch(updateStreak());
 
+    // Add focus listener to reload mushaf style when returning to screen
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('[QURAN SCREEN] Screen focused, reloading mushaf style');
+      loadMushafStyle();
+    });
+
     return () => {
       console.log('[QURAN SCREEN] Component unmounting');
+      unsubscribe();
     };
   }, []);
+
+  const loadMushafStyle = async () => {
+    try {
+      console.log('[QURAN SCREEN] Loading mushaf style...');
+      const style = await getMushafStyle();
+      console.log('[QURAN SCREEN] Loaded mushaf style:', style);
+      
+      // Check if style has changed
+      if (style !== mushafStyle) {
+        console.log('[QURAN SCREEN] Mushaf style changed from', mushafStyle, 'to', style);
+        setMushafStyle(style);
+        
+        // Force image reload by triggering loading state
+        setLoading(true);
+        setImageError(false);
+        
+        console.log('[QURAN SCREEN] mushafStyle state set to:', style);
+      }
+    } catch (error) {
+      console.error('[QURAN SCREEN] Error loading mushaf style:', error);
+      setMushafStyle(9); // Default to style 9
+    }
+  };
 
   useEffect(() => {
     if (initialPage && initialPage !== currentPage) {
@@ -274,11 +312,11 @@ export default function QuranPageScreen({ route }) {
     preloadAdjacentPages(currentPage);
   }, [currentPage]);
 
-  // Generate SearchTruth.com image URL
+  // Generate SearchTruth.com image URL using preferred style
   const getPageImageUrl = pageNumber => {
-    // SearchTruth.com pattern: page 1 = 000010, page 2 = 000011, etc.
-    const imageNumber = String(pageNumber + 9).padStart(6, '0');
-    return `https://www.searchtruth.com/quran/images/images9/${pageNumber}.jpg`;
+    const url = getMushafImageUrl(pageNumber, mushafStyle);
+    console.log('[QURAN SCREEN] Generated URL for page', pageNumber, 'style', mushafStyle, ':', url);
+    return url;
   };
 
   // Preload pages for instant navigation
@@ -293,6 +331,7 @@ export default function QuranPageScreen({ route }) {
 
     console.log('[QURAN SCREEN] Preloading page:', pageNumber);
     const imageUrl = getPageImageUrl(pageNumber);
+    console.log('[QURAN SCREEN] Preload URL:', imageUrl);
 
     // Use React Native's Image.prefetch for caching
     Image.prefetch(imageUrl)
@@ -304,8 +343,11 @@ export default function QuranPageScreen({ route }) {
         console.warn(
           '[QURAN SCREEN] Failed to preload page:',
           pageNumber,
+          'Error:',
           error
         );
+        // Still mark as preloaded to avoid infinite retry
+        setPreloadedPages(prev => new Set([...prev, pageNumber]));
       });
   };
 
@@ -335,6 +377,8 @@ export default function QuranPageScreen({ route }) {
 
   const goToPage = page => {
     console.log('[QURAN SCREEN] goToPage called with page:', page);
+    console.log('[QURAN SCREEN] Current state - currentPage:', currentPage, 'isTransitioning:', isTransitioning);
+    
     if (page >= 1 && page <= totalPages && !isTransitioning) {
       console.log('[QURAN SCREEN] Navigating to page:', page);
 
@@ -344,15 +388,32 @@ export default function QuranPageScreen({ route }) {
     } else {
       console.log(
         '[QURAN SCREEN] Invalid page number or transition in progress:',
-        page,
-        'Total pages:',
-        totalPages
+        'page:', page,
+        'totalPages:', totalPages,
+        'isTransitioning:', isTransitioning
       );
     }
   };
 
   const animatePageTransition = (newPage, isNext) => {
+    console.log('[QURAN SCREEN] Starting page transition from', currentPage, 'to', newPage);
     setIsTransitioning(true);
+    
+    // Safety timeout to reset isTransitioning in case animation fails
+    const safetyTimeout = setTimeout(() => {
+      console.log('[QURAN SCREEN] Safety timeout - resetting isTransitioning');
+      setIsTransitioning(false);
+    }, 2000);
+    
+    // Simplified version - just change the page immediately for testing
+    console.log('[QURAN SCREEN] About to set currentPage to:', newPage);
+    setCurrentPage(newPage);
+    console.log('[QURAN SCREEN] currentPage set, clearing timeout');
+    clearTimeout(safetyTimeout);
+    setIsTransitioning(false);
+    
+    // TODO: Re-enable animations once basic navigation works
+    /*
     InteractionManager.runAfterInteractions(() => {
       const slideDirection = isNext ? -width : width;
       Animated.timing(fadeAnim, {
@@ -361,6 +422,7 @@ export default function QuranPageScreen({ route }) {
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }).start(() => {
+        console.log('[QURAN SCREEN] Setting currentPage to:', newPage);
         setCurrentPage(newPage);
         slideAnim.setValue(slideDirection * 0.3);
         fadeAnim.setValue(0);
@@ -378,16 +440,23 @@ export default function QuranPageScreen({ route }) {
             useNativeDriver: true,
           }),
         ]).start(() => {
+          console.log('[QURAN SCREEN] Page transition completed');
+          clearTimeout(safetyTimeout);
           setIsTransitioning(false);
         });
       });
     });
+    */
   };
 
   const nextPage = () => {
-    if (isTransitioning) return; // Prevent multiple animations
+    console.log('[QURAN SCREEN] nextPage() called, isTransitioning:', isTransitioning);
+    if (isTransitioning) {
+      console.log('[QURAN SCREEN] Blocking nextPage - transition in progress');
+      return; // Prevent multiple animations
+    }
     console.log(
-      '[QURAN SCREEN] Next page button pressed, current page:',
+      '[QURAN SCREEN] Next page function executing, current page:',
       currentPage
     );
 
@@ -403,9 +472,13 @@ export default function QuranPageScreen({ route }) {
   };
 
   const prevPage = () => {
-    if (isTransitioning) return; // Prevent multiple animations
+    console.log('[QURAN SCREEN] prevPage() called, isTransitioning:', isTransitioning);
+    if (isTransitioning) {
+      console.log('[QURAN SCREEN] Blocking prevPage - transition in progress');
+      return; // Prevent multiple animations
+    }
     console.log(
-      '[QURAN SCREEN] Previous page button pressed, current page:',
+      '[QURAN SCREEN] Previous page function executing, current page:',
       currentPage
     );
 
@@ -492,6 +565,74 @@ export default function QuranPageScreen({ route }) {
     setShowAIModal(true);
     setAiLoading(true);
     setAiResponse('');
+    setAnalysisStep(0);
+    setAnalysisComplete(false);
+
+    // Create a ref to track if API response is ready
+    let apiResponseReady = false;
+    let apiResponseData = null;
+
+    // Start the step-by-step animation simulation
+    const simulateAnalysis = () => {
+      const steps = [
+        { step: 1, text: 'Analyzing Quranic text...', delay: 1200 },
+        { step: 2, text: 'Processing Arabic semantics...', delay: 1200 },
+        { step: 3, text: 'Consulting classical commentaries...', delay: 1200 },
+        { step: 4, text: 'Extracting linguistic insights...', delay: 1200 },
+        { step: 5, text: 'Generating comprehensive explanation...', delay: 1200 },
+        { step: 6, text: 'Finalizing Tafseer...', delay: 1200 },
+      ];
+
+      let currentStepIndex = 0;
+      let simulationTimeouts = [];
+      
+      const runNextStep = () => {
+        // If API response is ready, immediately stop simulation and show response
+        if (apiResponseReady) {
+          // Clear all pending timeouts
+          simulationTimeouts.forEach(timeout => clearTimeout(timeout));
+          setAnalysisComplete(true);
+          setTimeout(() => {
+            setAiResponse(apiResponseData);
+            setAiLoading(false);
+          }, 500);
+          return;
+        }
+
+        if (currentStepIndex < steps.length) {
+          setAnalysisStep(currentStepIndex + 1);
+          currentStepIndex++;
+          
+          const timeout = setTimeout(runNextStep, steps[currentStepIndex - 1]?.delay || 1000);
+          simulationTimeouts.push(timeout);
+        } else {
+          // Animation complete - wait for API response if not ready yet
+          if (!apiResponseReady) {
+            const checkForResponse = () => {
+              if (apiResponseReady) {
+                setAnalysisComplete(true);
+                setTimeout(() => {
+                  setAiResponse(apiResponseData);
+                  setAiLoading(false);
+                }, 500);
+              } else {
+                setTimeout(checkForResponse, 500);
+              }
+            };
+            checkForResponse();
+          }
+        }
+      };
+
+      // Start the animation
+      const initialTimeout = setTimeout(runNextStep, 500);
+      simulationTimeouts.push(initialTimeout);
+
+      return simulationTimeouts;
+    };
+
+    // Start the simulation
+    const timeouts = simulateAnalysis();
 
     try {
       // Get the current page image URL
@@ -543,15 +684,22 @@ export default function QuranPageScreen({ route }) {
         // Record successful request for rate limiting
         await rateLimitService.recordRequest('quran/tafseer');
 
-        setAiResponse(data.tafseer);
+        // Mark API response as ready
+        apiResponseReady = true;
+        apiResponseData = data.tafseer;
+        
+        console.log('[QURAN SCREEN] API response received, stopping simulation');
       } else {
         throw new Error(data.error || 'Failed to get tafseer');
       }
-
-      setAiLoading(false);
     } catch (error) {
       console.error('Error getting AI explanation:', error);
+      
+      // Clear all timeouts and reset state
+      timeouts.forEach(timeout => clearTimeout(timeout));
       setAiLoading(false);
+      setAnalysisStep(0);
+      setAnalysisComplete(false);
 
       // Show user-friendly error message
       Alert.alert(
@@ -611,18 +759,22 @@ export default function QuranPageScreen({ route }) {
             />
           </TouchableOpacity>
 
-          {/* Page Counter and Search */}
-          <View style={tw`flex-row items-center`}>
-            <Text style={tw`text-sm text-amber-700 dark:text-amber-300 mr-3`}>
-              {currentPage} / {totalPages}
+          {/* Mushaf Style Settings */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MushafStyle')}
+            style={[
+              tw`flex-row items-center px-3 py-2 rounded-2xl`,
+              { backgroundColor: '#f0f9ff' }
+            ]}
+          >
+            <Ionicons name="options" size={18} color="#0284c7" />
+            <Text style={[
+              tw`text-blue-600 font-medium ml-2`,
+              { fontSize: 13 }
+            ]}>
+              Mushaf Style
             </Text>
-            <TouchableOpacity
-              onPress={handleModalOpen}
-              style={tw`p-2 rounded-lg bg-amber-100 dark:bg-amber-900/50`}
-            >
-              <Ionicons name="search" size={20} color="#92400e" />
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -709,9 +861,15 @@ export default function QuranPageScreen({ route }) {
       >
         {/* Previous Page Button */}
         <TouchableOpacity
-          onPress={currentPage < totalPages ? nextPage : undefined}
-          disabled={currentPage >= totalPages}
-          style={tw`bg-amber-200 rounded-full p-3 mr-3 ${currentPage >= totalPages ? 'opacity-40' : ''}`}
+          onPress={() => {
+            console.log('[QURAN SCREEN] Previous button pressed, currentPage:', currentPage);
+            if (currentPage > 1) {
+              nextPage();
+            } else {
+              console.log('[QURAN SCREEN] Cannot go to previous page, already at page 1');
+            }
+          }}
+          style={tw`bg-amber-200 rounded-full p-3 mr-3`}
           activeOpacity={0.7}
         >
           <Ionicons name="chevron-back" size={22} color="#92400e" />
@@ -739,9 +897,15 @@ export default function QuranPageScreen({ route }) {
 
         {/* Next Page Button */}
         <TouchableOpacity
-          onPress={currentPage > 1 ? prevPage : undefined}
-          disabled={currentPage <= 1}
-          style={tw`bg-amber-200 rounded-full p-3 ml-3 ${currentPage <= 1 ? 'opacity-40' : ''}`}
+          onPress={() => {
+            console.log('[QURAN SCREEN] Next button pressed, currentPage:', currentPage, 'totalPages:', totalPages);
+            if (currentPage < totalPages) {
+              prevPage();
+            } else {
+              console.log('[QURAN SCREEN] Cannot go to next page, already at last page');
+            }
+          }}
+          style={tw`bg-amber-200 rounded-full p-3 ml-3`}
           activeOpacity={0.7}
         >
           <Ionicons name="chevron-forward" size={22} color="#92400e" />
@@ -790,23 +954,192 @@ export default function QuranPageScreen({ route }) {
             showsVerticalScrollIndicator={false}
           >
             {aiLoading ? (
-              <View style={tw`flex-1 items-center justify-center py-20`}>
-                <View style={tw`bg-purple-50 rounded-full p-6 mb-6`}>
-                  <ActivityIndicator size="large" color="#8B5CF6" />
+              <View style={tw`flex-1 items-center py-12`}>
+                {/* Main Analysis Container */}
+                <View style={[
+                  tw`w-full max-w-sm rounded-3xl p-8 mb-8`,
+                  {
+                    backgroundColor: '#faf5ff', // Light purple background
+                    shadowColor: '#8B5CF6',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 12,
+                    elevation: 8,
+                  }
+                ]}>
+                  {/* Central AI Brain Animation */}
+                  <View style={tw`items-center mb-8`}>
+                    <View style={[
+                      tw`w-20 h-20 rounded-full items-center justify-center mb-4`,
+                      {
+                        backgroundColor: analysisComplete ? '#22c55e' : '#8B5CF6',
+                        transform: [{ scale: analysisComplete ? 1.1 : 1 }],
+                      }
+                    ]}>
+                      {analysisComplete ? (
+                        <Animatable.View animation="tada" iterationCount={1}>
+                          <Ionicons name="checkmark-circle" size={40} color="white" />
+                        </Animatable.View>
+                      ) : (
+                        <Animatable.View 
+                          animation="rotate" 
+                          iterationCount="infinite" 
+                          duration={2000}
+                        >
+                          <Ionicons name="analytics" size={40} color="white" />
+                        </Animatable.View>
+                      )}
+                    </View>
+                    
+                    <Text style={[
+                      tw`font-bold text-center mb-2`,
+                      { 
+                        fontSize: 20, 
+                        color: analysisComplete ? '#22c55e' : '#8B5CF6',
+                        letterSpacing: -0.3 
+                      }
+                    ]}>
+                      {analysisComplete ? 'Analysis Complete!' : 'AI Analyzing...'}
+                    </Text>
+                    
+                    <Text style={tw`text-gray-600 text-center text-sm`}>
+                      {analysisComplete 
+                        ? 'Preparing your personalized Tafseer' 
+                        : 'Deep learning models processing Quranic wisdom'
+                      }
+                    </Text>
+                  </View>
+
+                  {/* Progress Steps */}
+                  <View style={tw`mt-4`}>
+                    {[
+                      { id: 1, text: 'Analyzing Quranic text...', icon: 'document-text' },
+                      { id: 2, text: 'Processing Arabic semantics...', icon: 'language' },
+                      { id: 3, text: 'Consulting classical commentaries...', icon: 'library' },
+                      { id: 4, text: 'Extracting linguistic insights...', icon: 'search' },
+                      { id: 5, text: 'Generating comprehensive explanation...', icon: 'create' },
+                      { id: 6, text: 'Finalizing Tafseer...', icon: 'checkmark-done' },
+                    ].map((item, index) => {
+                      const isActive = analysisStep >= item.id;
+                      const isCurrent = analysisStep === item.id;
+                      const isCompleted = analysisStep > item.id || analysisComplete;
+                      
+                      return (
+                        <View key={item.id} style={tw`mb-4`}>
+                          <Animatable.View
+                            animation={isCurrent ? "pulse" : isActive ? "fadeIn" : undefined}
+                            duration={isCurrent ? 1000 : 600}
+                            iterationCount={isCurrent ? "infinite" : 1}
+                            style={tw`flex-row items-center`}
+                          >
+                            {/* Step Icon */}
+                            <View style={[
+                              tw`w-10 h-10 rounded-full items-center justify-center mr-4`,
+                              {
+                                backgroundColor: isCompleted ? '#22c55e' : 
+                                               isCurrent ? '#8B5CF6' : 
+                                               isActive ? '#c084fc' : '#e5e7eb',
+                                borderWidth: 2,
+                                borderColor: isCompleted ? '#16a34a' :
+                                            isCurrent ? '#7c3aed' :
+                                            isActive ? '#a855f7' : 'transparent',
+                              }
+                            ]}>
+                              {isCompleted ? (
+                                <Ionicons name="checkmark" size={16} color="white" />
+                              ) : (
+                                <Ionicons 
+                                  name={item.icon} 
+                                  size={16} 
+                                  color={isActive ? "white" : "#9ca3af"} 
+                                />
+                              )}
+                            </View>
+                            
+                            {/* Step Text */}
+                            <Text style={[
+                              tw`flex-1 font-medium`,
+                              {
+                                fontSize: 15,
+                                color: isCompleted ? '#22c55e' :
+                                       isCurrent ? '#8B5CF6' :
+                                       isActive ? '#6b7280' : '#9ca3af',
+                                fontWeight: isCurrent ? 'bold' : 'normal',
+                              }
+                            ]}>
+                              {item.text}
+                            </Text>
+                            
+                            {/* Loading dots for current step */}
+                            {isCurrent && !analysisComplete && (
+                              <Animatable.View 
+                                animation="flash" 
+                                iterationCount="infinite" 
+                                duration={800}
+                                style={tw`ml-2`}
+                              >
+                                <Text style={[tw`text-purple-600`, { fontSize: 16 }]}>
+                                  ●●●
+                                </Text>
+                              </Animatable.View>
+                            )}
+                          </Animatable.View>
+                        </View>
+                      );
+                    })}
+                  </View>
+
+                  {/* Progress Bar */}
+                  <View style={tw`mt-8`}>
+                    <View style={tw`flex-row items-center justify-between mb-2`}>
+                      <Text style={tw`text-sm font-medium text-gray-600`}>
+                        Progress
+                      </Text>
+                      <Text style={tw`text-sm font-bold text-purple-600`}>
+                        {analysisComplete ? '100%' : `${Math.round((analysisStep / 6) * 100)}%`}
+                      </Text>
+                    </View>
+                    
+                    <View style={[
+                      tw`h-2 bg-gray-200 rounded-full overflow-hidden`,
+                      { backgroundColor: '#f3f4f6' }
+                    ]}>
+                      <Animatable.View
+                        animation="slideInLeft"
+                        duration={600}
+                        style={[
+                          tw`h-full rounded-full`,
+                          {
+                            width: `${analysisComplete ? 100 : (analysisStep / 6) * 100}%`,
+                            backgroundColor: analysisComplete ? '#22c55e' : '#8B5CF6',
+                          }
+                        ]}
+                      />
+                    </View>
+                  </View>
                 </View>
-                <Text style={tw`text-lg font-semibold text-gray-800 mb-2`}>
-                  Generating Explanation...
-                </Text>
-                <Text style={tw`text-gray-600 text-center`}>
-                  AI is analyzing the verses and preparing a detailed Tafseer
-                  for you
-                </Text>
-                <View style={tw`flex-row items-center mt-4`}>
-                  <Ionicons name="time-outline" size={16} color="#8B5CF6" />
-                  <Text style={tw`text-purple-600 text-sm ml-1`}>
-                    This may take a few moments
-                  </Text>
-                </View>
+
+                {/* Encouraging Message */}
+                {analysisComplete && (
+                  <Animatable.View 
+                    animation="bounceIn" 
+                    delay={200}
+                    style={[
+                      tw`px-6 py-4 rounded-2xl mx-4`,
+                      { backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' }
+                    ]}
+                  >
+                    <View style={tw`flex-row items-center justify-center`}>
+                      <Ionicons name="sparkles" size={20} color="#22c55e" style={tw`mr-2`} />
+                      <Text style={[
+                        tw`text-green-700 font-semibold text-center`,
+                        { fontSize: 16 }
+                      ]}>
+                        Ready! Preparing your Tafseer...
+                      </Text>
+                    </View>
+                  </Animatable.View>
+                )}
               </View>
             ) : aiResponse ? (
               <View>
@@ -1036,8 +1369,7 @@ export default function QuranPageScreen({ route }) {
         }}
       />
 
-      {/* Rate Limit Status Component for debugging */}
-      <RateLimitStatus />
+   
     </SafeAreaView>
   );
 }

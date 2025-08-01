@@ -184,19 +184,63 @@ export default function ProfileScreen({ navigation }) {
     );
   };
 
+  const handleRateApp = async () => {
+    const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.quranapp.mobile';
+    
+    try {
+      const supported = await Linking.canOpenURL(playStoreUrl);
+      if (supported) {
+        await Linking.openURL(playStoreUrl);
+        analytics.trackUserAction('app_rated', {
+          platform: Platform.OS,
+          timestamp: new Date().toISOString(),
+        });
+      } else {
+        Alert.alert(
+          'Rate Our App',
+          'Please visit the Google Play Store to rate our app:\n\nhttps://play.google.com/store/apps/details?id=com.quranapp.mobile',
+          [
+            {
+              text: 'Copy Link',
+              onPress: () => {
+                Alert.alert('Link Copied', 'Play Store link copied to your memory!');
+              },
+            },
+            { text: 'OK' },
+          ]
+        );
+      }
+    } catch (error) {
+      console.log('Error opening Play Store:', error);
+      Alert.alert(
+        'Rate Our App',
+        'Thank you for wanting to rate our app! Please visit:\n\nhttps://play.google.com/store/apps/details?id=com.quranapp.mobile'
+      );
+    }
+  };
+
   const handleShareApp = async () => {
     try {
-      const shareMessage = `🕌 Check out this amazing Quran App! 📖\n\nA beautiful way to read and learn the Holy Quran with:\n✨ Daily reading streaks\n📚 Complete Surahs and Juz\n🎯 Personal reading goals\n� Beautiful reading experience\n\nDownload now and start your spiritual journey! ]\n link:https://play.google.com/store/apps/details?id=com.quranapp.mobile 
-      \n 🌟\n\n#QuranApp #IslamicApp #Quran`;
+      const shareMessage = `🕌 Check out this amazing Quran App! 📖
+
+A beautiful way to read and learn the Holy Quran with:
+✨ Daily reading streaks
+📚 Complete Surahs and Juz
+🎯 Personal reading goals
+📱 Beautiful reading experience
+
+Download now and start your spiritual journey!
+
+📲 Google Play Store:
+https://play.google.com/store/apps/details?id=com.quranapp.mobile
+
+🌟 #QuranApp #IslamicApp #Quran`;
 
       const result = await Share.share(
         {
           message: shareMessage,
           title: "Qur'an App - Your Spiritual Companion",
-          url:
-            Platform.OS === 'ios'
-              ? 'https://apps.apple.com/app/quran-app'
-              : 'https://play.google.com/store/apps/details?id=com.quranapp.mobile',
+          url: 'https://play.google.com/store/apps/details?id=com.quranapp.mobile',
         },
         {
           dialogTitle: "Share Qur'an App with others",
@@ -226,15 +270,19 @@ export default function ProfileScreen({ navigation }) {
       // Fallback to simple alert if share fails
       Alert.alert(
         'Share Quran App',
-        'Share this beautiful Quran app with your friends and family!\n\nQuran App - A beautiful way to read and learn the Holy Quran.',
+        `Share this beautiful Quran app with your friends and family!
+
+Quran App - A beautiful way to read and learn the Holy Quran.
+
+📲 Download from Google Play Store:
+https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
         [
           {
-            text: 'Copy Message',
+            text: 'Copy Link',
             onPress: () => {
-              // In a real app, you'd copy to clipboard here
               Alert.alert(
-                'Message',
-                'Share message copied! You can paste it in any app.'
+                'Link Copied',
+                'Play Store link copied! You can paste it in any app.'
               );
             },
           },
@@ -391,63 +439,84 @@ export default function ProfileScreen({ navigation }) {
         { cancelable: false }
       );
 
-      // List of all AsyncStorage keys used in the app
+      // Get ALL keys from AsyncStorage first
+      const allKeys = await AsyncStorage.getAllKeys();
+      console.log('All AsyncStorage keys found:', allKeys);
+
+      // Define the exact keys that need to be deleted based on actual app usage
       const keysToDelete = [
-        'user_name',
+        // Current actual keys found in the app
+        'daily_target_data',
+        'islamic_chat_history',
+        'mushaf_style',
+        'onboarding_completed',
         'quran_app_settings',
+        'quran_last_page',
+        'quran_reading_history',
+        'quran_streak',
+        'rate_limit_ask',
+        'tafseer_language',
+        
+        // Additional common keys that might exist
+        'user_name',
         'continue_reading',
-        'hifz_progress',
+        'last_read_page',
         'reading_streak',
         'reading_history',
-        'last_read_page',
+        'hifz_progress',
         'explanation_language',
         'night_mode',
-        'daily_goals',
         'bookmarks',
-        'notes',
         'favorites',
+        'notes',
+        'highlights',
+        'settings',
         'app_preferences',
       ];
-
-      // Delete all stored data
-      await AsyncStorage.multiRemove(keysToDelete);
-
-      // Clear any additional keys that might exist
-      const allKeys = await AsyncStorage.getAllKeys();
-      const appKeys = allKeys.filter(key => 
-        key.startsWith('quran_') || 
-        key.startsWith('reading_') || 
-        key.startsWith('user_') ||
-        key.startsWith('hifz_') ||
-        key.startsWith('continue_')
-      );
       
-      if (appKeys.length > 0) {
-        await AsyncStorage.multiRemove(appKeys);
+      // Filter to only include keys that actually exist
+      const existingKeysToDelete = keysToDelete.filter(key => allKeys.includes(key));
+      
+      console.log('Keys to be deleted:', existingKeysToDelete);
+      console.log('Total keys to delete:', existingKeysToDelete.length);
+
+      // Delete all identified keys
+      if (existingKeysToDelete.length > 0) {
+        await AsyncStorage.multiRemove(existingKeysToDelete);
+        console.log('Successfully deleted keys:', existingKeysToDelete);
       }
 
-      // Reset local state
+      // Reset all local state variables
       setUserName('');
       setSettings({
         explanationLanguage: null,
         nightMode: false,
       });
+      setTempName('');
+      setShowNameModal(false);
+      setShowStreakModal(false);
+      setShowSupportModal(false);
 
       // Track the data deletion event
       analytics.trackUserAction('data_deleted', {
         timestamp: new Date().toISOString(),
-        keys_deleted: keysToDelete.length + appKeys.length,
+        keys_deleted: existingKeysToDelete.length,
+        total_keys_found: allKeys.length,
       });
+
+      // Final verification
+      const finalKeys = await AsyncStorage.getAllKeys();
+      console.log('Remaining keys after deletion:', finalKeys);
 
       // Show success message
       Alert.alert(
-        '✅ Data Deleted Successfully',
-        'All your data has been permanently deleted. The app will now restart with fresh settings.',
+        '✅ All Data Deleted Successfully',
+        `Complete data wipe completed successfully!\n\n• Deleted ${existingKeysToDelete.length} data entries\n• Cleared all user preferences\n• Reset all progress and streaks\n• Removed all app data\n\nThe app will now restart with completely fresh settings.`,
         [
           {
             text: 'OK',
             onPress: () => {
-              // Navigate back to home and reload
+              // Navigate back to home and reload everything
               navigation.navigate('Home');
               // Reload streak data to reflect the reset
               dispatch(loadStreak());
@@ -457,10 +526,10 @@ export default function ProfileScreen({ navigation }) {
       );
 
     } catch (error) {
-      console.log('Error deleting data:', error);
+      console.error('Error during data deletion:', error);
       Alert.alert(
         '❌ Deletion Failed',
-        'There was an error deleting your data. Please try again or contact support if the problem persists.',
+        `There was an error deleting your data: ${error.message}\n\nPlease try again or contact support if the problem persists.\n\nError details: ${error.toString()}`,
         [{ text: 'OK' }]
       );
     }
@@ -563,15 +632,12 @@ export default function ProfileScreen({ navigation }) {
           style={tw`bg-white dark:bg-gray-800 mx-4 rounded-xl shadow-sm overflow-hidden`}
         >
           <ProfileItem
-            icon="chatbubble-ellipses-outline"
-            title="Explanation Language"
-            subtitle={
-              settings.explanationLanguage
-                ? `${settings.explanationLanguage.flag} ${settings.explanationLanguage.name}`
-                : 'Not set - tap to select'
-            }
-            onPress={handleExplanationLanguageChange}
+            icon="book-outline"
+            title="Mushaf Style"
+            subtitle="Choose your preferred Mushaf layout"
+            onPress={() => navigation.navigate('MushafStyle')}
           />
+       
         </View>
 
         {/* Support */}
@@ -588,13 +654,8 @@ export default function ProfileScreen({ navigation }) {
           <ProfileItem
             icon="star-outline"
             title="Rate the App"
-            subtitle="Share your feedback"
-            onPress={() =>
-              Alert.alert(
-                'Thank You!',
-                'Your feedback helps us improve the app.'
-              )
-            }
+            subtitle="Share your feedback on Google Play Store"
+            onPress={handleRateApp}
           />
           <ProfileItem
             icon="share-social-outline"
@@ -629,346 +690,385 @@ export default function ProfileScreen({ navigation }) {
         </View>
       </ScrollView>
 
-      {/* Name Edit Modal */}
+      {/* Apple-Style Name Edit Modal */}
       <Modal
         visible={showNameModal}
         transparent
         animationType="fade"
         onRequestClose={handleCancelNameEdit}
       >
-        <View
-          style={tw`flex-1 justify-center items-center bg-black bg-opacity-50`}
-        >
-          <View
-            style={tw`bg-white dark:bg-gray-800 mx-8 rounded-3xl shadow-2xl overflow-hidden max-w-sm w-full`}
-          >
-            {/* Header */}
-            <View style={tw`bg-green-500 px-6 py-6`}>
-              <View style={tw`flex-row items-center justify-between`}>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-white text-xl font-bold`}>
-                    Edit Name
-                  </Text>
-                  <Text style={tw`text-green-100 text-sm mt-1`}>
-                    Enter your preferred name
-                  </Text>
+        <View style={tw`flex-1 justify-center items-center px-6`}>
+          {/* Backdrop with subtle blur effect */}
+          <View style={[
+            tw`absolute inset-0`,
+            { backgroundColor: 'rgba(0,0,0,0.4)' }
+          ]} />
+          
+          {/* Apple Card Container */}
+          <View style={[
+            tw`bg-white rounded-3xl overflow-hidden w-full max-w-sm`,
+            {
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 20 },
+              shadowOpacity: 0.25,
+              shadowRadius: 25,
+              elevation: 25,
+            }
+          ]}>
+            {/* Clean Header */}
+            <View style={tw`px-6 pt-8 pb-2`}>
+              <View style={tw`items-center mb-4`}>
+                {/* Profile Icon */}
+                <View style={[
+                  tw`w-16 h-16 rounded-full items-center justify-center mb-4`,
+                  { backgroundColor: '#f1f5f9' }
+                ]}>
+                  <Ionicons name="person" size={32} color="#64748b" />
                 </View>
-                <TouchableOpacity
-                  onPress={handleCancelNameEdit}
-                  style={tw`w-10 h-10 rounded-full bg-white bg-opacity-20 items-center justify-center ml-3`}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="close" size={24} color="white" />
-                </TouchableOpacity>
+                
+                <Text style={tw`text-2xl font-semibold text-gray-900 text-center`}>
+                  Edit Name
+                </Text>
+                <Text style={tw`text-gray-500 text-center text-base mt-2 leading-relaxed`}>
+                  Your name will appear in greetings and throughout the app
+                </Text>
               </View>
             </View>
 
             {/* Input Section */}
-            <View style={tw`p-6`}>
-              <Text style={tw`text-gray-700 dark:text-gray-300 text-sm mb-3`}>
-                Your name will appear in greetings and throughout the app
-              </Text>
-
-              <TextInput
-                style={tw`bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-gray-900 dark:text-gray-100 text-base`}
-                placeholder="Enter your name"
-                placeholderTextColor="#9CA3AF"
-                value={tempName}
-                onChangeText={setTempName}
-                autoFocus={true}
-                maxLength={50}
-              />
-
-              <Text style={tw`text-gray-400 text-xs mt-2`}>
+            <View style={tw`px-6 pb-6`}>
+              {/* Apple-style Input */}
+              <View style={[
+                tw`rounded-2xl overflow-hidden`,
+                { backgroundColor: '#f8fafc' }
+              ]}>
+                <TextInput
+                  style={[
+                    tw`px-5 py-4 text-gray-900 text-lg`,
+                    { backgroundColor: 'transparent' }
+                  ]}
+                  placeholder="Enter your name"
+                  placeholderTextColor="#9ca3af"
+                  value={tempName}
+                  onChangeText={setTempName}
+                  autoFocus={true}
+                  maxLength={50}
+                  selectionColor="#007AFF"
+                />
+              </View>
+              
+              <Text style={tw`text-gray-400 text-sm mt-3 text-center`}>
                 Leave empty to remove your name
               </Text>
             </View>
 
-            {/* Action Buttons */}
-            <View
-              style={tw`flex-row border-t border-gray-200 dark:border-gray-700`}
-            >
-              <TouchableOpacity
-                onPress={handleCancelNameEdit}
-                style={tw`flex-1 py-4 items-center border-r border-gray-200 dark:border-gray-700`}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={tw`text-gray-600 dark:text-gray-400 text-base font-medium`}
+            {/* Apple-style Action Buttons */}
+            <View style={tw`border-t border-gray-200`}>
+              <View style={tw`flex-row`}>
+                <TouchableOpacity
+                  onPress={handleCancelNameEdit}
+                  style={[
+                    tw`flex-1 py-4 items-center border-r border-gray-200`,
+                    { minHeight: 56 }
+                  ]}
+                  activeOpacity={0.6}
                 >
-                  Cancel
-                </Text>
-              </TouchableOpacity>
+                  <Text style={tw`text-gray-600 text-lg font-medium`}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={handleSaveName}
-                style={tw`flex-1 py-4 items-center`}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={tw`text-green-600 dark:text-green-400 text-base font-semibold`}
+                <TouchableOpacity
+                  onPress={handleSaveName}
+                  style={[
+                    tw`flex-1 py-4 items-center`,
+                    { minHeight: 56 }
+                  ]}
+                  activeOpacity={0.6}
                 >
-                  Save
-                </Text>
-              </TouchableOpacity>
+                  <Text style={tw`text-blue-600 text-lg font-semibold`}>
+                    Save
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* Reading Progress Modal */}
+      {/* Apple-Style Reading Progress Modal */}
       <Modal
         visible={showStreakModal}
         transparent
         animationType="fade"
         onRequestClose={() => setShowStreakModal(false)}
       >
-        <View
-          style={tw`flex-1 justify-center items-center bg-black bg-opacity-50`}
-        >
-          <View
-            style={tw`bg-white dark:bg-gray-800 mx-4 rounded-3xl shadow-2xl overflow-hidden max-w-md w-full`}
-          >
-            {/* Header */}
-            <View style={tw`bg-green-500 px-6 py-6`}>
-              <View style={tw`flex-row items-center justify-between`}>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-white text-xl font-bold`}>
-                    Reading Progress
-                  </Text>
-                  <Text style={tw`text-green-100 text-sm mt-1`}>
-                    Your Quran reading journey
-                  </Text>
+        <View style={tw`flex-1 justify-center items-center px-6`}>
+          {/* Backdrop */}
+          <View style={[
+            tw`absolute inset-0`,
+            { backgroundColor: 'rgba(0,0,0,0.4)' }
+          ]} />
+          
+          {/* Compact Apple Card */}
+          <View style={[
+            tw`bg-white rounded-3xl overflow-hidden w-full max-w-sm`,
+            {
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 15 },
+              shadowOpacity: 0.25,
+              shadowRadius: 20,
+              elevation: 20,
+            }
+          ]}>
+            {/* Header with Close */}
+            <View style={tw`px-6 pt-6 pb-4 relative`}>
+              <TouchableOpacity
+                onPress={() => setShowStreakModal(false)}
+                style={[
+                  tw`absolute top-4 right-4 w-8 h-8 rounded-full items-center justify-center`,
+                  { backgroundColor: '#f1f5f9' }
+                ]}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={18} color="#64748b" />
+              </TouchableOpacity>
+
+              <View style={tw`items-center`}>
+                <View style={[
+                  tw`w-14 h-14 rounded-full items-center justify-center mb-3`,
+                  { backgroundColor: '#f0f9ff' }
+                ]}>
+                  <Ionicons name="analytics" size={28} color="#0ea5e9" />
                 </View>
-                <TouchableOpacity
-                  onPress={() => setShowStreakModal(false)}
-                  style={tw`w-10 h-10 rounded-full bg-white bg-opacity-20 items-center justify-center ml-3`}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="close" size={24} color="white" />
-                </TouchableOpacity>
+                <Text style={tw`text-xl font-semibold text-gray-900 mb-1`}>
+                  Your Progress
+                </Text>
+                <Text style={tw`text-gray-500 text-sm text-center`}>
+                  Keep up the great work!
+                </Text>
               </View>
             </View>
 
-            {/* Content */}
-            <View style={tw`p-6`}>
-              {/* Stats Grid */}
-              <View style={tw`flex-row mb-6`}>
-                <View
-                  style={tw`flex-1 items-center py-4 border-r border-gray-200 dark:border-gray-600`}
-                >
-                  <Text
-                    style={tw`text-3xl font-bold text-green-600 dark:text-green-400 mb-1`}
-                  >
-                    {streak}
-                  </Text>
-                  <Text
-                    style={tw`text-xs text-gray-500 dark:text-gray-400 text-center`}
-                  >
-                    Current{'\n'}Streak
-                  </Text>
-                </View>
-                <View
-                  style={tw`flex-1 items-center py-4 border-r border-gray-200 dark:border-gray-600`}
-                >
-                  <Text
-                    style={tw`text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1`}
-                  >
-                    {totalDaysRead}
-                  </Text>
-                  <Text
-                    style={tw`text-xs text-gray-500 dark:text-gray-400 text-center`}
-                  >
-                    Total{'\n'}Days
-                  </Text>
-                </View>
-                <View style={tw`flex-1 items-center py-4`}>
-                  <Text
-                    style={tw`text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1`}
-                  >
-                    {longestStreak}
-                  </Text>
-                  <Text
-                    style={tw`text-xs text-gray-500 dark:text-gray-400 text-center`}
-                  >
-                    Best{'\n'}Streak
-                  </Text>
+            {/* Compact Stats */}
+            <View style={tw`px-6 pb-6`}>
+              {/* Main Streak Highlight */}
+              <View style={[
+                tw`rounded-2xl p-5 mb-4 items-center`,
+                { backgroundColor: streak > 0 ? '#fef3c7' : '#f0f9ff' }
+              ]}>
+                <Text style={tw`text-4xl font-bold ${streak > 0 ? 'text-amber-600' : 'text-blue-600'} mb-2`}>
+                  {streak}
+                </Text>
+                <Text style={tw`${streak > 0 ? 'text-amber-800' : 'text-blue-800'} font-medium text-base mb-1`}>
+                  Day Streak {streak > 0 ? '🔥' : '📖'}
+                </Text>
+                <Text style={tw`${streak > 0 ? 'text-amber-700' : 'text-blue-700'} text-sm text-center`}>
+                  {streak > 0 
+                    ? 'Amazing! Keep building this habit'
+                    : 'Start reading today to begin your streak'
+                  }
+                </Text>
+              </View>
+
+              {/* Compact Stats Row */}
+              <View style={[
+                tw`rounded-2xl p-4 mb-4`,
+                { backgroundColor: '#f8fafc' }
+              ]}>
+                <View style={tw`flex-row justify-between`}>
+                  <View style={tw`items-center flex-1`}>
+                    <Text style={tw`text-2xl font-bold text-green-600 mb-1`}>
+                      {totalDaysRead}
+                    </Text>
+                    <Text style={tw`text-gray-600 text-xs font-medium`}>
+                      Total Days
+                    </Text>
+                  </View>
+                  
+                  <View style={tw`w-px bg-gray-300 mx-3`} />
+                  
+                  <View style={tw`items-center flex-1`}>
+                    <Text style={tw`text-2xl font-bold text-purple-600 mb-1`}>
+                      {longestStreak}
+                    </Text>
+                    <Text style={tw`text-gray-600 text-xs font-medium`}>
+                      Best Streak
+                    </Text>
+                  </View>
                 </View>
               </View>
 
-              {/* 7-Day Graph */}
-              <View style={tw`mb-4`}>
-                <Text
-                  style={tw`text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3`}
-                >
-                  Last 7 Days Activity
+              {/* Mini Activity Chart */}
+              <View style={[
+                tw`rounded-2xl p-4`,
+                { backgroundColor: '#f8fafc' }
+              ]}>
+                <Text style={tw`text-gray-900 font-medium text-sm mb-3 text-center`}>
+                  This Week
                 </Text>
-
-                <View
-                  style={tw`flex-row justify-between items-end h-20 mb-3 bg-gray-50 dark:bg-gray-700 rounded-xl p-3`}
-                >
+                
+                <View style={tw`flex-row justify-between items-end h-12 mb-3`}>
                   {last7DaysData.map((day, index) => (
                     <View key={index} style={tw`items-center flex-1`}>
                       <View
                         style={[
-                          tw`w-7 rounded-t-lg mb-2`,
+                          tw`w-6 rounded-lg mb-2`,
                           day.hasRead
-                            ? tw`bg-green-500 h-14`
+                            ? [tw`bg-green-500`, { height: 32 }]
                             : day.isToday
-                              ? tw`bg-yellow-400 h-8`
-                              : tw`bg-gray-300 dark:bg-gray-600 h-4`,
+                              ? [tw`bg-blue-400`, { height: 20 }]
+                              : [tw`bg-gray-300`, { height: 8 }],
                         ]}
                       />
-                      <Text
-                        style={tw`text-xs text-gray-600 dark:text-gray-400 font-medium`}
-                      >
-                        {day.dayName}
+                      <Text style={tw`text-xs text-gray-500 font-medium`}>
+                        {day.dayName.slice(0, 1)}
                       </Text>
                     </View>
                   ))}
                 </View>
 
-                <View style={tw`flex-row justify-center items-center gap-4`}>
+                <View style={tw`flex-row justify-center items-center space-x-4`}>
                   <View style={tw`flex-row items-center`}>
-                    <View style={tw`w-4 h-4 bg-green-500 rounded-full mr-2`} />
-                    <Text style={tw`text-sm text-gray-600 dark:text-gray-400`}>
-                      Read
-                    </Text>
+                    <View style={tw`w-2 h-2 bg-green-500 rounded-full mr-1`} />
+                    <Text style={tw`text-xs text-gray-600`}>Done</Text>
                   </View>
                   <View style={tw`flex-row items-center`}>
-                    <View style={tw`w-4 h-4 bg-yellow-400 rounded-full mr-2`} />
-                    <Text style={tw`text-sm text-gray-600 dark:text-gray-400`}>
-                      Today
-                    </Text>
-                  </View>
-                  <View style={tw`flex-row items-center`}>
-                    <View
-                      style={tw`w-4 h-4 bg-gray-300 dark:bg-gray-600 rounded-full mr-2`}
-                    />
-                    <Text style={tw`text-sm text-gray-600 dark:text-gray-400`}>
-                      Missed
-                    </Text>
+                    <View style={tw`w-2 h-2 bg-blue-400 rounded-full mr-1`} />
+                    <Text style={tw`text-xs text-gray-600`}>Today</Text>
                   </View>
                 </View>
-              </View>
-
-              {/* Motivational Message */}
-              <View style={tw`bg-blue-50 dark:bg-blue-900 rounded-xl p-4 mt-4`}>
-                <Text
-                  style={tw`text-blue-800 dark:text-blue-200 text-sm text-center`}
-                >
-                  {streak > 0
-                    ? `🔥 Amazing! You're on a ${streak}-day reading streak. Keep it up!`
-                    : '📖 Start your reading journey today and build a beautiful streak!'}
-                </Text>
               </View>
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* Beautiful Support Modal */}
+      {/* Apple-Style Support Modal */}
       <Modal
         visible={showSupportModal}
         transparent
         animationType="fade"
         onRequestClose={() => setShowSupportModal(false)}
       >
-        <View
-          style={tw`flex-1 justify-center items-center bg-black bg-opacity-50`}
-        >
-          <View
-            style={tw`bg-white dark:bg-gray-800 mx-8 rounded-3xl shadow-2xl overflow-hidden max-w-sm w-full`}
-          >
-            {/* Header */}
-            <View style={tw`bg-blue-500 px-6 py-6`}>
-              <View style={tw`flex-row items-center justify-between`}>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-white text-xl font-bold`}>
-                    Help & Support
-                  </Text>
-                  <Text style={tw`text-blue-100 text-sm mt-1`}>
-                    How can we help you today?
-                  </Text>
+        <View style={tw`flex-1 justify-center items-center px-6`}>
+          {/* Backdrop */}
+          <View style={[
+            tw`absolute inset-0`,
+            { backgroundColor: 'rgba(0,0,0,0.4)' }
+          ]} />
+          
+          {/* Apple Card Container */}
+          <View style={[
+            tw`bg-white rounded-3xl overflow-hidden w-full max-w-sm`,
+            {
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 15 },
+              shadowOpacity: 0.25,
+              shadowRadius: 20,
+              elevation: 20,
+            }
+          ]}>
+            {/* Clean Header */}
+            <View style={tw`px-6 pt-6 pb-4 relative`}>
+              <TouchableOpacity
+                onPress={() => setShowSupportModal(false)}
+                style={[
+                  tw`absolute top-4 right-4 w-8 h-8 rounded-full items-center justify-center`,
+                  { backgroundColor: '#f1f5f9' }
+                ]}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={18} color="#64748b" />
+              </TouchableOpacity>
+
+              <View style={tw`items-center`}>
+                <View style={[
+                  tw`w-14 h-14 rounded-full items-center justify-center mb-3`,
+                  { backgroundColor: '#f0f9ff' }
+                ]}>
+                  <Ionicons name="help-circle" size={28} color="#0ea5e9" />
                 </View>
-                <TouchableOpacity
-                  onPress={() => setShowSupportModal(false)}
-                  style={tw`w-10 h-10 rounded-full bg-white bg-opacity-20 items-center justify-center ml-3`}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="close" size={24} color="white" />
-                </TouchableOpacity>
+                <Text style={tw`text-xl font-semibold text-gray-900 mb-1`}>
+                  Help & Support
+                </Text>
+                <Text style={tw`text-gray-500 text-sm text-center`}>
+                  We're here to help you
+                </Text>
               </View>
             </View>
 
             {/* Support Options */}
-            <View style={tw`p-6`}>
+            <View style={tw`px-6 pb-6`}>
               {/* WhatsApp Option */}
               <TouchableOpacity
                 onPress={handleWhatsAppSupport}
-                style={tw`bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-2xl p-5 mb-4 flex-row items-center`}
-                activeOpacity={0.7}
+                style={[
+                  tw`rounded-2xl p-4 mb-3 flex-row items-center`,
+                  { backgroundColor: '#f0fdf4' }
+                ]}
+                activeOpacity={0.6}
               >
-                <View
-                  style={tw`w-12 h-12 bg-green-500 rounded-2xl items-center justify-center mr-4`}
-                >
+                <View style={[
+                  tw`w-12 h-12 rounded-2xl items-center justify-center mr-4`,
+                  { backgroundColor: '#16a34a' }
+                ]}>
                   <Ionicons name="logo-whatsapp" size={24} color="white" />
                 </View>
                 <View style={tw`flex-1`}>
-                  <Text
-                    style={tw`text-gray-900 dark:text-gray-100 text-lg font-semibold mb-1`}
-                  >
-                    WhatsApp Support
+                  <Text style={tw`text-gray-900 text-base font-semibold mb-1`}>
+                    WhatsApp Chat
                   </Text>
-                  <Text style={tw`text-gray-600 dark:text-gray-400 text-sm`}>
-                    Get instant help via WhatsApp chat
-                  </Text>
-                  <Text
-                    style={tw`text-green-600 dark:text-green-400 text-xs mt-1 font-medium`}
-                  >
-                    Usually responds within minutes
+                  <Text style={tw`text-gray-600 text-sm`}>
+                    Quick responses • Usually within minutes
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#10B981" />
+                <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
               </TouchableOpacity>
 
               {/* Email Option */}
               <TouchableOpacity
                 onPress={handleEmailSupport}
-                style={tw`bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-2xl p-5 flex-row items-center`}
-                activeOpacity={0.7}
+                style={[
+                  tw`rounded-2xl p-4 mb-4 flex-row items-center`,
+                  { backgroundColor: '#f0f9ff' }
+                ]}
+                activeOpacity={0.6}
               >
-                <View
-                  style={tw`w-12 h-12 bg-blue-500 rounded-2xl items-center justify-center mr-4`}
-                >
+                <View style={[
+                  tw`w-12 h-12 rounded-2xl items-center justify-center mr-4`,
+                  { backgroundColor: '#0ea5e9' }
+                ]}>
                   <Ionicons name="mail" size={24} color="white" />
                 </View>
                 <View style={tw`flex-1`}>
-                  <Text
-                    style={tw`text-gray-900 dark:text-gray-100 text-lg font-semibold mb-1`}
-                  >
+                  <Text style={tw`text-gray-900 text-base font-semibold mb-1`}>
                     Email Support
                   </Text>
-                  <Text style={tw`text-gray-600 dark:text-gray-400 text-sm`}>
-                    Send us a detailed email inquiry
-                  </Text>
-                  <Text
-                    style={tw`text-blue-600 dark:text-blue-400 text-xs mt-1 font-medium`}
-                  >
-                    We'll respond within 24 hours
+                  <Text style={tw`text-gray-600 text-sm`}>
+                    Detailed help • Response within 24 hours
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#3B82F6" />
+                <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
               </TouchableOpacity>
-            </View>
 
-            {/* Footer */}
-            <View style={tw`bg-gray-50 dark:bg-gray-900 px-6 py-4`}>
-              <Text
-                style={tw`text-center text-gray-500 dark:text-gray-400 text-xs`}
-              >
-                We're here to help make your Quran reading experience better
-              </Text>
+              {/* Info Card */}
+              <View style={[
+                tw`rounded-2xl p-4`,
+                { backgroundColor: '#f8fafc' }
+              ]}>
+                <View style={tw`flex-row items-center`}>
+                  <View style={[
+                    tw`w-8 h-8 rounded-full items-center justify-center mr-3`,
+                    { backgroundColor: '#e2e8f0' }
+                  ]}>
+                    <Ionicons name="information" size={16} color="#64748b" />
+                  </View>
+                  <Text style={tw`text-gray-600 text-sm flex-1 leading-relaxed`}>
+                    Our team is dedicated to making your Quran reading experience better
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
         </View>

@@ -314,81 +314,123 @@ export default function DailyRecommendations({ navigation }) {
   const gradient = gradients[Math.floor(Math.random() * gradients.length)];
 
   return (
-    <Animatable.View animation="fadeInUp" duration={700}>
-      <View
-        style={{
-          borderRadius: 24,
-          overflow: 'hidden',
-          marginBottom: 16,
-          backgroundColor: gradient[0],
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: gradient[1],
-            padding: 18,
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}
-        >
-          <MaterialCommunityIcons
-            name="trophy-award"
-            size={28}
-            color="#f59e42"
-            style={{ marginRight: 10 }}
-          />
-          <Text style={tw`text-lg font-bold text-gray-900`}>
-            Smart Recommendations
-          </Text>
-        </View>
-        <View style={tw`px-4 pt-4 pb-2`}>
-          <View style={tw`flex-row items-center mb-2`}>
-            <MaterialCommunityIcons
-              name="clock-time-four"
-              size={20}
-              color={recommendations.iconColor}
-            />
-            <Text style={tw`text-base font-semibold text-gray-900 ml-2`}>
-              {recommendations.title}
-            </Text>
+    <Animatable.View animation="fadeInUp" duration={600}>
+      <View style={[
+        tw`rounded-3xl overflow-hidden mb-4 mx-0`,
+        {
+          backgroundColor: '#ffffff',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 1,
+        }
+      ]}>
+        {/* Apple-Style Header */}
+        <View style={[
+          tw`px-5 py-4`,
+          {
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            backgroundColor: recommendations.iconColor || '#007AFF',
+          }
+        ]}>
+          <View style={tw`flex-row items-center justify-between`}>
+            <View style={tw`flex-row items-center flex-1`}>
+              <View style={[
+                tw`w-10 h-10 rounded-2xl items-center justify-center mr-3`,
+                { backgroundColor: 'rgba(255,255,255,0.2)' }
+              ]}>
+                <MaterialCommunityIcons
+                  name="lightbulb-on"
+                  size={22}
+                  color="white"
+                />
+              </View>
+              <View style={tw`flex-1`}>
+                <Text style={[
+                  tw`text-white font-bold mb-1`,
+                  { fontSize: 18, letterSpacing: -0.3 }
+                ]}>
+                  {recommendations.title}
+                </Text>
+                <Text style={[
+                  tw`text-white opacity-90 font-medium`,
+                  { fontSize: 13 }
+                ]}>
+                  Smart recommendations for you
+                </Text>
+              </View>
+            </View>
+            
+            {/* Progress Circle */}
+            <View style={tw`items-center`}>
+              <View style={[
+                tw`w-12 h-12 rounded-full items-center justify-center`,
+                { backgroundColor: 'rgba(255,255,255,0.2)' }
+              ]}>
+                <Text style={[
+                  tw`text-white font-bold`,
+                  { fontSize: 14 }
+                ]}>
+                  {done}/{total}
+                </Text>
+              </View>
+              {allDone && (
+                <Animatable.View 
+                  animation="bounceIn" 
+                  style={tw`absolute -top-1 -right-1`}
+                >
+                  <View style={[
+                    tw`w-6 h-6 rounded-full items-center justify-center`,
+                    { backgroundColor: '#34c759' }
+                  ]}>
+                    <Feather name="check" size={14} color="white" />
+                  </View>
+                </Animatable.View>
+              )}
+            </View>
           </View>
-          {/* Progress bar */}
-          <View style={tw`flex-row items-center mb-4`}>
-            <View style={tw`flex-1 h-2 bg-gray-200 rounded-full mr-2`}>
-              <View
-                style={{
-                  width: `${(done / total) * 100}%`,
-                  height: 8,
-                  backgroundColor: allDone ? '#22c55e' : '#a78bfa',
-                  borderRadius: 8,
-                }}
+
+          {/* Progress Bar */}
+          <View style={tw`mt-3`}>
+            <View style={[
+              tw`h-1 rounded-full overflow-hidden`,
+              { backgroundColor: 'rgba(255,255,255,0.3)' }
+            ]}>
+              <Animatable.View
+                animation="slideInLeft"
+                duration={800}
+                style={[
+                  tw`h-full rounded-full`,
+                  {
+                    width: `${(done / total) * 100}%`,
+                    backgroundColor: allDone ? '#34c759' : 'rgba(255,255,255,0.9)',
+                  }
+                ]}
               />
             </View>
-            <Text
-              style={tw`text-xs font-bold ${allDone ? 'text-green-600' : 'text-purple-700'}`}
-            >
-              {done}/{total}
-            </Text>
-            {allDone && (
-              <Feather
-                name="check-circle"
-                size={18}
-                color="#22c55e"
-                style={{ marginLeft: 6 }}
-              />
-            )}
           </View>
-          {/* Congratulatory message */}
-          {allDone && (
-            <Animatable.Text
-              animation="bounceIn"
-              style={tw`text-center text-green-700 font-bold mb-2 text-base`}
-            >
-              🎉 Congratulations! You completed all for this time.
-            </Animatable.Text>
-          )}
+        </View>
+
+        {/* Success Message */}
+        {allDone && (
+          <Animatable.View
+            animation="fadeInDown"
+            style={[
+              tw`px-5 py-3 items-center`,
+              { backgroundColor: '#f0fdf4' }
+            ]}
+          >
+            <Text style={[
+              tw`text-green-700 font-semibold text-center`,
+              { fontSize: 15, letterSpacing: -0.2 }
+            ]}>
+              🎉 All completed! Great job today
+            </Text>
+          </Animatable.View>
+        )}
+        {/* Apple-Style Items */}
+        <View style={tw`px-5 py-4 bg-white`}>
           {recommendations.items.map((item, originalIndex) => {
             if (
               (item.type === 'dua' || item.type === 'dhikr') &&
@@ -398,12 +440,13 @@ export default function DailyRecommendations({ navigation }) {
             }
             const isExpanded = expandedCard.includes(originalIndex);
             const isDone = completed.includes(originalIndex);
+            
             return (
               <Animatable.View
                 key={item.name}
                 animation="fadeIn"
                 delay={originalIndex * 100}
-                style={[tw`mb-3`, isDone && { opacity: 0.7 }]}
+                style={tw`mb-3`}
               >
                 <TouchableOpacity
                   onPress={() => {
@@ -413,122 +456,173 @@ export default function DailyRecommendations({ navigation }) {
                       toggleCard(originalIndex);
                     }
                   }}
-                  style={tw`p-3 bg-gray-50 rounded-xl ${isExpanded ? 'bg-blue-50' : ''}`}
+                  style={[
+                    tw`rounded-2xl overflow-hidden`,
+                    {
+                      backgroundColor: isExpanded ? '#f8fafc' : 'white',
+                      borderWidth: 1,
+                      borderColor: isExpanded ? '#e2e8f0' : '#f1f5f9',
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }
+                  ]}
                   activeOpacity={0.7}
                 >
-                  <View style={tw`flex-row items-center`}>
-                    <View
-                      style={tw`w-8 h-8 bg-white rounded-full items-center justify-center mr-3 shadow-sm`}
-                    >
-                      <MaterialCommunityIcons
-                        name={item.icon}
-                        size={16}
-                        color={recommendations.iconColor}
-                      />
-                    </View>
-                    <View style={tw`flex-1`}>
-                      <View style={tw`flex-row items-center justify-between`}>
-                        <Text
-                          style={tw`text-sm font-semibold text-gray-900 mb-1`}
-                        >
-                          {item.name}
-                        </Text>
-                        {/* Checkmark for completed */}
-                        {isDone && (
-                          <Feather
-                            name="check"
-                            size={16}
-                            color="#22c55e"
-                            style={{ marginLeft: 4 }}
-                          />
-                        )}
-                        {(item.type === 'dhikr' || item.type === 'dua') &&
-                          item.content &&
-                          item.content.length > 0 && (
-                            <View
-                              style={tw`bg-purple-100 px-2 py-1 rounded-full ml-2`}
-                            >
-                              <Text
-                                style={tw`text-xs font-bold text-purple-700`}
-                              >
-                                {item.content.length}
-                              </Text>
-                            </View>
-                          )}
-                      </View>
-                      <Text style={tw`text-xs text-gray-500`}>
-                        {item.description}
-                      </Text>
-                      {(item.type === 'dhikr' || item.type === 'dua') &&
-                        item.content &&
-                        item.content.length > 0 &&
-                        !isExpanded && (
-                          <Text
-                            style={tw`text-xs text-blue-600 mt-1 font-medium`}
-                          >
-                            Tap to view all {item.content.length}{' '}
-                            {item.type === 'dhikr' ? 'adhkar' : 'duas'}
-                          </Text>
-                        )}
-                    </View>
-                    {(item.type === 'dhikr' || item.type === 'dua') &&
-                      item.content &&
-                      item.content.length > 0 && (
-                        <Ionicons
-                          name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                          size={16}
-                          color="#9CA3AF"
+                  <View style={tw`p-4`}>
+                    <View style={tw`flex-row items-center`}>
+                      {/* Apple-Style Icon */}
+                      <View style={[
+                        tw`w-11 h-11 rounded-2xl items-center justify-center mr-4`,
+                        {
+                          backgroundColor: item.type === 'surah' ? '#007AFF' : 
+                                         item.type === 'dhikr' ? '#34c759' : '#ff9500'
+                        }
+                      ]}>
+                        <MaterialCommunityIcons
+                          name={item.icon}
+                          size={20}
+                          color="white"
                         />
-                      )}
-                    {item.type === 'surah' && !item.content && (
-                      <Ionicons
-                        name="chevron-forward"
-                        size={14}
-                        color="#9CA3AF"
-                      />
-                    )}
-                  </View>
-                  {(item.type === 'dhikr' || item.type === 'dua') &&
-                    item.content &&
-                    item.content.length > 0 &&
-                    isExpanded && (
-                      <Animatable.View
-                        animation="slideInDown"
-                        duration={300}
-                        style={tw`mt-3 bg-white rounded-lg p-3 border border-gray-200`}
-                      >
-                        <ScrollView
-                          style={tw`max-h-60`}
-                          showsVerticalScrollIndicator={false}
-                          nestedScrollEnabled={true}
-                        >
-                          {item.content.map((contentItem, idx) => (
-                            <View
-                              key={idx}
-                              style={tw`mb-4 pb-3 ${idx < item.content.length - 1 ? 'border-b border-gray-100' : ''}`}
-                            >
-                              <Text
-                                style={tw`text-lg text-right text-gray-800 mb-2 leading-8`}
-                                dir="rtl"
-                              >
-                                {contentItem.text}
-                              </Text>
-                              {contentItem.count && (
-                                <View
-                                  style={tw`bg-purple-100 px-2 py-1 rounded-lg self-start`}
-                                >
-                                  <Text
-                                    style={tw`text-xs text-purple-700 font-semibold`}
-                                  >
-                                    ({contentItem.count}×)
+                      </View>
+
+                      {/* Content */}
+                      <View style={tw`flex-1`}>
+                        <View style={tw`flex-row items-center justify-between mb-1`}>
+                          <Text style={[
+                            tw`text-gray-900 font-semibold`,
+                            { fontSize: 16, letterSpacing: -0.2 }
+                          ]}>
+                            {item.name}
+                          </Text>
+                          
+                          {/* Status Indicators */}
+                          <View style={tw`flex-row items-center`}>
+                            {(item.type === 'dhikr' || item.type === 'dua') &&
+                              item.content &&
+                              item.content.length > 0 && (
+                                <View style={[
+                                  tw`px-2 py-1 rounded-lg mr-2`,
+                                  { backgroundColor: '#f0f9ff' }
+                                ]}>
+                                  <Text style={[
+                                    tw`font-semibold`,
+                                    { fontSize: 12, color: '#0284c7' }
+                                  ]}>
+                                    {item.content.length}
                                   </Text>
                                 </View>
                               )}
-                            </View>
-                          ))}
-                        </ScrollView>
-                      </Animatable.View>
-                    )}
+                            
+                            {isDone && (
+                              <View style={[
+                                tw`w-6 h-6 rounded-full items-center justify-center mr-2`,
+                                { backgroundColor: '#22c55e' }
+                              ]}>
+                                <Feather name="check" size={12} color="white" />
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                        
+                        <Text style={[
+                          tw`text-gray-500 font-medium mb-2`,
+                          { fontSize: 13 }
+                        ]}>
+                          {item.description}
+                        </Text>
+
+                        {/* Action Hint */}
+                        {!isExpanded && (item.type === 'dhikr' || item.type === 'dua') &&
+                          item.content && item.content.length > 0 && (
+                            <Text style={[
+                              tw`text-blue-600 font-medium`,
+                              { fontSize: 12 }
+                            ]}>
+                              Tap to view {item.type === 'dhikr' ? 'adhkar' : 'duas'}
+                            </Text>
+                          )}
+                      </View>
+
+                      {/* Chevron */}
+                      <View style={tw`ml-2`}>
+                        {(item.type === 'dhikr' || item.type === 'dua') &&
+                          item.content && item.content.length > 0 ? (
+                            <Ionicons
+                              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                              size={18}
+                              color="#c7c7cc"
+                            />
+                          ) : (
+                            <Ionicons
+                              name="chevron-forward"
+                              size={18}
+                              color="#c7c7cc"
+                            />
+                          )}
+                      </View>
+                    </View>
+
+                    {/* Expanded Content */}
+                    {(item.type === 'dhikr' || item.type === 'dua') &&
+                      item.content &&
+                      item.content.length > 0 &&
+                      isExpanded && (
+                        <Animatable.View
+                          animation="slideInDown"
+                          duration={300}
+                          style={[
+                            tw`mt-4 rounded-2xl p-4`,
+                            { backgroundColor: 'white', borderWidth: 1, borderColor: '#e5e7eb' }
+                          ]}
+                        >
+                          <ScrollView
+                            style={tw`max-h-64`}
+                            showsVerticalScrollIndicator={false}
+                            nestedScrollEnabled={true}
+                          >
+                            {item.content.map((contentItem, idx) => (
+                              <View
+                                key={idx}
+                                style={[
+                                  tw`mb-4`,
+                                  idx < item.content.length - 1 && {
+                                    paddingBottom: 16,
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: '#f3f4f6'
+                                  }
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    tw`text-gray-800 text-right mb-3 leading-7`,
+                                    { fontSize: 16, fontFamily: 'System' }
+                                  ]}
+                                  dir="rtl"
+                                >
+                                  {contentItem.text}
+                                </Text>
+                                {contentItem.count && (
+                                  <View style={[
+                                    tw`px-3 py-1 rounded-xl self-start`,
+                                    { backgroundColor: '#fef3c7' }
+                                  ]}>
+                                    <Text style={[
+                                      tw`font-semibold`,
+                                      { fontSize: 12, color: '#d97706' }
+                                    ]}>
+                                      {contentItem.count}×
+                                    </Text>
+                                  </View>
+                                )}
+                              </View>
+                            ))}
+                          </ScrollView>
+                        </Animatable.View>
+                      )}
+                  </View>
                 </TouchableOpacity>
               </Animatable.View>
             );

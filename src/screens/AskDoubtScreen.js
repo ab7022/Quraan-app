@@ -18,11 +18,14 @@ import Markdown from 'react-native-markdown-display';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import rateLimitService from '../services/rateLimitService';
 import RateLimitStatus from '../components/RateLimitStatus';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Maximum number of chat messages to keep in history
 const MAX_CHAT_MESSAGES = 20;
 
 export default function AskDoubtScreen() {
+    const insets = useSafeAreaInsets();
+  
   const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const [isSending, setIsSending] = useState(false);
@@ -421,40 +424,9 @@ export default function AskDoubtScreen() {
     </View>
   );
 
-  const renderTypingIndicator = () => (
-    <View style={tw`mb-4 px-4`}>
-      <View style={tw`flex-row justify-start`}>
-        <View
-          style={tw`bg-white dark:bg-gray-800 border border-amber-200 dark:border-gray-600 mr-4 rounded-2xl px-4 py-3`}
-        >
-          <Text
-            style={tw`text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1`}
-          >
-            Islamic Scholar
-          </Text>
-          <View style={tw`flex-row items-center`}>
-            <Text style={tw`text-amber-900 dark:text-amber-100 mr-2`}>
-              Typing
-            </Text>
-            <View style={tw`flex-row`}>
-              <View
-                style={tw`w-2 h-2 bg-amber-600 rounded-full mr-1 animate-pulse`}
-              />
-              <View
-                style={tw`w-2 h-2 bg-amber-600 rounded-full mr-1 animate-pulse`}
-              />
-              <View
-                style={tw`w-2 h-2 bg-amber-600 rounded-full animate-pulse`}
-              />
-            </View>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
 
   return (
-    <SafeAreaView style={tw`flex-1`}>
+    <SafeAreaView style={[tw`flex-1 bg-gray-50`, { paddingTop: insets.top }]}>
       <View style={tw`flex-1 bg-amber-50 dark:bg-gray-900`}>
         <View
           style={tw`bg-white dark:bg-gray-800 border-b border-amber-200 dark:border-gray-700 px-4 py-3`}
@@ -469,7 +441,7 @@ export default function AskDoubtScreen() {
               <Text
                 style={tw`text-lg font-bold text-amber-900 dark:text-amber-100`}
               >
-                Islamic Scholar Chat
+                AI Assistant
               </Text>
               <Text style={tw`text-sm text-amber-600 dark:text-amber-400`}>
                 Ask your Islamic questions
@@ -494,7 +466,6 @@ export default function AskDoubtScreen() {
             >
               <Ionicons name="trash-outline" size={16} color="#92400e" />
             </TouchableOpacity>
-            <View style={tw`w-3 h-3 bg-green-500 rounded-full`} />
           </View>
         </View>
 
@@ -515,7 +486,7 @@ export default function AskDoubtScreen() {
             style={tw`flex-1`}
             contentContainerStyle={tw`py-4`}
             showsVerticalScrollIndicator={false}
-            ListFooterComponent={isTyping ? renderTypingIndicator : null}
+            ListFooterComponent={ null}
           />
         )}
 
@@ -586,9 +557,6 @@ export default function AskDoubtScreen() {
             </View>
           </View>
         </KeyboardAvoidingView>
-
-        {/* Rate Limit Status Component for debugging */}
-        <RateLimitStatus />
       </View>
     </SafeAreaView>
   );

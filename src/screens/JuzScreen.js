@@ -88,41 +88,44 @@ export default function JuzScreen() {
   };
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-white`}>
-      <StatusBar backgroundColor="#FFFFFF" barStyle="dark-content" />
+    <SafeAreaView style={[tw`flex-1`, { backgroundColor: '#f2f2f7' }]}>
+      <StatusBar backgroundColor="#f2f2f7" barStyle="dark-content" />
 
-      {/* Clean Header */}
-      <View style={tw`bg-white px-6 py-4 mb-2`}>
-        <View style={tw`flex-row items-center justify-between`}>
-          <View style={tw`flex-1`}>
-            <Text style={tw`text-2xl font-bold text-gray-900`}>
-              Juz Collection
-            </Text>
-            <Text style={tw`text-base text-gray-600 mt-1`}>
-              30 Parts • Complete Quran Division
-            </Text>
-          </View>
-
-          {/* Stats Card */}
-          <View style={tw`bg-green-100 px-4 py-3 rounded-xl`}>
-            <View style={tw`flex-row items-center`}>
-              <Ionicons name="library-outline" size={18} color="#059669" />
-              <Text style={tw`text-green-700 font-bold text-lg ml-2`}>30</Text>
-            </View>
-            <Text style={tw`text-green-600 text-xs font-medium`}>
-              Total Juz
-            </Text>
-          </View>
+      <View style={tw`px-4 pt-4 pb-4`}>
+        <View
+          style={tw`flex flex-row justify-between align-center items-center mb-1 pl-4`}
+        >
+          <Text
+            style={[
+              tw`text-3xl font-bold text-gray-700 mb-0`,
+              { letterSpacing: -0.5 },
+            ]}
+          >
+            Juz
+          </Text>
+          <Text style={tw`text-gray-500 text-base font-medium`}>30 Parts</Text>
         </View>
       </View>
 
-      {/* Main Content */}
-      <View style={tw`flex-1 px-6`}>
+      {/* Apple-Style Content */}
+      <View style={tw`flex-1 px-4 mb-12`}>
         {loading ? (
-          <View>
-            {Array.from({ length: 6 }).map((_, idx) => (
-              <View key={idx} style={tw`bg-gray-50 rounded-xl p-4 mb-3`}>
-                <Shimmer height={60} style={tw`rounded-lg`} />
+          <View style={tw`flex-1`}>
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <View
+                key={idx}
+                style={[
+                  tw`bg-white rounded-2xl p-4 mb-3 mx-2`,
+                  {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  },
+                ]}
+              >
+                <Shimmer height={60} style={tw`rounded-xl`} />
               </View>
             ))}
           </View>
@@ -133,69 +136,89 @@ export default function JuzScreen() {
             renderItem={({ item }) => (
               <TouchableOpacity
                 onPress={() => handleJuzPress(item)}
-                style={tw`mb-3`}
-                activeOpacity={0.7}
+                style={tw`mb-3 mx-2`}
+                activeOpacity={0.6}
               >
                 <View
-                  style={tw`bg-white rounded-xl p-5 border border-gray-200`}
+                  style={[
+                    tw`bg-white  rounded-2xl overflow-hidden`,
+                    {
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    },
+                  ]}
                 >
-                  <View style={tw`flex-row items-center justify-between`}>
-                    {/* Left Content */}
-                    <View style={tw`flex-1 mr-4`}>
-                      <View style={tw`flex-row items-center mb-3`}>
-                        <View
-                          style={tw`w-12 h-12 bg-green-500 rounded-xl items-center justify-center mr-4`}
+                  <View style={tw`px-4 py-4`}>
+                    <View style={tw`flex-row items-center`}>
+                      {/* Apple-Style Number Circle */}
+                      <View
+                        style={[
+                          tw`w-10 h-10 rounded-full items-center justify-center mr-4`,
+                          { backgroundColor: '#34c759' },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            tw`text-white font-semibold`,
+                            { fontSize: 15 },
+                          ]}
                         >
-                          <Text style={tw`text-white font-bold text-lg`}>
-                            {item.juz_number}
-                          </Text>
-                        </View>
-                        <View style={tw`flex-1`}>
+                          {item.juz_number}
+                        </Text>
+                      </View>
+
+                      {/* Content */}
+                      <View style={tw`flex-1`}>
+                        <View
+                          style={tw`flex-row items-center justify-between mb-1`}
+                        >
                           <Text
-                            style={tw`text-gray-900 font-bold text-lg mb-1`}
+                            style={[
+                              tw`text-gray-900 font-semibold`,
+                              { fontSize: 17, letterSpacing: -0.3 },
+                            ]}
                           >
                             Juz {item.juz_number}
                           </Text>
-                          <Text style={tw`text-gray-600 text-sm`}>
-                            {getJuzDescription(item.juz_number)}
-                          </Text>
-                        </View>
-                      </View>
-
-                      <View style={tw`flex-row items-center flex-wrap`}>
-                        <View
-                          style={tw`bg-blue-100 rounded-lg px-3 py-1 mr-2 mb-1`}
-                        >
-                          <Text style={tw`text-blue-700 text-xs font-medium`}>
+                          <Text style={tw`text-gray-400 text-sm font-medium`}>
                             Page {juzToPageMapping[item.juz_number]}
                           </Text>
                         </View>
-                        <View
-                          style={tw`bg-purple-100 rounded-lg px-3 py-1 mr-2 mb-1`}
-                        >
-                          <Text style={tw`text-purple-700 text-xs font-medium`}>
-                            📖 Verses
-                          </Text>
-                        </View>
-                        <View
-                          style={tw`bg-green-100 rounded-lg px-3 py-1 mb-1`}
-                        >
-                          <Text style={tw`text-green-700 text-xs font-medium`}>
-                            🕊️ Part {item.juz_number}/30
-                          </Text>
+
+                        <Text style={tw`text-gray-500 text-sm font-medium`}>
+                          {getJuzDescription(item.juz_number)}
+                        </Text>
+
+                        <View style={tw`flex-row items-center mt-2`}>
+                          <View
+                            style={[
+                              tw`px-2 py-1 rounded-lg`,
+                              { backgroundColor: '#e3f2fd' },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                tw`text-xs font-medium`,
+                                { color: '#1976d2' },
+                              ]}
+                            >
+                              Part {item.juz_number}/30
+                            </Text>
+                          </View>
                         </View>
                       </View>
-                    </View>
 
-                    {/* Right Arrow */}
-                    <View
-                      style={tw`w-12 h-12 bg-gray-50 rounded-xl items-center justify-center`}
-                    >
-                      <Ionicons
-                        name="arrow-forward"
-                        size={20}
-                        color="#059669"
-                      />
+                      {/* Apple-Style Chevron */}
+                      <View style={tw`ml-3`}>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={18}
+                          color="#c7c7cc"
+                        />
+                      </View>
                     </View>
                   </View>
                 </View>
