@@ -1,5 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Alert, KeyboardAvoidingView, Platform, FlatList, StatusBar } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  FlatList,
+  StatusBar,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import Markdown from 'react-native-markdown-display';
@@ -37,31 +49,38 @@ export default function AskDoubtScreen() {
     try {
       console.log('[CHAT] Loading chat history from storage');
       const savedMessages = await AsyncStorage.getItem('islamic_chat_history');
-      
+
       if (savedMessages) {
         const parsedMessages = JSON.parse(savedMessages);
-        console.log('[CHAT] Loaded', parsedMessages.length, 'messages from storage');
-        
+        console.log(
+          '[CHAT] Loaded',
+          parsedMessages.length,
+          'messages from storage'
+        );
+
         // Ensure we don't load more than the maximum messages (safety check)
-        const messagesToLoad = parsedMessages.length > MAX_CHAT_MESSAGES 
-          ? parsedMessages.slice(-MAX_CHAT_MESSAGES) 
-          : parsedMessages;
-        
+        const messagesToLoad =
+          parsedMessages.length > MAX_CHAT_MESSAGES
+            ? parsedMessages.slice(-MAX_CHAT_MESSAGES)
+            : parsedMessages;
+
         if (messagesToLoad.length !== parsedMessages.length) {
-          console.log(`[CHAT] Trimmed loaded messages from ${parsedMessages.length} to ${messagesToLoad.length}`);
+          console.log(
+            `[CHAT] Trimmed loaded messages from ${parsedMessages.length} to ${messagesToLoad.length}`
+          );
           // Save the trimmed version back to storage
           await saveChatHistory(messagesToLoad);
         }
-        
+
         setChatMessages(messagesToLoad);
       } else {
         // Set default welcome message if no history exists
         const welcomeMessage = {
           id: '1',
-          text: 'Assalamu Alaikum! Welcome to our Islamic Q&A chat. I\'m here to help answer your questions about Islam, Quran, Hadith, and Islamic practices. How can I assist you today?',
+          text: "Assalamu Alaikum! Welcome to our Islamic Q&A chat. I'm here to help answer your questions about Islam, Quran, Hadith, and Islamic practices. How can I assist you today?",
           isUser: false,
           timestamp: new Date().toISOString(),
-          sender: 'Islamic Scholar'
+          sender: 'Islamic Scholar',
         };
         setChatMessages([welcomeMessage]);
         await saveChatHistory([welcomeMessage]);
@@ -71,10 +90,10 @@ export default function AskDoubtScreen() {
       // Fallback to default message
       const welcomeMessage = {
         id: '1',
-        text: 'Assalamu Alaikum! Welcome to our Islamic Q&A chat. I\'m here to help answer your questions about Islam, Quran, Hadith, and Islamic practices. How can I assist you today?',
+        text: "Assalamu Alaikum! Welcome to our Islamic Q&A chat. I'm here to help answer your questions about Islam, Quran, Hadith, and Islamic practices. How can I assist you today?",
         isUser: false,
         timestamp: new Date().toISOString(),
-        sender: 'Islamic Scholar'
+        sender: 'Islamic Scholar',
       };
       setChatMessages([welcomeMessage]);
       await saveChatHistory([welcomeMessage]);
@@ -84,20 +103,25 @@ export default function AskDoubtScreen() {
   };
 
   // Save chat history to AsyncStorage (keep only last 20 messages)
-  const saveChatHistory = async (messages) => {
+  const saveChatHistory = async messages => {
     try {
       // Keep only the last MAX_CHAT_MESSAGES messages to prevent storage bloat
       let messagesToSave = messages;
-      
+
       if (messages.length > MAX_CHAT_MESSAGES) {
         // Keep the last messages
         messagesToSave = messages.slice(-MAX_CHAT_MESSAGES);
-        console.log(`[CHAT] Trimmed messages from ${messages.length} to ${messagesToSave.length} (keeping last ${MAX_CHAT_MESSAGES})`);
+        console.log(
+          `[CHAT] Trimmed messages from ${messages.length} to ${messagesToSave.length} (keeping last ${MAX_CHAT_MESSAGES})`
+        );
       }
-      
-      await AsyncStorage.setItem('islamic_chat_history', JSON.stringify(messagesToSave));
+
+      await AsyncStorage.setItem(
+        'islamic_chat_history',
+        JSON.stringify(messagesToSave)
+      );
       console.log('[CHAT] Saved', messagesToSave.length, 'messages to storage');
-      
+
       // Update state with trimmed messages if we trimmed anything
       if (messages.length > MAX_CHAT_MESSAGES) {
         setChatMessages(messagesToSave);
@@ -113,8 +137,13 @@ export default function AskDoubtScreen() {
       if (chatMessages.length > MAX_CHAT_MESSAGES) {
         const trimmedMessages = chatMessages.slice(-MAX_CHAT_MESSAGES);
         setChatMessages(trimmedMessages);
-        await AsyncStorage.setItem('islamic_chat_history', JSON.stringify(trimmedMessages));
-        console.log(`[CHAT] Manually trimmed messages from ${chatMessages.length} to ${trimmedMessages.length}`);
+        await AsyncStorage.setItem(
+          'islamic_chat_history',
+          JSON.stringify(trimmedMessages)
+        );
+        console.log(
+          `[CHAT] Manually trimmed messages from ${chatMessages.length} to ${trimmedMessages.length}`
+        );
         return trimmedMessages.length;
       }
       return chatMessages.length;
@@ -130,10 +159,10 @@ export default function AskDoubtScreen() {
       await AsyncStorage.removeItem('islamic_chat_history');
       const welcomeMessage = {
         id: '1',
-        text: 'Assalamu Alaikum! Welcome to our Islamic Q&A chat. I\'m here to help answer your questions about Islam, Quran, Hadith, and Islamic practices. How can I assist you today?',
+        text: "Assalamu Alaikum! Welcome to our Islamic Q&A chat. I'm here to help answer your questions about Islam, Quran, Hadith, and Islamic practices. How can I assist you today?",
         isUser: false,
         timestamp: new Date().toISOString(),
-        sender: 'Islamic Scholar'
+        sender: 'Islamic Scholar',
       };
       setChatMessages([welcomeMessage]);
       await saveChatHistory([welcomeMessage]);
@@ -148,10 +177,13 @@ export default function AskDoubtScreen() {
 
     // Check rate limit before proceeding
     try {
-      const rateLimitResult = await rateLimitService.checkRateLimit('quran/ask');
-      
+      const rateLimitResult =
+        await rateLimitService.checkRateLimit('quran/ask');
+
       if (!rateLimitResult.allowed) {
-        const resetTime = rateLimitService.getTimeUntilReset(rateLimitResult.resetTime);
+        const resetTime = rateLimitService.getTimeUntilReset(
+          rateLimitResult.resetTime
+        );
         Alert.alert(
           'Rate Limit Exceeded',
           `You've reached the maximum number of AI questions (${rateLimitResult.maxRequests}) for this hour. Please try again in ${resetTime}.`,
@@ -169,7 +201,7 @@ export default function AskDoubtScreen() {
       text: message.trim(),
       isUser: true,
       timestamp: new Date().toISOString(),
-      sender: 'You'
+      sender: 'You',
     };
 
     // Add user message immediately
@@ -182,43 +214,47 @@ export default function AskDoubtScreen() {
 
     try {
       console.log('Sending message to backend:', userMessage.text);
-      
+
       const requestBody = {
         question: userMessage.text, // Changed from 'message' to 'question' to match backend
         timestamp: userMessage.timestamp,
       };
-      
+
       console.log('Request body:', JSON.stringify(requestBody));
-      
+
       const response = await fetch('https://api.devlop.app/quran/ask', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify(requestBody),
       });
-      
+
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
 
       if (response.ok) {
         const data = await response.json();
         console.log('Backend response:', data);
-        
+
         // Record successful request for rate limiting
         await rateLimitService.recordRequest('quran/ask');
-        
+
         // Simulate typing delay for better UX
         setTimeout(async () => {
           const scholarResponse = {
             id: (Date.now() + 1).toString(),
-            text: data.answer || data.response || data.message || 'Thank you for your question. Let me provide you with an Islamic perspective on this matter...',
+            text:
+              data.answer ||
+              data.response ||
+              data.message ||
+              'Thank you for your question. Let me provide you with an Islamic perspective on this matter...',
             isUser: false,
             timestamp: new Date().toISOString(),
-            sender: 'Abdul Bayees AI' // Updated to match your backend
+            sender: 'Abdul Bayees AI', // Updated to match your backend
           };
-          
+
           setIsTyping(false);
           const finalMessages = [...updatedMessages, scholarResponse];
           setChatMessages(finalMessages);
@@ -232,15 +268,15 @@ export default function AskDoubtScreen() {
     } catch (error) {
       console.error('Error sending message:', error);
       setIsTyping(false);
-      
+
       // Add error message to chat
       const errorMessage = {
         id: (Date.now() + 2).toString(),
-        text: 'I apologize, but I\'m having trouble connecting right now. Please check your internet connection and try again.',
+        text: "I apologize, but I'm having trouble connecting right now. Please check your internet connection and try again.",
         isUser: false,
         timestamp: new Date().toISOString(),
         sender: 'System',
-        isError: true
+        isError: true,
       };
       const errorMessages = [...updatedMessages, errorMessage];
       setChatMessages(errorMessages);
@@ -250,10 +286,10 @@ export default function AskDoubtScreen() {
     }
   };
 
-  const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+  const formatTime = timestamp => {
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -340,40 +376,44 @@ export default function AskDoubtScreen() {
 
   const renderMessage = ({ item }) => (
     <View style={tw`mb-4 px-4`}>
-      <View style={[
-        tw`flex-row`,
-        item.isUser ? tw`justify-end` : tw`justify-start`
-      ]}>
-        <View style={[
-          tw`max-w-[80%] rounded-2xl px-4 py-3`,
-          item.isUser 
-            ? tw`bg-amber-600 ml-4` 
-            : item.isError
-            ? tw`bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 mr-4`
-            : tw`bg-white dark:bg-gray-800 border border-amber-200 dark:border-gray-600 mr-4`
-        ]}>
+      <View
+        style={[
+          tw`flex-row`,
+          item.isUser ? tw`justify-end` : tw`justify-start`,
+        ]}
+      >
+        <View
+          style={[
+            tw`max-w-[80%] rounded-2xl px-4 py-3`,
+            item.isUser
+              ? tw`bg-amber-600 ml-4`
+              : item.isError
+                ? tw`bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 mr-4`
+                : tw`bg-white dark:bg-gray-800 border border-amber-200 dark:border-gray-600 mr-4`,
+          ]}
+        >
           {!item.isUser && (
-            <Text style={tw`text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1`}>
+            <Text
+              style={tw`text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1`}
+            >
               {item.sender}
             </Text>
           )}
           {item.isUser ? (
-            <Text style={[
-              tw`text-base leading-6 text-white`
-            ]}>
+            <Text style={[tw`text-base leading-6 text-white`]}>
               {item.text}
             </Text>
           ) : (
-            <Markdown style={markdownStyles}>
-              {item.text}
-            </Markdown>
+            <Markdown style={markdownStyles}>{item.text}</Markdown>
           )}
-          <Text style={[
-            tw`text-xs mt-2`,
-            item.isUser 
-              ? tw`text-amber-100` 
-              : tw`text-amber-500 dark:text-amber-500`
-          ]}>
+          <Text
+            style={[
+              tw`text-xs mt-2`,
+              item.isUser
+                ? tw`text-amber-100`
+                : tw`text-amber-500 dark:text-amber-500`,
+            ]}
+          >
             {formatTime(item.timestamp)}
           </Text>
         </View>
@@ -384,8 +424,12 @@ export default function AskDoubtScreen() {
   const renderTypingIndicator = () => (
     <View style={tw`mb-4 px-4`}>
       <View style={tw`flex-row justify-start`}>
-        <View style={tw`bg-white dark:bg-gray-800 border border-amber-200 dark:border-gray-600 mr-4 rounded-2xl px-4 py-3`}>
-          <Text style={tw`text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1`}>
+        <View
+          style={tw`bg-white dark:bg-gray-800 border border-amber-200 dark:border-gray-600 mr-4 rounded-2xl px-4 py-3`}
+        >
+          <Text
+            style={tw`text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1`}
+          >
             Islamic Scholar
           </Text>
           <View style={tw`flex-row items-center`}>
@@ -393,9 +437,15 @@ export default function AskDoubtScreen() {
               Typing
             </Text>
             <View style={tw`flex-row`}>
-              <View style={tw`w-2 h-2 bg-amber-600 rounded-full mr-1 animate-pulse`} />
-              <View style={tw`w-2 h-2 bg-amber-600 rounded-full mr-1 animate-pulse`} />
-              <View style={tw`w-2 h-2 bg-amber-600 rounded-full animate-pulse`} />
+              <View
+                style={tw`w-2 h-2 bg-amber-600 rounded-full mr-1 animate-pulse`}
+              />
+              <View
+                style={tw`w-2 h-2 bg-amber-600 rounded-full mr-1 animate-pulse`}
+              />
+              <View
+                style={tw`w-2 h-2 bg-amber-600 rounded-full animate-pulse`}
+              />
             </View>
           </View>
         </View>
@@ -428,13 +478,13 @@ export default function AskDoubtScreen() {
             <TouchableOpacity
               onPress={() => {
                 Alert.alert(
-                  "Clear Chat History",
-                  "Are you sure you want to clear all chat messages? This action cannot be undone.",
+                  'Clear Chat History',
+                  'Are you sure you want to clear all chat messages? This action cannot be undone.',
                   [
-                    { text: "Cancel", style: "cancel" },
+                    { text: 'Cancel', style: 'cancel' },
                     {
-                      text: "Clear",
-                      style: "destructive",
+                      text: 'Clear',
+                      style: 'destructive',
                       onPress: clearChatHistory,
                     },
                   ]
@@ -461,7 +511,7 @@ export default function AskDoubtScreen() {
             ref={flatListRef}
             data={chatMessages}
             renderItem={renderMessage}
-            keyExtractor={(item) => item.id}
+            keyExtractor={item => item.id}
             style={tw`flex-1`}
             contentContainerStyle={tw`py-4`}
             showsVerticalScrollIndicator={false}
@@ -474,12 +524,12 @@ export default function AskDoubtScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={tw`flex-row gap-2`}>
               {[
-                "Prayer times",
-                "Wudu steps",
-                "Quran recitation",
-                "Zakat calculation",
-                "Hajj rituals",
-              ].map((question) => (
+                'Prayer times',
+                'Wudu steps',
+                'Quran recitation',
+                'Zakat calculation',
+                'Hajj rituals',
+              ].map(question => (
                 <TouchableOpacity
                   key={question}
                   onPress={() => setMessage(question)}
@@ -496,8 +546,8 @@ export default function AskDoubtScreen() {
 
         {/* Message Input */}
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
           <View
             style={tw`bg-white dark:bg-gray-800 border-t border-amber-200 dark:border-gray-700 px-4 py-3 pb-24`}

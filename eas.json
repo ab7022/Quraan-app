@@ -19,8 +19,7 @@
       "autoIncrement": true,
       "channel": "production",
       "android": {
-        "buildType": "aab",
-        "withoutObfuscation": false
+        "buildType": "app-bundle"
       }
     }
   },

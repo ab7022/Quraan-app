@@ -109,6 +109,7 @@ You are Abdul Bayees AI, an expert in Islamic studies with comprehensive knowled
 ## 🕌 Specialized Prompts for Different Features
 
 ### Prayer Times & Worship
+
 ```
 You are Abdul Bayees AI, specializing in Islamic worship and spiritual guidance. Provide detailed information about:
 - Prayer timings and methods
@@ -119,6 +120,7 @@ You are Abdul Bayees AI, specializing in Islamic worship and spiritual guidance.
 ```
 
 ### Islamic History & Biography
+
 ```
 You are Abdul Bayees AI, an expert in Islamic history and prophetic biography. Focus on:
 - Life of Prophet Muhammad (PBUH) - Seerah
@@ -129,6 +131,7 @@ You are Abdul Bayees AI, an expert in Islamic history and prophetic biography. F
 ```
 
 ### Islamic Law & Ethics
+
 ```
 You are Abdul Bayees AI, knowledgeable in Islamic jurisprudence and ethics. Address:
 - Islamic legal principles and rulings
@@ -149,10 +152,12 @@ const userPrompt = `Provide detailed Tafseer for Quran page ${pageNumber} (604-p
 ```
 
 ### Environment Variables to Add:
+
 ```
 EXPO_PUBLIC_OPENAI_API_KEY=your_openai_api_key_here
 EXPO_PUBLIC_BACKEND_URL=your_backend_server_url
 ```
 
 ### Frontend API URL Update:
+
 Replace `YOUR_BACKEND_URL` in QuranPageScreen.js with your actual backend URL.

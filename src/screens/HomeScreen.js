@@ -1,9 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+  Animated,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QuranLogo } from '../components/QuranLogo';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+  FontAwesome5,
+} from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import tw from 'twrnc';
 import ContinueReading from '../components/ContinueReading';
@@ -12,7 +23,11 @@ import LearnQuranCard from '../components/LearnQuranCard';
 import HifzCard from '../components/HifzCard';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { loadStreak, updateStreak, getLast7DaysStreak } from '../store/streakSlice';
+import {
+  loadStreak,
+  updateStreak,
+  getLast7DaysStreak,
+} from '../store/streakSlice';
 import * as Animatable from 'react-native-animatable';
 import analytics from '../services/analyticsService';
 export default function HomeScreen() {
@@ -22,34 +37,57 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [hifzRefreshKey, setHifzRefreshKey] = useState(0);
   const [userName, setUserName] = useState('');
+  const colorAnimation = useRef(new Animated.Value(0)).current;
 
   // Get last 7 days streak data
   const last7Days = getLast7DaysStreak(readingHistory);
 
   useEffect(() => {
     console.log('[HOME SCREEN] Component mounted');
-    
+
     // Track screen view
     analytics.trackScreenView('HomeScreen', {
       streak_count: streak,
       has_reading_history: readingHistory.length > 0,
     });
-    
+
     dispatch(loadStreak());
     loadUserName();
-    
+
     // Auto-increment streak when app is opened (once per day)
     const markDailyStreak = async () => {
       try {
-        console.log('[HOME SCREEN] Checking if streak should be updated for app open');
+        console.log(
+          '[HOME SCREEN] Checking if streak should be updated for app open'
+        );
         dispatch(updateStreak());
       } catch (error) {
         console.log('[HOME SCREEN] Error updating streak on app open:', error);
       }
     };
-    
+
     markDailyStreak();
-    
+
+    // Start color animation
+    const startColorAnimation = () => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(colorAnimation, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: false,
+          }),
+          Animated.timing(colorAnimation, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: false,
+          }),
+        ])
+      ).start();
+    };
+
+    startColorAnimation();
+
     return () => {
       console.log('[HOME SCREEN] Component unmounting');
     };
@@ -78,9 +116,9 @@ export default function HomeScreen() {
   }, [navigation]);
 
   // Helper function to get user initials
-    const getUserInitials = (name) => {
+  const getUserInitials = name => {
     if (!name || name.trim() === '') return '🕌';
-    
+
     const words = name.trim().split(' ');
     if (words.length === 1) {
       return words[0].charAt(0).toUpperCase();
@@ -88,51 +126,68 @@ export default function HomeScreen() {
     return words[0].charAt(0).toUpperCase() + words[1].charAt(0).toUpperCase();
   };
 
-  const getFirstName = (name) => {
+  const getFirstName = name => {
     if (!name || name.trim() === '') return '';
     return name.trim().split(' ')[0];
   };
 
   const handleStreakPress = () => {
     console.log('[HOME SCREEN] Streak button pressed, current streak:', streak);
-    
+
     // Track navigation event
-    analytics.trackNavigationEvent('HomeScreen', 'StreakScreen', 'streak_button_tap');
+    analytics.trackNavigationEvent(
+      'HomeScreen',
+      'StreakScreen',
+      'streak_button_tap'
+    );
     analytics.trackUserAction('view_streak', { current_streak: streak });
-    
+
     // Navigate to dedicated Streak screen
     navigation.navigate('Streak');
   };
 
   const handleQuranPress = () => {
     console.log('[HOME SCREEN] Quran button pressed');
-    
+
     // Track navigation event
     analytics.trackNavigationEvent('HomeScreen', 'QuranScreen', 'button_tap');
     analytics.trackUserAction('start_reading', { from_screen: 'home' });
-    
+
     navigation.navigate('Quran');
   };
 
   const handleSurahsPress = () => {
     console.log('[HOME SCREEN] All Surahs button pressed');
-    
+
     // Track navigation event
     analytics.trackNavigationEvent('HomeScreen', 'SurahsScreen', 'button_tap');
     analytics.trackUserAction('browse_surahs', { from_screen: 'home' });
-    
-    navigation.navigate('Quran', { screen: 'QuranTabs', params: { screen: 'SurahsList' } });
+
+    navigation.navigate('Quran', {
+      screen: 'QuranTabs',
+      params: { screen: 'SurahsList' },
+    });
   };
 
   const handleAskDoubtPress = () => {
     console.log('[HOME SCREEN] Ask Doubt button pressed');
-    
+
     // Track navigation event
-    analytics.trackNavigationEvent('HomeScreen', 'AskDoubtScreen', 'button_tap');
+    analytics.trackNavigationEvent(
+      'HomeScreen',
+      'AskDoubtScreen',
+      'button_tap'
+    );
     analytics.trackUserAction('ask_doubt', { from_screen: 'home' });
-    
+
     navigation.navigate('AskDoubt');
   };
+
+  // Interpolate background color
+  const animatedBackgroundColor = colorAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['rgb(236, 253, 245)', 'rgb(187, 247, 208)'], // emerald-50 to emerald-200
+  });
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`}>
@@ -142,7 +197,7 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => {
-              console.log("[HOME SCREEN] Pull to refresh triggered");
+              console.log('[HOME SCREEN] Pull to refresh triggered');
               setRefreshing(true);
               // Refresh streak data and check for updates
               dispatch(loadStreak());
@@ -167,10 +222,13 @@ export default function HomeScreen() {
               </View>
               <View style={tw`flex-1`}>
                 <Text style={tw`text-xl font-bold text-gray-900`}>
-                  Assalamu Alaikum{userName ? `, ${getFirstName(userName)}` : ''}
+                  Assalamu Alaikum
+                  {userName ? `, ${getFirstName(userName)}` : ''}
                 </Text>
                 <Text style={tw`text-base text-gray-500`}>
-                  {userName ? 'Welcome back to your spiritual journey' : 'Welcome to your spiritual journey'}
+                  {userName
+                    ? 'Welcome back to your spiritual journey'
+                    : 'Welcome to your spiritual journey'}
                 </Text>
               </View>
             </View>
@@ -191,60 +249,88 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Ultra Compact Streak */}
-        <View style={tw`px-6 mb-3`}>
-          <TouchableOpacity 
-            onPress={handleStreakPress}
-            activeOpacity={0.95}
-            style={tw`bg-emerald-50 rounded-xl p-3 border border-emerald-100`}
-          >
-            {/* Compact Header */}
-            <View style={tw`flex-row items-center justify-between mb-2`}>
-              <View style={tw`flex-row items-center`}>
-                <Ionicons name="flame" size={14} color="#059669" style={tw`mr-1.5`} />
-                <Text style={tw`text-xs font-bold text-gray-900`}>
-                  Weekly
-                </Text>
-              </View>
-              <Text style={tw`text-xs font-bold text-emerald-600`}>
-                {last7Days.filter((day) => day.hasRead).length}/7
-              </Text>
-            </View>
-
-            {/* Mini Progress Bars */}
-            <View style={tw`flex-row justify-between items-center mb-1`}>
-              {last7Days.map((day, index) => (
-                <View key={day.date} style={tw`items-center flex-1`}>
-                  <View style={tw`w-full mx-0.5 h-3 bg-gray-100 rounded-full overflow-hidden`}>
-                    <View 
-                      style={[
-                        tw`w-full rounded-full`,
-                        {
-                          height: day.hasRead ? '100%' : day.isToday ? '50%' : '0%',
-                          backgroundColor: day.hasRead 
-                            ? '#10B981' 
-                            : day.isToday 
-                              ? '#86EFAC' 
-                              : 'transparent'
-                        }
-                      ]}
-                    />
+        {/* Weekly Progress Tracker */}
+        <View style={tw`px-6 mb-4 `}>
+          <TouchableOpacity onPress={handleStreakPress} activeOpacity={0.92}>
+            <LinearGradient
+              colors={['#F0FDF4', '#DCFCE7', '#BBF7D0']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={tw`rounded-2xl p-5 shadow-sm border border-gray-100`}
+            >
+              {/* Clean Header */}
+              <View style={tw`flex-row items-center justify-between mb-2`}>
+                <View style={tw`flex-row items-center`}>
+                  <View>
+                    <Text style={tw`text-base justify-center items-center font-bold text-gray-900`}>
+                      Reading Progress
+                    </Text>
                   </View>
-                  <Text style={tw`text-xs ${day.hasRead || day.isToday ? 'text-emerald-600' : 'text-gray-400'} mt-0.5`}>
-                    {day.dayName.charAt(0)}
-                  </Text>
                 </View>
-              ))}
-            </View>
+              </View>
 
-            {/* Mini Status */}
-            <Text style={tw`text-xs text-emerald-600 text-center mt-1`}>
-              {last7Days.filter(d => d.hasRead).length === 7 
-                ? "Perfect! 🔥" 
-                : last7Days.find(d => d.isToday)?.hasRead 
-                  ? "Done today ✓" 
-                  : "Tap for details"}
-            </Text>
+              {/* Progress Circles Row */}
+              <View style={tw`flex-row justify-between items-center mb-2`}>
+                {last7Days.map((day, index) => (
+                  <View key={day.date} style={tw`items-center flex-1`}>
+                    {/* Circle */}
+                    {day.hasRead ? (
+                      <LinearGradient
+                        colors={['#22C55E', '#16A34A', '#15803D']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={tw`w-11 h-11 rounded-full items-center justify-center mb-2 shadow-sm border-2 border-white`}
+                      >
+                        <Text style={tw`text-base`}>💫</Text>
+                      </LinearGradient>
+                    ) : (
+                      <View
+                        style={[
+                          tw`w-11 h-11 rounded-full items-center justify-center mb-2 border-2`,
+                          {
+                            backgroundColor: day.isToday
+                              ? '#ECFDF5'
+                              : '#FFFFFF',
+                            borderColor: day.isToday ? '#22C55E' : '#E5E7EB',
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.1,
+                            shadowRadius: 2,
+                            elevation: 2,
+                          },
+                        ]}
+                      >
+                        {day.isToday ? (
+                          <View
+                            style={tw`w-3 h-3 bg-emerald-500 rounded-full`}
+                          />
+                        ) : (
+                          <Text style={tw`text-base`}>😭</Text>
+                        )}
+                      </View>
+                    )}
+
+                    {/* Day Label */}
+                    <Text
+                      style={[
+                        tw`text-xs font-semibold`,
+                        {
+                          color: day.hasRead
+                            ? '#22C55E'
+                            : day.isToday
+                              ? '#22C55E'
+                              : '#6B7280',
+                        },
+                      ]}
+                    >
+                      {day.dayName.slice(0, 3)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Status Message */}
+            </LinearGradient>
           </TouchableOpacity>
         </View>
         {/* Continue Reading Section */}
@@ -253,112 +339,112 @@ export default function HomeScreen() {
         </View>
         {/* Quick Actions */}
         <View style={tw`px-6 mb-6`}>
-          <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
+          <Text style={tw`text-xl font-bold text-gray-900 mb-4`}>
             Quick Actions
           </Text>
-          <View style={tw`flex-row flex-wrap justify-between`}>
-            {/* Read Quran - Google Green Gradient */}
-            <TouchableOpacity
-              onPress={handleQuranPress}
-              style={tw`w-[48%] rounded-2xl mb-3 shadow-lg`}
-              accessibilityLabel="Read Quran Page by Page"
-              activeOpacity={0.8}
+
+          {/* Main Actions Row */}
+          <View style={tw`flex-row gap-3 mb-3`}>
+            {/* Read Quran - Primary Action */}
+            <Animated.View
+              style={[
+                tw`flex-1 rounded-2xl p-2 border border-emerald-200 flex-row items-center`,
+                { backgroundColor: animatedBackgroundColor },
+              ]}
             >
-              <LinearGradient
-                colors={["#34D399", "#10B981", "#059669"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={tw`rounded-2xl p-4 items-center`}
+              <TouchableOpacity
+                onPress={handleQuranPress}
+                style={tw`flex-1 flex-row items-center`}
+                accessibilityLabel="Read Quran Page by Page"
+                activeOpacity={0.8}
               >
                 <View
-                  style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center mb-3`}
+                  style={tw`w-12 h-12 bg-emerald-100 rounded-2xl items-center justify-center mr-3`}
                 >
-                  <Ionicons name="book-outline" size={24} color="white" />
+                  <Text style={tw`text-2xl`}>📖</Text>
                 </View>
-                <Text style={tw`text-sm font-semibold text-white`}>
-                  Read Quran
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            {/* Learn Quran - Orange Gradient */}
-            <TouchableOpacity
-              onPress={() => navigation.navigate("LearnQuran")}
-              style={tw`w-[48%] rounded-2xl mb-3 shadow-lg`}
-              accessibilityLabel="Learn Quran with Expert Teachers"
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={["#F59E0B", "#D97706", "#B45309"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={tw`rounded-2xl p-4 items-center`}
-              >
-                <View
-                  style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center mb-3`}
-                >
-                  <MaterialCommunityIcons
-                    name="school-outline"
-                    size={24}
-                    color="white"
-                  />
+                <View style={tw`flex-1`}>
+                  <Text style={tw`text-emerald-800 font-bold text-sm mb-1`}>
+                    Read Quran
+                  </Text>
+                  <Text style={tw`text-emerald-600 text-xs`}>Page by page</Text>
                 </View>
-                <Text style={tw`text-sm font-semibold text-white`}>
-                  Learn Quran
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color="#059669"
+                  style={tw`opacity-60`}
+                />
+              </TouchableOpacity>
+            </Animated.View>
 
-            {/* Ask Doubt - Google Blue Gradient */}
+            {/* Ask Doubt */}
             <TouchableOpacity
               onPress={handleAskDoubtPress}
-              style={tw`w-[48%] rounded-2xl mb-3 shadow-lg`}
+              style={tw`flex-1 bg-blue-50 rounded-2xl p-2 border border-blue-200 flex-row items-center`}
               accessibilityLabel="Ask Islamic Questions"
               activeOpacity={0.8}
             >
-              <LinearGradient
-                colors={["#60A5FA", "#3B82F6", "#2563EB"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={tw`rounded-2xl p-4 items-center`}
+              <View
+                style={tw`w-12 h-12 bg-blue-100 rounded-2xl items-center justify-center mr-3`}
               >
-                <View
-                  style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center mb-3`}
-                >
-                  <Ionicons
-                    name="chatbubble-ellipses-outline"
-                    size={24}
-                    color="white"
-                  />
-                </View>
-                <Text style={tw`text-sm font-semibold text-white`}>
+                <Text style={tw`text-2xl`}>🤲</Text>
+              </View>
+              <View style={tw`flex-1`}>
+                <Text style={tw`text-blue-800 font-bold text-xs mb-1`}>
                   Ask Doubt
                 </Text>
-              </LinearGradient>
+                <Text style={tw`text-blue-600 text-xs`}>Islamic Q&A</Text>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color="#3B82F6"
+                style={tw`opacity-60`}
+              />
             </TouchableOpacity>
+          </View>
 
-            {/* Progress - Google Purple Gradient */}
+          {/* Secondary Actions Row */}
+          <View style={tw`flex-row gap-3`}>
+            {/* Learn Quran */}
             <TouchableOpacity
-              onPress={handleStreakPress}
-              style={tw`w-[48%] rounded-2xl mb-3 shadow-lg`}
-              accessibilityLabel="View Streak"
+              onPress={() => navigation.navigate('LearnQuran')}
+              style={tw`flex-1 bg-orange-50 rounded-2xl p-4 border border-orange-200 flex-row items-center`}
+              accessibilityLabel="Learn Quran with Expert Teachers"
               activeOpacity={0.8}
             >
-              <LinearGradient
-                colors={["#A78BFA", "#8B5CF6", "#7C3AED"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={tw`rounded-2xl p-4 items-center`}
+              <View
+                style={tw`w-10 h-10 bg-orange-100 rounded-xl items-center justify-center mr-3`}
               >
-                <View
-                  style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center mb-3`}
-                >
-                  <Ionicons name="trophy-outline" size={24} color="white" />
-                </View>
-                <Text style={tw`text-sm font-semibold text-white`}>
+                <Text style={tw`text-lg`}>🎓</Text>
+              </View>
+              <View style={tw`flex-1`}>
+                <Text style={tw`text-orange-800 font-semibold text-sm mb-1`}>
+                  Learn Quran
+                </Text>
+                <Text style={tw`text-orange-600 text-xs`}>With teachers</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Progress */}
+            <TouchableOpacity
+              onPress={handleStreakPress}
+              style={tw`flex-1 bg-purple-50 rounded-2xl p-4 border border-purple-200 flex-row items-center`}
+              accessibilityLabel="View Reading Progress"
+              activeOpacity={0.8}
+            >
+              <View
+                style={tw`w-10 h-10 bg-purple-100 rounded-xl items-center justify-center mr-3`}
+              >
+                <Text style={tw`text-lg`}>📊</Text>
+              </View>
+              <View style={tw`flex-1`}>
+                <Text style={tw`text-purple-800 font-semibold text-sm mb-1`}>
                   Progress
                 </Text>
-              </LinearGradient>
+                <Text style={tw`text-purple-600 text-xs`}>View stats</Text>
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -376,26 +462,26 @@ export default function HomeScreen() {
           >
             <View style={tw`flex-row flex-wrap justify-between`}>
               {[
-                { name: "Al-Waqi'ah", page: 534, color: "#8B5CF6" },
-                { name: "Al-Muzammil", page: 574, color: "#059669" },
-                { name: "Ayat al-Kursi", page: 40, color: "#DC2626" },
-                { name: "Ar-Rahman", page: 531, color: "#EA580C" },
-                { name: "Yaseen", page: 440, color: "#7C3AED" },
-                { name: "Al-Mulk", page: 562, color: "#0284C7" },
-                { name: "As-Sajdah", page: 415, color: "#BE185D" },
+                { name: "Al-Waqi'ah", page: 534, color: '#8B5CF6' },
+                { name: 'Al-Muzammil', page: 574, color: '#059669' },
+                { name: 'Ayat al-Kursi', page: 40, color: '#DC2626' },
+                { name: 'Ar-Rahman', page: 531, color: '#EA580C' },
+                { name: 'Yaseen', page: 440, color: '#7C3AED' },
+                { name: 'Al-Mulk', page: 562, color: '#0284C7' },
+                { name: 'As-Sajdah', page: 415, color: '#BE185D' },
               ].map((surah, index) => (
                 <TouchableOpacity
                   key={surah.name}
                   onPress={() => {
-                    console.log("Navigating to page:", surah.page);
-                    navigation.navigate("Quran", {
-                      screen: "QuranPage",
+                    console.log('Navigating to page:', surah.page);
+                    navigation.navigate('Quran', {
+                      screen: 'QuranPage',
                       params: { initialPage: surah.page },
                     });
                   }}
                   style={[
                     tw`px-3 py-2 rounded-lg mb-2 mr-2`,
-                    { backgroundColor: surah.color + "15" },
+                    { backgroundColor: surah.color + '15' },
                   ]}
                   activeOpacity={0.7}
                 >

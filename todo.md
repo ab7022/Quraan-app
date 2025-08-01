@@ -6,6 +6,7 @@ notifications
 ✅ expo insights - analytics tracking added (COMPLETE COVERAGE)
 
 ## Analytics Coverage:
+
 ✅ App.js - Session tracking, app state monitoring
 ✅ HomeScreen.js - Screen views, navigation tracking
 ✅ QuranPageScreen.js - Reading tracking, AI Tafseer, language selection, swipe gestures

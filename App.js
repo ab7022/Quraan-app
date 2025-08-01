@@ -1,4 +1,4 @@
-import "react-native-url-polyfill/auto"
+import 'react-native-url-polyfill/auto';
 
 import React, { useEffect, useState } from 'react';
 import * as Updates from 'expo-updates';
@@ -15,7 +15,11 @@ const updateApp = async () => {
     console.log('Update check failed:', e);
   }
 };
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  DefaultTheme,
+  DarkTheme,
+} from '@react-navigation/native';
 import { Provider } from 'react-redux';
 import { useColorScheme, AppState } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -26,7 +30,7 @@ import store from './src/store';
 import MainNavigator from './src/navigation/MainNavigator';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import { QuranLogo } from './src/components/QuranLogo';
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import analytics from './src/services/analyticsService';
 
 export default function App() {
@@ -44,7 +48,7 @@ export default function App() {
     checkOnboardingStatus();
 
     // Track app state changes
-    const handleAppStateChange = (nextAppState) => {
+    const handleAppStateChange = nextAppState => {
       if (nextAppState === 'active') {
         analytics.startNewSession();
         updateApp(); // Also check for updates when app comes to foreground
@@ -53,7 +57,10 @@ export default function App() {
       }
     };
 
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange
+    );
 
     return () => {
       subscription?.remove();
@@ -63,7 +70,9 @@ export default function App() {
 
   const checkOnboardingStatus = async () => {
     try {
-      const onboardingCompleted = await AsyncStorage.getItem('onboarding_completed');
+      const onboardingCompleted = await AsyncStorage.getItem(
+        'onboarding_completed'
+      );
       setIsOnboardingComplete(onboardingCompleted === 'true');
     } catch (error) {
       console.log('Error checking onboarding status:', error);
@@ -86,7 +95,10 @@ export default function App() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Provider store={store}>
           <SafeAreaProvider>
-            <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} hidden={false} />
+            <StatusBar
+              style={scheme === 'dark' ? 'light' : 'dark'}
+              hidden={false}
+            />
             <OnboardingScreen onComplete={handleOnboardingComplete} />
           </SafeAreaProvider>
         </Provider>
@@ -98,8 +110,13 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
         <SafeAreaProvider>
-          <NavigationContainer theme={scheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} hidden={false} />
+          <NavigationContainer
+            theme={scheme === 'dark' ? DarkTheme : DefaultTheme}
+          >
+            <StatusBar
+              style={scheme === 'dark' ? 'light' : 'dark'}
+              hidden={false}
+            />
             <MainNavigator />
           </NavigationContainer>
         </SafeAreaProvider>

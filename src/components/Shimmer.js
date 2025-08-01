@@ -16,12 +16,18 @@ export default function Shimmer({ height = 24, width = '100%', style }) {
           toValue: -100,
           duration: 0,
           useNativeDriver: true,
-        })
+        }),
       ])
     ).start();
   }, []);
   return (
-    <View style={[tw`bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden`, { height, width }, style]}>
+    <View
+      style={[
+        tw`bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden`,
+        { height, width },
+        style,
+      ]}
+    >
       <Animated.View
         style={{
           position: 'absolute',

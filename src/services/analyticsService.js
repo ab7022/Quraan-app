@@ -55,7 +55,6 @@ class AnalyticsService {
 
       // Here you could send to your analytics backend
       // await this.sendToBackend(eventData);
-      
     } catch (error) {
       console.error('Error tracking event:', error);
     }

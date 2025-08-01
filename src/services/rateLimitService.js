@@ -31,7 +31,7 @@ class RateLimitService {
     try {
       const storedData = await AsyncStorage.getItem(config.storageKey);
       const now = Date.now();
-      
+
       let requestData = {
         requests: [],
         windowStart: now,
@@ -51,7 +51,7 @@ class RateLimitService {
       if (requestData.requests.length >= config.maxRequests) {
         const oldestRequest = Math.min(...requestData.requests);
         const resetTime = oldestRequest + config.windowMs;
-        
+
         return {
           allowed: false,
           resetTime,
@@ -86,7 +86,7 @@ class RateLimitService {
     try {
       const storedData = await AsyncStorage.getItem(config.storageKey);
       const now = Date.now();
-      
+
       let requestData = {
         requests: [],
         windowStart: now,
@@ -106,7 +106,10 @@ class RateLimitService {
       requestData.requests.push(now);
 
       // Save updated data
-      await AsyncStorage.setItem(config.storageKey, JSON.stringify(requestData));
+      await AsyncStorage.setItem(
+        config.storageKey,
+        JSON.stringify(requestData)
+      );
     } catch (error) {
       console.error('Error recording request:', error);
     }
@@ -133,12 +136,12 @@ class RateLimitService {
    */
   async getRateLimitStatus() {
     const status = {};
-    
+
     for (const endpoint of Object.keys(RATE_LIMIT_CONFIG)) {
       const result = await this.checkRateLimit(endpoint);
       status[endpoint] = result;
     }
-    
+
     return status;
   }
 
@@ -150,17 +153,17 @@ class RateLimitService {
   getTimeUntilReset(resetTime) {
     const now = Date.now();
     const diff = resetTime - now;
-    
+
     if (diff <= 0) return 'Now';
-    
+
     const minutes = Math.ceil(diff / (60 * 1000));
     const hours = Math.floor(minutes / 60);
-    
+
     if (hours > 0) {
       const remainingMinutes = minutes % 60;
       return `${hours}h ${remainingMinutes}m`;
     }
-    
+
     return `${minutes}m`;
   }
 }

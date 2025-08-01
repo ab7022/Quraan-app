@@ -22,7 +22,7 @@ const RateLimitStatus = ({ visible = false }) => {
     }
   };
 
-  const resetRateLimit = async (endpoint) => {
+  const resetRateLimit = async endpoint => {
     try {
       await rateLimitService.resetRateLimit(endpoint);
       Alert.alert('Success', `Rate limit reset for ${endpoint}`);
@@ -45,18 +45,20 @@ const RateLimitStatus = ({ visible = false }) => {
   }
 
   return (
-    <View style={tw`absolute top-12 right-4 bg-white border border-gray-300 rounded-lg p-3 shadow-lg z-50 w-64`}>
+    <View
+      style={tw`absolute top-12 right-4 bg-white border border-gray-300 rounded-lg p-3 shadow-lg z-50 w-64`}
+    >
       <View style={tw`flex-row justify-between items-center mb-2`}>
         <Text style={tw`font-bold text-sm`}>Rate Limit Status</Text>
         <TouchableOpacity onPress={() => setIsVisible(false)}>
           <Text style={tw`text-gray-500 font-bold`}>×</Text>
         </TouchableOpacity>
       </View>
-      
+
       {Object.entries(status).map(([endpoint, data]) => (
         <View key={endpoint} style={tw`mb-3 p-2 bg-gray-50 rounded`}>
           <Text style={tw`font-semibold text-xs mb-1`}>{endpoint}</Text>
-          
+
           {data.allowed ? (
             <View>
               <Text style={tw`text-green-600 text-xs`}>✓ Allowed</Text>
@@ -72,7 +74,7 @@ const RateLimitStatus = ({ visible = false }) => {
               </Text>
             </View>
           )}
-          
+
           <TouchableOpacity
             style={tw`mt-1 bg-red-100 px-2 py-1 rounded`}
             onPress={() => resetRateLimit(endpoint)}
@@ -81,7 +83,7 @@ const RateLimitStatus = ({ visible = false }) => {
           </TouchableOpacity>
         </View>
       ))}
-      
+
       <TouchableOpacity
         style={tw`bg-blue-500 px-3 py-1 rounded mt-2`}
         onPress={loadStatus}

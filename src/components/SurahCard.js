@@ -15,10 +15,22 @@ export default function SurahCard({ surah, onPress, isSuggested = false }) {
       activeOpacity={0.8}
     >
       <View style={tw`flex-row items-center`}>
-        <Ionicons name="book" size={18} color={isSuggested ? '#4F8A10' : '#6b7280'} style={tw`mr-2`} />
+        <Ionicons
+          name="book"
+          size={18}
+          color={isSuggested ? '#4F8A10' : '#6b7280'}
+          style={tw`mr-2`}
+        />
         <View>
-          <Text style={tw`text-base font-semibold text-black dark:text-white`}>{surah.englishName} <Text style={tw`text-xs text-gray-500 dark:text-gray-400`}>({surah.name})</Text></Text>
-          <Text style={tw`text-xs text-gray-500 dark:text-gray-400`}>{surah.englishNameTranslation} • {surah.numberOfAyahs} Ayah</Text>
+          <Text style={tw`text-base font-semibold text-black dark:text-white`}>
+            {surah.englishName}{' '}
+            <Text style={tw`text-xs text-gray-500 dark:text-gray-400`}>
+              ({surah.name})
+            </Text>
+          </Text>
+          <Text style={tw`text-xs text-gray-500 dark:text-gray-400`}>
+            {surah.englishNameTranslation} • {surah.numberOfAyahs} Ayah
+          </Text>
         </View>
       </View>
       {isSuggested && (

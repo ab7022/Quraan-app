@@ -18,9 +18,7 @@
     },
     "newArchEnabled": true,
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
@@ -47,8 +45,6 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "plugins": [
-      "expo-tracking-transparency"
-    ]
+    "plugins": ["expo-tracking-transparency"]
   }
 }

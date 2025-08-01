@@ -37,21 +37,25 @@ export const promptForExplanationLanguage = () => {
         onPress: async () => {
           try {
             // Save the selected language
-            const savedSettings = await AsyncStorage.getItem('quran_app_settings');
+            const savedSettings =
+              await AsyncStorage.getItem('quran_app_settings');
             const settings = savedSettings ? JSON.parse(savedSettings) : {};
             const updatedSettings = { ...settings, explanationLanguage: lang };
-            await AsyncStorage.setItem('quran_app_settings', JSON.stringify(updatedSettings));
+            await AsyncStorage.setItem(
+              'quran_app_settings',
+              JSON.stringify(updatedSettings)
+            );
             resolve(lang);
           } catch (error) {
             reject(error);
           }
-        }
+        },
       }));
 
-      buttons.push({ 
-        text: 'Cancel', 
+      buttons.push({
+        text: 'Cancel',
         style: 'cancel',
-        onPress: () => resolve(null)
+        onPress: () => resolve(null),
       });
 
       Alert.alert(

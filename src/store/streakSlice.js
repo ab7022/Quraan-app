@@ -1,6 +1,6 @@
-import { createSlice } from "@reduxjs/toolkit";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { differenceInDays, isToday, parseISO } from "date-fns";
+import { createSlice } from '@reduxjs/toolkit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { differenceInDays, isToday, parseISO } from 'date-fns';
 
 const initialState = {
   streak: 0,
@@ -12,7 +12,7 @@ const initialState = {
 };
 
 const streakSlice = createSlice({
-  name: "streak",
+  name: 'streak',
   initialState,
   reducers: {
     setStreak: (state, action) => {
@@ -47,10 +47,10 @@ const streakSlice = createSlice({
         state.lastReadPage = action.payload.lastReadPage;
       }
     },
-    resetStreak: (state) => {
+    resetStreak: state => {
       state.streak = 1;
       state.lastRead = new Date().toISOString();
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toISOString().split('T')[0];
       state.readingHistory = { ...state.readingHistory, [today]: true };
     },
     setLastReadPage: (state, action) => {
@@ -62,11 +62,11 @@ const streakSlice = createSlice({
 export const { setStreak, incrementStreak, resetStreak, setLastReadPage } =
   streakSlice.actions;
 
-export const loadStreak = () => async (dispatch) => {
+export const loadStreak = () => async dispatch => {
   try {
-    const data = await AsyncStorage.getItem("quran_streak");
-    const historyData = await AsyncStorage.getItem("quran_reading_history");
-    const lastPageData = await AsyncStorage.getItem("quran_last_page");
+    const data = await AsyncStorage.getItem('quran_streak');
+    const historyData = await AsyncStorage.getItem('quran_reading_history');
+    const lastPageData = await AsyncStorage.getItem('quran_last_page');
 
     let readingHistory = {};
     let totalDaysRead = 0;
@@ -75,19 +75,19 @@ export const loadStreak = () => async (dispatch) => {
 
     // Load last read page
     if (lastPageData) {
-      console.log("Loaded last read page:", lastPageData);
+      console.log('Loaded last read page:', lastPageData);
       lastReadPage = JSON.parse(lastPageData);
     }
 
     if (historyData) {
-      console.log("Loaded reading history:", historyData);
-      console.log("data", data);
+      console.log('Loaded reading history:', historyData);
+      console.log('data', data);
       readingHistory = JSON.parse(historyData);
       totalDaysRead = Object.values(readingHistory).filter(Boolean).length;
 
       // Calculate longest streak from history
       const sortedDates = Object.keys(readingHistory)
-        .filter((date) => readingHistory[date])
+        .filter(date => readingHistory[date])
         .sort();
 
       let currentStreak = 0;
@@ -113,10 +113,10 @@ export const loadStreak = () => async (dispatch) => {
 
     const todayStr =
       now.getFullYear() +
-      "-" +
-      String(now.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(now.getDate()).padStart(2, "0");
+      '-' +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(now.getDate()).padStart(2, '0');
 
     let updatedHistory = { ...readingHistory };
     let currentStreak = 0;
@@ -135,7 +135,7 @@ export const loadStreak = () => async (dispatch) => {
 
         // Recalculate current streak from reading history
         const sortedDates = Object.keys(updatedHistory)
-          .filter((date) => updatedHistory[date])
+          .filter(date => updatedHistory[date])
           .sort()
           .reverse(); // Start from most recent
 
@@ -143,7 +143,7 @@ export const loadStreak = () => async (dispatch) => {
         const today = new Date();
 
         for (let i = 0; i < sortedDates.length; i++) {
-          const checkDate = new Date(sortedDates[i] + "T00:00:00");
+          const checkDate = new Date(sortedDates[i] + 'T00:00:00');
           const daysDiff = Math.floor(
             (today - checkDate) / (1000 * 60 * 60 * 24)
           );
@@ -163,9 +163,9 @@ export const loadStreak = () => async (dispatch) => {
         // Force update if the recalculated streak is different
         if (currentStreak !== streak) {
           console.log(
-            "📊 Streak mismatch! Stored:",
+            '📊 Streak mismatch! Stored:',
             streak,
-            "Calculated:",
+            'Calculated:',
             currentStreak
           );
           shouldUpdate = true;
@@ -175,7 +175,7 @@ export const loadStreak = () => async (dispatch) => {
 
         // Calculate how many consecutive days we have
         const sortedDates = Object.keys(updatedHistory)
-          .filter((date) => updatedHistory[date])
+          .filter(date => updatedHistory[date])
           .sort();
 
         let consecutiveDays = 0;
@@ -188,14 +188,14 @@ export const loadStreak = () => async (dispatch) => {
           checkDate.setDate(today.getDate() - i);
           const checkDateStr =
             checkDate.getFullYear() +
-            "-" +
-            String(checkDate.getMonth() + 1).padStart(2, "0") +
-            "-" +
-            String(checkDate.getDate()).padStart(2, "0");
+            '-' +
+            String(checkDate.getMonth() + 1).padStart(2, '0') +
+            '-' +
+            String(checkDate.getDate()).padStart(2, '0');
 
           console.log(
             `Day ${i}: Checking ${checkDateStr} = ${
-              updatedHistory[checkDateStr] ? "READ" : "NOT READ"
+              updatedHistory[checkDateStr] ? 'READ' : 'NOT READ'
             }`
           );
 
@@ -209,7 +209,7 @@ export const loadStreak = () => async (dispatch) => {
           }
         }
 
-        console.log("📈 Found consecutive days:", consecutiveDays);
+        console.log('📈 Found consecutive days:', consecutiveDays);
         currentStreak = consecutiveDays;
         shouldUpdate = true;
       } else {
@@ -220,45 +220,45 @@ export const loadStreak = () => async (dispatch) => {
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr =
           yesterday.getFullYear() +
-          "-" +
-          String(yesterday.getMonth() + 1).padStart(2, "0") +
-          "-" +
-          String(yesterday.getDate()).padStart(2, "0");
+          '-' +
+          String(yesterday.getMonth() + 1).padStart(2, '0') +
+          '-' +
+          String(yesterday.getDate()).padStart(2, '0');
 
         console.log(
-          "Days difference:",
+          'Days difference:',
           days,
-          "Last date:",
+          'Last date:',
           lastRead,
-          "Today:",
+          'Today:',
           now.toString()
         );
-        console.log("Yesterday should be (local):", yesterdayStr);
+        console.log('Yesterday should be (local):', yesterdayStr);
         console.log(
-          "Yesterday should be (UTC):",
-          lastDate.toISOString().split("T")[0]
+          'Yesterday should be (UTC):',
+          lastDate.toISOString().split('T')[0]
         );
-        console.log("Today should be (local):", todayStr);
+        console.log('Today should be (local):', todayStr);
 
         if (days === 1) {
           // Yesterday was last visit - increment streak
-          console.log("🎯 Consecutive day detected! Yesterday:", yesterdayStr);
+          console.log('🎯 Consecutive day detected! Yesterday:', yesterdayStr);
           updatedHistory[yesterdayStr] = true; // Ensure yesterday is marked with local date
           currentStreak = streak + 1;
-          console.log("📈 Incrementing streak:", streak, "→", currentStreak);
+          console.log('📈 Incrementing streak:', streak, '→', currentStreak);
           shouldUpdate = true;
         } else if (days > 1) {
           // Streak broken - start new streak
-          console.log("💔 Streak broken, gap of", days, "days");
+          console.log('💔 Streak broken, gap of', days, 'days');
           currentStreak = 1;
           shouldUpdate = true;
         } else {
           // This shouldn't happen, but keep current streak as fallback
-          console.log("⚠️ Unexpected case: days =", days);
+          console.log('⚠️ Unexpected case: days =', days);
           currentStreak = streak;
         }
         updatedHistory[todayStr] = true; // ALWAYS mark today as read (local date)
-        console.log("✅ Marking today as read:", todayStr);
+        console.log('✅ Marking today as read:', todayStr);
         shouldUpdate = true; // ALWAYS update when opening on new day
       }
     } else {
@@ -275,34 +275,34 @@ export const loadStreak = () => async (dispatch) => {
 
     // Save updated data - always save when shouldUpdate is true
     if (shouldUpdate || !data) {
-      console.log("💾 [SAVE] Updating storage...");
-      console.log("Final streak to save:", currentStreak);
-      console.log("Final history to save:", updatedHistory);
-      console.log("Should update?", shouldUpdate, "Has data?", !!data);
-      console.log("-------------------------------------------------")
+      console.log('💾 [SAVE] Updating storage...');
+      console.log('Final streak to save:', currentStreak);
+      console.log('Final history to save:', updatedHistory);
+      console.log('Should update?', shouldUpdate, 'Has data?', !!data);
+      console.log('-------------------------------------------------');
       await AsyncStorage.setItem(
-        "quran_streak",
+        'quran_streak',
         JSON.stringify({ streak: currentStreak, lastRead: now.toISOString() })
       );
       await AsyncStorage.setItem(
-        "quran_reading_history",
+        'quran_reading_history',
         JSON.stringify(updatedHistory)
       );
       console.log(
-        "Saved streak:",
+        'Saved streak:',
         currentStreak,
-        "Last read:",
+        'Last read:',
         now.toISOString()
       );
       console.log(
-        "Saved history:",
-        Object.keys(updatedHistory).filter((k) => updatedHistory[k])
+        'Saved history:',
+        Object.keys(updatedHistory).filter(k => updatedHistory[k])
       );
     } else {
       console.log(
-        "❌ [SAVE] Skipping save - shouldUpdate:",
+        '❌ [SAVE] Skipping save - shouldUpdate:',
         shouldUpdate,
-        "data exists:",
+        'data exists:',
         !!data
       );
     }
@@ -313,8 +313,8 @@ export const loadStreak = () => async (dispatch) => {
         lastRead: shouldUpdate
           ? now.toISOString()
           : data
-          ? JSON.parse(data).lastRead
-          : now.toISOString(),
+            ? JSON.parse(data).lastRead
+            : now.toISOString(),
         readingHistory: updatedHistory,
         totalDaysRead: newTotalDaysRead,
         longestStreak: newLongestStreak,
@@ -336,18 +336,18 @@ export const updateStreak = () => async (dispatch, getState) => {
     // Use local timezone for today's date
     const todayStr =
       now.getFullYear() +
-      "-" +
-      String(now.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(now.getDate()).padStart(2, "0");
+      '-' +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(now.getDate()).padStart(2, '0');
 
-    console.log("Updating streak for today (local):", todayStr);
+    console.log('Updating streak for today (local):', todayStr);
     // Just mark today as read and save
     const updatedHistory = { ...readingHistory, [todayStr]: true };
     const totalDaysRead = Object.values(updatedHistory).filter(Boolean).length;
 
     await AsyncStorage.setItem(
-      "quran_reading_history",
+      'quran_reading_history',
       JSON.stringify(updatedHistory)
     );
 
@@ -365,7 +365,7 @@ export const updateStreak = () => async (dispatch, getState) => {
 };
 
 // Get streak data for the last 7 days (including today)
-export const getLast7DaysStreak = (readingHistory) => {
+export const getLast7DaysStreak = readingHistory => {
   const last7Days = [];
   const today = new Date();
 
@@ -376,12 +376,12 @@ export const getLast7DaysStreak = (readingHistory) => {
     // Use local timezone for date string
     const dateStr =
       date.getFullYear() +
-      "-" +
-      String(date.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(date.getDate()).padStart(2, "0");
+      '-' +
+      String(date.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(date.getDate()).padStart(2, '0');
 
-    const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
     const dayNumber = date.getDate();
     const hasRead = Boolean(readingHistory && readingHistory[dateStr]);
     const isToday = i === 0;
@@ -399,7 +399,7 @@ export const getLast7DaysStreak = (readingHistory) => {
 };
 
 // Get streak data for the last 30 days
-export const getLast30DaysStreak = (readingHistory) => {
+export const getLast30DaysStreak = readingHistory => {
   const last30Days = [];
   const today = new Date();
 
@@ -410,12 +410,12 @@ export const getLast30DaysStreak = (readingHistory) => {
     // Use local timezone for date string
     const dateStr =
       date.getFullYear() +
-      "-" +
-      String(date.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(date.getDate()).padStart(2, "0");
+      '-' +
+      String(date.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(date.getDate()).padStart(2, '0');
 
-    const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
     const dayNumber = date.getDate();
     const hasRead = Boolean(readingHistory && readingHistory[dateStr]);
 
@@ -432,12 +432,12 @@ export const getLast30DaysStreak = (readingHistory) => {
 };
 
 // Save the last read page
-export const saveLastReadPage = (pageInfo) => async (dispatch) => {
+export const saveLastReadPage = pageInfo => async dispatch => {
   try {
-    await AsyncStorage.setItem("quran_last_page", JSON.stringify(pageInfo));
+    await AsyncStorage.setItem('quran_last_page', JSON.stringify(pageInfo));
     dispatch(setLastReadPage(pageInfo));
   } catch (error) {
-    console.log("Error saving last read page:", error);
+    console.log('Error saving last read page:', error);
   }
 };
 
