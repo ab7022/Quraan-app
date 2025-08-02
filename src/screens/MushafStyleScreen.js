@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import tw from 'twrnc';
 import { getMushafStyle, saveMushafStyle, getMushafImageUrl } from '../services/mushafService';
 import analytics from '../services/analyticsService';
+import { IOSLoader, IOSInlineLoader } from '../components/IOSLoader';
 
 const { width } = Dimensions.get('window');
 
@@ -206,10 +207,11 @@ export default function MushafStyleScreen() {
     return (
       <SafeAreaView style={tw`flex-1 bg-gray-100`}>
         <StatusBar backgroundColor="#f3f4f6" barStyle="dark-content" />
-        <View style={tw`flex-1 items-center justify-center`}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={tw`text-gray-600 mt-4 text-base`}>Loading Mushaf Styles...</Text>
-        </View>
+        <IOSLoader 
+          title="Loading Styles"
+          subtitle="Please wait while we load Mushaf styles"
+          overlay={false}
+        />
       </SafeAreaView>
     );
   }

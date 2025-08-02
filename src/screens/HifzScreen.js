@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { IOSLoader } from '../components/IOSLoader';
 
 const DAILY_TARGET_STORAGE_KEY = 'daily_target_data';
 
@@ -425,12 +426,11 @@ export default function HifzScreen({ navigation }) {
     return (
       <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
         <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
-        <View style={tw`flex-1 justify-center items-center`}>
-          <View style={tw`w-16 h-16 rounded-full bg-blue-100 items-center justify-center mb-4`}>
-            <Ionicons name="book" size={24} color="#007AFF" />
-          </View>
-          <Text style={tw`text-lg font-medium text-black`}>Loading your journey...</Text>
-        </View>
+        <IOSLoader 
+          title="Loading Journey"
+          subtitle="Please wait while we load your Hifz progress"
+          overlay={false}
+        />
       </SafeAreaView>
     );
   }

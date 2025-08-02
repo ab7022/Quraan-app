@@ -120,6 +120,7 @@ function QuranNavigator() {
         <Stack.Screen name="SurahDetail" component={SurahDetailScreen} />
         <Stack.Screen name="JuzDetail" component={JuzDetailScreen} />
         <Stack.Screen name="QuranPage" component={QuranPageScreen} />
+        <Stack.Screen name="MushafStyle" component={MushafStyleScreen} />
       </Stack.Navigator>
     </SafeAreaView>
   );
@@ -143,6 +144,9 @@ function getTabBarDisplay(route) {
   if (routeName === 'LearnQuran') {
     return 'none';
   }
+    if (routeName === 'AskDoubtMain') {
+      return 'none';
+    }
 
   return 'flex'; // Show tab bar on all other screens
 }

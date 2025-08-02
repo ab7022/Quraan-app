@@ -23,6 +23,7 @@ import RateLimitStatus from '../components/RateLimitStatus';
 import analytics from '../services/analyticsService';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { IOSLoader, IOSInlineLoader } from '../components/IOSLoader';
 
 // Maximum number of chat messages to keep in history
 const MAX_CHAT_MESSAGES = 20;
@@ -67,33 +68,12 @@ export default function AskDoubtScreen() {
   const [screenHeight, setScreenHeight] = useState(Dimensions.get('window').height);
   const flatListRef = useRef(null);
 
-  // Hide/show tab bar based on chat state
+  // Hide tab bar completely on this screen
   useEffect(() => {
     const parent = navigation.getParent();
     if (parent) {
       parent.setOptions({
-        tabBarStyle: {
-          display: (showChat || chatMessages.length > 1) ? 'none' : 'flex',
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: 'rgba(248, 248, 248, 0.94)',
-          borderTopWidth: 0.5,
-          borderTopColor: 'rgba(60, 60, 67, 0.12)',
-          height: 83,
-          paddingBottom: 20,
-          paddingTop: 8,
-          paddingHorizontal: 0,
-          shadowColor: 'rgba(0, 0, 0, 0.3)',
-          shadowOffset: {
-            width: 0,
-            height: -0.5,
-          },
-          shadowOpacity: 0.1,
-          shadowRadius: 0,
-          elevation: 0,
-        },
+        tabBarStyle: { display: 'none' }
       });
     }
 
@@ -127,7 +107,7 @@ export default function AskDoubtScreen() {
         });
       }
     };
-  }, [showChat, chatMessages.length, navigation]);
+  }, [navigation]);
 
   // Keyboard listeners for dynamic positioning
   useEffect(() => {
@@ -634,12 +614,11 @@ export default function AskDoubtScreen() {
             ]}
           >
             {isLoading ? (
-              <View style={tw`flex-1 items-center justify-center`}>
-                <View style={tw`w-12 h-12 items-center justify-center mb-3`}>
-                  <Ionicons name="hourglass-outline" size={32} color="#8E8E93" />
-                </View>
-                <Text style={tw`text-gray-600 text-base`}>Loading messages...</Text>
-              </View>
+              <IOSLoader 
+                title="Loading Messages"
+                subtitle="Please wait while we load your chat history"
+                overlay={false}
+              />
             ) : (
               <FlatList
                 ref={flatListRef}

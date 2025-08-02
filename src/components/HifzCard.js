@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import tw from 'twrnc';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSelector } from 'react-redux';
+import { IOSInlineLoader } from './IOSLoader';
 
 const DAILY_TARGET_STORAGE_KEY = 'daily_target_data';
 
@@ -124,14 +125,8 @@ export default function HifzCard({ navigation }) {
 
   if (loading) {
     return (
-      <View style={tw`bg-white rounded-2xl p-4 mb-4 border border-blue-200`}>
-        <View style={tw`flex-row items-center`}>
-          <View style={tw`w-12 h-12 bg-gray-200 rounded-full mr-3`} />
-          <View style={tw`flex-1`}>
-            <View style={tw`h-4 bg-gray-200 rounded mb-2`} />
-            <View style={tw`h-3 bg-gray-200 rounded w-3/4`} />
-          </View>
-        </View>
+      <View style={tw`bg-white rounded-2xl p-6 border border-gray-200 shadow-sm`}>
+        <IOSInlineLoader text="Loading Hifz progress..." />
       </View>
     );
   }

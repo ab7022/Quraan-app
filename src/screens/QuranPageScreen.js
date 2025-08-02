@@ -7,23 +7,21 @@ import {
   StatusBar,
   Image,
   ActivityIndicator,
-  SafeAreaView,
-  Animated,
-  Easing,
-  InteractionManager,
   Modal,
   ScrollView,
   Alert,
+  Switch,
+  Animated,
 } from 'react-native';
-import * as Animatable from 'react-native-animatable';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import tw from 'twrnc';
 import PageNavigationModal from '../components/PageNavigationModal';
+import { IOSLoader, IOSProgressLoader, IOSErrorView } from '../components/IOSLoader';
 import { useDispatch } from 'react-redux';
 import { updateStreak, saveLastReadPage } from '../store/streakSlice';
-import { LinearGradient } from 'expo-linear-gradient';
 import Markdown from 'react-native-markdown-display';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '../services/analyticsService';
@@ -40,6 +38,7 @@ export default function QuranPageScreen({ route }) {
   );
 
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const { initialPage } = route?.params || {};
   const [currentPage, setCurrentPage] = useState(initialPage || 1);
   const [loading, setLoading] = useState(true);
@@ -57,50 +56,32 @@ export default function QuranPageScreen({ route }) {
   const [isTransitioning, setIsTransitioning] = useState(false); // Prevent multiple transitions
   const [mushafStyle, setMushafStyle] = useState(9); // Default to style 9
 
-  // Animation refs
+  // Animation references
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   // Swipe gesture handling
   const onGestureEvent = event => {
     const { translationX, velocityX } = event.nativeEvent;
+    const minSwipeDistance = width * 0.2;
+    const minVelocity = 300;
 
-    // More sensitive swipe detection
-    const minSwipeDistance = width * 0.2; // Reduced to 20% for easier swiping
-    const minVelocity = 300; // Reduced threshold for faster response
-
-    if (
-      Math.abs(translationX) > minSwipeDistance ||
-      Math.abs(velocityX) > minVelocity
-    ) {
+    if (Math.abs(translationX) > minSwipeDistance || Math.abs(velocityX) > minVelocity) {
       if (translationX > 0 && velocityX >= 0) {
-        // Swipe right - go to next page
-        console.log('[QURAN SCREEN] Swipe right detected - going to next page');
-
-        // Track swipe navigation
         analytics.trackUserAction('page_navigation', {
           direction: 'next',
           from_page: currentPage,
           to_page: currentPage + 1,
           method: 'swipe_right',
         });
-
         nextPage();
       } else if (translationX < 0 && velocityX <= 0) {
-        // Swipe left - go to previous page
-        console.log(
-          '[QURAN SCREEN] Swipe left detected - going to previous page'
-        );
-
-        // Track swipe navigation
         analytics.trackUserAction('page_navigation', {
           direction: 'previous',
           from_page: currentPage,
           to_page: currentPage - 1,
           method: 'swipe_left',
         });
-
         prevPage();
       }
     }
@@ -111,8 +92,6 @@ export default function QuranPageScreen({ route }) {
       onGestureEvent(event);
     }
   };
-
-  const dispatch = useDispatch();
 
   // Language options - Most spoken languages in the world
   const languageOptions = [
@@ -376,130 +355,39 @@ export default function QuranPageScreen({ route }) {
   };
 
   const goToPage = page => {
-    console.log('[QURAN SCREEN] goToPage called with page:', page);
-    console.log('[QURAN SCREEN] Current state - currentPage:', currentPage, 'isTransitioning:', isTransitioning);
-    
     if (page >= 1 && page <= totalPages && !isTransitioning) {
       console.log('[QURAN SCREEN] Navigating to page:', page);
-
-      // Determine animation direction
-      const isNext = page > currentPage;
-      animatePageTransition(page, isNext);
-    } else {
-      console.log(
-        '[QURAN SCREEN] Invalid page number or transition in progress:',
-        'page:', page,
-        'totalPages:', totalPages,
-        'isTransitioning:', isTransitioning
-      );
+      setIsTransitioning(true);
+      setCurrentPage(page);
+      setTimeout(() => setIsTransitioning(false), 300);
     }
-  };
-
-  const animatePageTransition = (newPage, isNext) => {
-    console.log('[QURAN SCREEN] Starting page transition from', currentPage, 'to', newPage);
-    setIsTransitioning(true);
-    
-    // Safety timeout to reset isTransitioning in case animation fails
-    const safetyTimeout = setTimeout(() => {
-      console.log('[QURAN SCREEN] Safety timeout - resetting isTransitioning');
-      setIsTransitioning(false);
-    }, 2000);
-    
-    // Simplified version - just change the page immediately for testing
-    console.log('[QURAN SCREEN] About to set currentPage to:', newPage);
-    setCurrentPage(newPage);
-    console.log('[QURAN SCREEN] currentPage set, clearing timeout');
-    clearTimeout(safetyTimeout);
-    setIsTransitioning(false);
-    
-    // TODO: Re-enable animations once basic navigation works
-    /*
-    InteractionManager.runAfterInteractions(() => {
-      const slideDirection = isNext ? -width : width;
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 80, // much faster fade out
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }).start(() => {
-        console.log('[QURAN SCREEN] Setting currentPage to:', newPage);
-        setCurrentPage(newPage);
-        slideAnim.setValue(slideDirection * 0.3);
-        fadeAnim.setValue(0);
-        Animated.parallel([
-          Animated.spring(slideAnim, {
-            toValue: 0,
-            tension: 120, // snappier
-            friction: 18, // snappier
-            useNativeDriver: true,
-          }),
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 120, // much faster fade in
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-        ]).start(() => {
-          console.log('[QURAN SCREEN] Page transition completed');
-          clearTimeout(safetyTimeout);
-          setIsTransitioning(false);
-        });
-      });
-    });
-    */
   };
 
   const nextPage = () => {
-    console.log('[QURAN SCREEN] nextPage() called, isTransitioning:', isTransitioning);
-    if (isTransitioning) {
-      console.log('[QURAN SCREEN] Blocking nextPage - transition in progress');
-      return; // Prevent multiple animations
-    }
-    console.log(
-      '[QURAN SCREEN] Next page function executing, current page:',
-      currentPage
-    );
-
-    // Track navigation
+    if (isTransitioning) return;
     analytics.trackUserAction('page_navigation', {
       direction: 'next',
       from_page: currentPage,
       to_page: currentPage + 1,
       method: 'button',
     });
-
     goToPage(currentPage + 1);
   };
 
   const prevPage = () => {
-    console.log('[QURAN SCREEN] prevPage() called, isTransitioning:', isTransitioning);
-    if (isTransitioning) {
-      console.log('[QURAN SCREEN] Blocking prevPage - transition in progress');
-      return; // Prevent multiple animations
-    }
-    console.log(
-      '[QURAN SCREEN] Previous page function executing, current page:',
-      currentPage
-    );
-
-    // Track navigation
+    if (isTransitioning) return;
     analytics.trackUserAction('page_navigation', {
       direction: 'previous',
       from_page: currentPage,
       to_page: currentPage - 1,
       method: 'button',
     });
-
     goToPage(currentPage - 1);
   };
 
   const handleImageLoad = () => {
-    console.log(
-      '[QURAN SCREEN] Image loaded successfully for page:',
-      currentPage
-    );
+    console.log('[QURAN SCREEN] Image loaded successfully for page:', currentPage);
     setLoading(false);
-    // Mark page as preloaded for future instant navigation
     setPreloadedPages(prev => new Set([...prev, currentPage]));
   };
 
@@ -509,22 +397,17 @@ export default function QuranPageScreen({ route }) {
     setImageError(true);
   };
 
-  const handleModalOpen = () => {
-    console.log('[QURAN SCREEN] Navigation modal opened');
-    setShowNavModal(true);
-  };
-
-  const handleModalClose = () => {
-    console.log('[QURAN SCREEN] Navigation modal closed');
-    setShowNavModal(false);
-  };
-
   const handleBackPress = () => {
     console.log('[QURAN SCREEN] Back button pressed, navigating to Juz List');
     navigation.navigate('Quran', {
       screen: 'QuranTabs',
       params: { screen: 'JuzList' },
     });
+  };
+
+  const handleModalClose = () => {
+    console.log('[QURAN SCREEN] Navigation modal closed');
+    setShowNavModal(false);
   };
 
   // AI Tafseer functions
@@ -714,486 +597,227 @@ export default function QuranPageScreen({ route }) {
   };
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-amber-50 dark:bg-gray-900`}>
-      <StatusBar backgroundColor="#FFFBEB" barStyle="dark-content" />
+    <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['left', 'right', 'bottom']}>
+      <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
 
-      {/* Header */}
-      <View
-        style={tw`px-4 py-3 bg-amber-50 dark:bg-gray-900 border-b border-amber-200 dark:border-gray-700`}
-      >
-        <View style={tw`flex-row items-center justify-between`}>
-          {/* Back Button with Text */}
+      {/* iOS-Style Navigation Header */}
+      <View style={tw`bg-gray-100 border-b border-gray-200`}>
+        <View style={tw`flex-row items-center justify-between px-4 py-3`}>
           <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('Quran', {
-                screen: 'QuranTabs',
-                params: { screen: 'JuzList' },
-              })
-            }
-            style={tw`flex-row items-center py-2`}
-            accessibilityLabel="Go Back to Juz List"
+            onPress={handleBackPress}
+            style={tw`flex-row items-center py-1`}
+            activeOpacity={0.3}
           >
-            <Ionicons name="arrow-back" size={24} color="#92400e" />
-            <Text
-              style={tw`text-lg font-semibold text-amber-900 dark:text-amber-100 ml-2`}
-            >
-              Back
-            </Text>
+            <Ionicons name="chevron-back" size={24} color="#007AFF" />
+            <Text style={tw`text-lg text-blue-500 ml-1 font-normal`}>Back</Text>
           </TouchableOpacity>
 
-          {/* Page Title and Navigation */}
           <TouchableOpacity
-            onPress={handleModalOpen}
-            style={tw`flex-row items-center`}
+            onPress={() => setShowNavModal(true)}
+            style={tw`px-3 py-1`}
+            activeOpacity={0.3}
           >
-            <Text
-              style={tw`text-lg font-bold text-amber-900 dark:text-amber-100`}
-            >
+            <Text style={tw`text-lg font-semibold text-black`}>
               Page {currentPage}
             </Text>
             <Ionicons
               name="chevron-down"
-              size={20}
-              color="#92400e"
-              style={tw`ml-1`}
+              size={16}
+              color="#8E8E93"
+              style={tw`absolute -right-2 top-3`}
             />
           </TouchableOpacity>
 
-          {/* Mushaf Style Settings */}
           <TouchableOpacity
             onPress={() => navigation.navigate('MushafStyle')}
-            style={[
-              tw`flex-row items-center px-3 py-2 rounded-2xl`,
-              { backgroundColor: '#f0f9ff' }
-            ]}
+            style={tw`p-1`}
+            activeOpacity={0.3}
           >
-            <Ionicons name="options" size={18} color="#0284c7" />
-            <Text style={[
-              tw`text-blue-600 font-medium ml-2`,
-              { fontSize: 13 }
-            ]}>
-              Mushaf Style
-            </Text>
+            <Ionicons name="book-outline" size={24} color="#007AFF" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Mushaf Page Image with Page Turn Animation and Swipe Gestures */}
-      <PanGestureHandler
-        onHandlerStateChange={onHandlerStateChange}
-        minDist={30}
-      >
-        <Animated.View
-          style={[
-            tw`flex-1 justify-center items-center`,
-            {
-              transform: [{ translateX: slideAnim }],
-              opacity: fadeAnim,
-            },
-          ]}
+      {/* Mushaf Page Display */}
+      <View style={tw`flex-1 bg-white`}>
+        <PanGestureHandler
+          onHandlerStateChange={onHandlerStateChange}
+          minDist={30}
         >
-          {loading && !isTransitioning && (
-            <View
-              style={tw`absolute z-10 bg-white dark:bg-gray-800 rounded-lg p-4`}
-            >
-              <ActivityIndicator size="large" color="#92400e" />
-              <Text
-                style={tw`text-amber-800 dark:text-amber-200 mt-2 text-center`}
-              >
-                Loading page...
-              </Text>
-            </View>
-          )}
-
-          {imageError ? (
-            <View
-              style={tw`bg-white dark:bg-gray-800 rounded-lg p-6 border border-red-200 dark:border-red-800`}
-            >
-              <Ionicons
-                name="alert-circle-outline"
-                size={48}
-                color="#EF4444"
-                style={tw`mb-4 self-center`}
+          <View style={tw`flex-1 justify-center items-center`}>
+            {loading && !isTransitioning && (
+              <IOSLoader 
+                title="Loading Page"
+                subtitle="Please wait while we load the Quran page"
+                overlay={true}
               />
-              <Text
-                style={tw`text-center text-gray-500 dark:text-gray-400 text-lg mb-2`}
-              >
-                صفحہ لوڈ نہیں ہو سکا
-              </Text>
-              <Text
-                style={tw`text-center text-gray-400 dark:text-gray-500 text-sm mb-4`}
-              >
-                Unable to load Mushaf page
-              </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  console.log(
-                    '[QURAN SCREEN] Retry button pressed for page:',
-                    currentPage
-                  );
+            )}
+            
+            {imageError ? (
+              <IOSErrorView 
+                title="Unable to Load Page"
+                subtitle="Please check your internet connection and try again."
+                onRetry={() => {
                   setImageError(false);
                   setLoading(true);
                 }}
-                style={tw`px-4 py-2 bg-green-600 rounded-lg self-center`}
-              >
-                <Text style={tw`text-white font-medium`}>Retry</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <Image
-              source={{ uri: getPageImageUrl(currentPage) }}
-              style={{
-                width: width,
-                height: height * 0.73, // Use full screen height
-                backgroundColor: '#FFFBEB',
-              }}
-              resizeMode="stretch" // This must be outside `style`
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-            />
-          )}
-        </Animated.View>
-      </PanGestureHandler>
-
-      {/* Compact Explain Button with Next/Prev */}
-      <View
-        style={tw`absolute bottom-2 left-0 right-0 flex-row items-center justify-center px-6`}
-      >
-        {/* Previous Page Button */}
-        <TouchableOpacity
-          onPress={() => {
-            console.log('[QURAN SCREEN] Previous button pressed, currentPage:', currentPage);
-            if (currentPage > 1) {
-              nextPage();
-            } else {
-              console.log('[QURAN SCREEN] Cannot go to previous page, already at page 1');
-            }
-          }}
-          style={tw`bg-amber-200 rounded-full p-3 mr-3`}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={22} color="#92400e" />
-        </TouchableOpacity>
-
-        {/* Explain Button */}
-        <TouchableOpacity
-          onPress={handleAIExplanation}
-          style={tw`rounded-full shadow-lg flex-1 mx-1`}
-          activeOpacity={0.5}
-        >
-          <LinearGradient
-            colors={['#8B5CF6', '#7C3AED', '#6D28D9']}
-            style={tw`py-3 px-6 rounded-full items-center justify-center flex-row`}
-          >
-            <Ionicons
-              name="book-outline"
-              size={18}
-              color="white"
-              style={tw`mr-2`}
-            />
-            <Text style={tw`text-white font-semibold text-base`}>Tafseer</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        {/* Next Page Button */}
-        <TouchableOpacity
-          onPress={() => {
-            console.log('[QURAN SCREEN] Next button pressed, currentPage:', currentPage, 'totalPages:', totalPages);
-            if (currentPage < totalPages) {
-              prevPage();
-            } else {
-              console.log('[QURAN SCREEN] Cannot go to next page, already at last page');
-            }
-          }}
-          style={tw`bg-amber-200 rounded-full p-3 ml-3`}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-forward" size={22} color="#92400e" />
-        </TouchableOpacity>
+              />
+            ) : (
+              <Image
+                source={{ uri: getPageImageUrl(currentPage) }}
+                style={{
+                  width: width,
+                  height: height * 0.73,
+                  backgroundColor: '#FFFFFF',
+                }}
+                resizeMode="contain"
+                onLoad={handleImageLoad}
+                onError={handleImageError}
+              />
+            )}
+          </View>
+        </PanGestureHandler>
       </View>
 
-      {/* AI Explanation Modal */}
+      {/* iOS-Style Bottom Controls */}
+      <View style={tw`bg-gray-100 border-t border-gray-200 px-4 py-3`}>
+        <View style={tw`flex-row items-center justify-between`}>
+          {/* Next Button (moved to left) */}
+          <TouchableOpacity
+            onPress={nextPage}
+            disabled={currentPage >= totalPages}
+            style={[
+              tw`flex-row items-center px-4 py-2 rounded-xl`,
+              currentPage >= totalPages ? tw`opacity-50` : tw`bg-white`
+            ]}
+            activeOpacity={0.3}
+          >
+            <Ionicons 
+              name="chevron-back" 
+              size={20} 
+              color={currentPage >= totalPages ? "#8E8E93" : "#007AFF"} 
+            />
+            <Text style={[
+              tw`ml-1 font-medium`,
+              { color: currentPage >= totalPages ? "#8E8E93" : "#007AFF" }
+            ]}>
+              Next
+            </Text>
+          </TouchableOpacity>
+
+          {/* Tafseer Button */}
+          <TouchableOpacity
+            onPress={handleAIExplanation}
+            style={tw`bg-blue-500 px-6 py-2 rounded-xl flex-row items-center`}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="book" size={18} color="white" style={tw`mr-2`} />
+            <Text style={tw`text-white font-semibold`}>Tafseer</Text>
+          </TouchableOpacity>
+
+          {/* Previous Button (moved to right) */}
+          <TouchableOpacity
+            onPress={prevPage}
+            disabled={currentPage <= 1}
+            style={[
+              tw`flex-row items-center px-4 py-2 rounded-xl`,
+              currentPage <= 1 ? tw`opacity-50` : tw`bg-white`
+            ]}
+            activeOpacity={0.3}
+          >
+            <Text style={[
+              tw`mr-1 font-medium`,
+              { color: currentPage <= 1 ? "#8E8E93" : "#007AFF" }
+            ]}>
+              Previous
+            </Text>
+            <Ionicons 
+              name="chevron-forward" 
+              size={20} 
+              color={currentPage <= 1 ? "#8E8E93" : "#007AFF"} 
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* iOS-Style AI Explanation Modal */}
       <Modal
         visible={showAIModal}
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => setShowAIModal(false)}
       >
-        <SafeAreaView style={tw`flex-1 bg-white`}>
+        <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
+          <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
+          
           {/* Modal Header */}
-          <View style={tw`bg-white border-b border-gray-200 px-6 py-4`}>
-            <View style={tw`flex-row items-center justify-between`}>
-              <View style={tw`flex-row items-center`}>
-                <LinearGradient
-                  colors={['#8B5CF6', '#7C3AED']}
-                  style={tw`w-10 h-10 rounded-full items-center justify-center mr-3`}
-                >
-                  <Ionicons name="sparkles" size={20} color="white" />
-                </LinearGradient>
-                <View>
-                  <Text style={tw`text-xl font-bold text-gray-900`}>
-                    AI Tafseer
-                  </Text>
-                  <Text style={tw`text-sm text-gray-600`}>
-                    Page {currentPage} Explanation
-                  </Text>
-                </View>
-              </View>
+          <View style={tw`bg-gray-100 border-b border-gray-200`}>
+            <View style={tw`flex-row items-center justify-between px-4 py-3`}>
               <TouchableOpacity
                 onPress={() => setShowAIModal(false)}
-                style={tw`w-8 h-8 rounded-full items-center justify-center bg-gray-100`}
+                style={tw`py-1`}
+                activeOpacity={0.3}
               >
-                <Ionicons name="close" size={20} color="#6b7280" />
+                <Text style={tw`text-lg text-blue-500`}>Done</Text>
               </TouchableOpacity>
+
+              <Text style={tw`text-lg font-semibold text-black`}>
+                AI Tafseer
+              </Text>
+
+              <View style={tw`w-12`} />
             </View>
           </View>
 
-          {/* Modal Content */}
           <ScrollView
-            style={tw`flex-1 px-6 py-4`}
+            style={tw`flex-1`}
+            contentContainerStyle={tw`px-4 py-6`}
             showsVerticalScrollIndicator={false}
           >
             {aiLoading ? (
-              <View style={tw`flex-1 items-center py-12`}>
-                {/* Main Analysis Container */}
-                <View style={[
-                  tw`w-full max-w-sm rounded-3xl p-8 mb-8`,
-                  {
-                    backgroundColor: '#faf5ff', // Light purple background
-                    shadowColor: '#8B5CF6',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 12,
-                    elevation: 8,
-                  }
-                ]}>
-                  {/* Central AI Brain Animation */}
-                  <View style={tw`items-center mb-8`}>
-                    <View style={[
-                      tw`w-20 h-20 rounded-full items-center justify-center mb-4`,
-                      {
-                        backgroundColor: analysisComplete ? '#22c55e' : '#8B5CF6',
-                        transform: [{ scale: analysisComplete ? 1.1 : 1 }],
-                      }
-                    ]}>
-                      {analysisComplete ? (
-                        <Animatable.View animation="tada" iterationCount={1}>
-                          <Ionicons name="checkmark-circle" size={40} color="white" />
-                        </Animatable.View>
-                      ) : (
-                        <Animatable.View 
-                          animation="rotate" 
-                          iterationCount="infinite" 
-                          duration={2000}
-                        >
-                          <Ionicons name="analytics" size={40} color="white" />
-                        </Animatable.View>
-                      )}
-                    </View>
-                    
-                    <Text style={[
-                      tw`font-bold text-center mb-2`,
-                      { 
-                        fontSize: 20, 
-                        color: analysisComplete ? '#22c55e' : '#8B5CF6',
-                        letterSpacing: -0.3 
-                      }
-                    ]}>
-                      {analysisComplete ? 'Analysis Complete!' : 'AI Analyzing...'}
-                    </Text>
-                    
-                    <Text style={tw`text-gray-600 text-center text-sm`}>
-                      {analysisComplete 
-                        ? 'Preparing your personalized Tafseer' 
-                        : 'Deep learning models processing Quranic wisdom'
-                      }
-                    </Text>
+              <IOSProgressLoader
+                title={analysisComplete ? 'Analysis Complete!' : 'Analyzing Page...'}
+                subtitle={analysisComplete 
+                  ? 'Preparing your Tafseer explanation' 
+                  : 'AI is processing the Quranic text and generating insights'
+                }
+                steps={[
+                  'Analyzing Arabic text...',
+                  'Processing meanings...',
+                  'Consulting sources...',
+                  'Generating explanation...',
+                  'Finalizing Tafseer...'
+                ]}
+                currentStep={analysisStep}
+                overlay={false}
+              />
+            ) : aiResponse ? (
+              <View style={tw`bg-white rounded-xl p-6 shadow-sm`}>
+                <View style={tw`flex-row items-center mb-4`}>
+                  <View style={tw`w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3`}>
+                    <Ionicons name="sparkles" size={20} color="#007AFF" />
                   </View>
-
-                  {/* Progress Steps */}
-                  <View style={tw`mt-4`}>
-                    {[
-                      { id: 1, text: 'Analyzing Quranic text...', icon: 'document-text' },
-                      { id: 2, text: 'Processing Arabic semantics...', icon: 'language' },
-                      { id: 3, text: 'Consulting classical commentaries...', icon: 'library' },
-                      { id: 4, text: 'Extracting linguistic insights...', icon: 'search' },
-                      { id: 5, text: 'Generating comprehensive explanation...', icon: 'create' },
-                      { id: 6, text: 'Finalizing Tafseer...', icon: 'checkmark-done' },
-                    ].map((item, index) => {
-                      const isActive = analysisStep >= item.id;
-                      const isCurrent = analysisStep === item.id;
-                      const isCompleted = analysisStep > item.id || analysisComplete;
-                      
-                      return (
-                        <View key={item.id} style={tw`mb-4`}>
-                          <Animatable.View
-                            animation={isCurrent ? "pulse" : isActive ? "fadeIn" : undefined}
-                            duration={isCurrent ? 1000 : 600}
-                            iterationCount={isCurrent ? "infinite" : 1}
-                            style={tw`flex-row items-center`}
-                          >
-                            {/* Step Icon */}
-                            <View style={[
-                              tw`w-10 h-10 rounded-full items-center justify-center mr-4`,
-                              {
-                                backgroundColor: isCompleted ? '#22c55e' : 
-                                               isCurrent ? '#8B5CF6' : 
-                                               isActive ? '#c084fc' : '#e5e7eb',
-                                borderWidth: 2,
-                                borderColor: isCompleted ? '#16a34a' :
-                                            isCurrent ? '#7c3aed' :
-                                            isActive ? '#a855f7' : 'transparent',
-                              }
-                            ]}>
-                              {isCompleted ? (
-                                <Ionicons name="checkmark" size={16} color="white" />
-                              ) : (
-                                <Ionicons 
-                                  name={item.icon} 
-                                  size={16} 
-                                  color={isActive ? "white" : "#9ca3af"} 
-                                />
-                              )}
-                            </View>
-                            
-                            {/* Step Text */}
-                            <Text style={[
-                              tw`flex-1 font-medium`,
-                              {
-                                fontSize: 15,
-                                color: isCompleted ? '#22c55e' :
-                                       isCurrent ? '#8B5CF6' :
-                                       isActive ? '#6b7280' : '#9ca3af',
-                                fontWeight: isCurrent ? 'bold' : 'normal',
-                              }
-                            ]}>
-                              {item.text}
-                            </Text>
-                            
-                            {/* Loading dots for current step */}
-                            {isCurrent && !analysisComplete && (
-                              <Animatable.View 
-                                animation="flash" 
-                                iterationCount="infinite" 
-                                duration={800}
-                                style={tw`ml-2`}
-                              >
-                                <Text style={[tw`text-purple-600`, { fontSize: 16 }]}>
-                                  ●●●
-                                </Text>
-                              </Animatable.View>
-                            )}
-                          </Animatable.View>
-                        </View>
-                      );
-                    })}
-                  </View>
-
-                  {/* Progress Bar */}
-                  <View style={tw`mt-8`}>
-                    <View style={tw`flex-row items-center justify-between mb-2`}>
-                      <Text style={tw`text-sm font-medium text-gray-600`}>
-                        Progress
-                      </Text>
-                      <Text style={tw`text-sm font-bold text-purple-600`}>
-                        {analysisComplete ? '100%' : `${Math.round((analysisStep / 6) * 100)}%`}
-                      </Text>
-                    </View>
-                    
-                    <View style={[
-                      tw`h-2 bg-gray-200 rounded-full overflow-hidden`,
-                      { backgroundColor: '#f3f4f6' }
-                    ]}>
-                      <Animatable.View
-                        animation="slideInLeft"
-                        duration={600}
-                        style={[
-                          tw`h-full rounded-full`,
-                          {
-                            width: `${analysisComplete ? 100 : (analysisStep / 6) * 100}%`,
-                            backgroundColor: analysisComplete ? '#22c55e' : '#8B5CF6',
-                          }
-                        ]}
-                      />
-                    </View>
-                  </View>
+                  <Text style={tw`text-lg font-semibold text-black`}>
+                    Page {currentPage} Explanation
+                  </Text>
                 </View>
 
-                {/* Encouraging Message */}
-                {analysisComplete && (
-                  <Animatable.View 
-                    animation="bounceIn" 
-                    delay={200}
-                    style={[
-                      tw`px-6 py-4 rounded-2xl mx-4`,
-                      { backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' }
-                    ]}
-                  >
-                    <View style={tw`flex-row items-center justify-center`}>
-                      <Ionicons name="sparkles" size={20} color="#22c55e" style={tw`mr-2`} />
-                      <Text style={[
-                        tw`text-green-700 font-semibold text-center`,
-                        { fontSize: 16 }
-                      ]}>
-                        Ready! Preparing your Tafseer...
-                      </Text>
-                    </View>
-                  </Animatable.View>
-                )}
-              </View>
-            ) : aiResponse ? (
-              <View>
-                {/* Response Content with Markdown */}
                 <Markdown
                   style={{
                     body: { fontSize: 16, lineHeight: 24, color: '#1f2937' },
-                    heading1: {
-                      fontSize: 24,
-                      fontWeight: 'bold',
-                      color: '#111827',
-                      marginBottom: 12,
-                      marginTop: 8,
-                    },
-                    heading2: {
-                      fontSize: 20,
-                      fontWeight: 'bold',
-                      color: '#1f2937',
-                      marginBottom: 10,
-                      marginTop: 12,
-                    },
-                    heading3: {
-                      fontSize: 18,
-                      fontWeight: '600',
-                      color: '#374151',
-                      marginBottom: 8,
-                      marginTop: 10,
-                    },
+                    heading1: { fontSize: 22, fontWeight: 'bold', color: '#111827', marginBottom: 12 },
+                    heading2: { fontSize: 20, fontWeight: 'bold', color: '#1f2937', marginBottom: 10 },
+                    heading3: { fontSize: 18, fontWeight: '600', color: '#374151', marginBottom: 8 },
                     paragraph: { marginBottom: 12, lineHeight: 22 },
                     strong: { fontWeight: 'bold', color: '#111827' },
-                    em: { fontStyle: 'italic' },
-                    list_item: { marginBottom: 6 },
-                    bullet_list: { marginBottom: 12 },
-                    ordered_list: { marginBottom: 12 },
-                    code_inline: {
-                      backgroundColor: '#f3f4f6',
-                      paddingHorizontal: 4,
-                      paddingVertical: 2,
-                      borderRadius: 4,
-                      fontSize: 14,
-                    },
                     blockquote: {
                       backgroundColor: '#f9fafb',
                       borderLeftWidth: 4,
-                      borderLeftColor: '#8B5CF6',
+                      borderLeftColor: '#007AFF',
                       paddingLeft: 16,
                       paddingVertical: 12,
                       marginVertical: 8,
                       fontStyle: 'italic',
-                    },
-                    hr: {
-                      backgroundColor: '#e5e7eb',
-                      height: 1,
-                      marginVertical: 16,
                     },
                   }}
                 >
@@ -1201,37 +825,27 @@ export default function QuranPageScreen({ route }) {
                 </Markdown>
 
                 {/* Disclaimer */}
-                <View
-                  style={tw`bg-amber-50 border border-amber-200 rounded-xl p-4 mt-6`}
-                >
+                <View style={tw`bg-gray-50 rounded-xl p-4 mt-6`}>
                   <View style={tw`flex-row items-start`}>
-                    <Ionicons
-                      name="information-circle"
-                      size={20}
-                      color="#F59E0B"
-                      style={tw`mr-2 mt-0.5`}
-                    />
+                    <Ionicons name="information-circle" size={20} color="#8E8E93" style={tw`mr-2 mt-0.5`} />
                     <View style={tw`flex-1`}>
-                      <Text
-                        style={tw`text-amber-800 font-semibold text-sm mb-1`}
-                      >
+                      <Text style={tw`text-gray-600 font-medium text-sm mb-1`}>
                         Important Note
                       </Text>
-                      <Text style={tw`text-amber-700 text-sm leading-5`}>
-                        This AI-generated explanation is for educational
-                        purposes. For authoritative interpretation, please
-                        consult qualified Islamic scholars and authentic Tafseer
-                        books.
+                      <Text style={tw`text-gray-500 text-sm leading-5`}>
+                        This AI-generated explanation is for educational purposes. 
+                        Please consult qualified Islamic scholars for authoritative interpretation.
                       </Text>
                     </View>
                   </View>
                 </View>
 
                 {/* Action Buttons */}
-                <View style={tw`flex-row gap-3 mt-6 mb-4`}>
+                <View style={tw`flex-row gap-3 mt-6`}>
                   <TouchableOpacity
                     onPress={handleAIExplanation}
-                    style={tw`flex-1 bg-purple-600 py-3 rounded-xl`}
+                    style={tw`flex-1 bg-blue-500 py-3 rounded-xl`}
+                    activeOpacity={0.8}
                   >
                     <Text style={tw`text-white font-semibold text-center`}>
                       Regenerate
@@ -1240,33 +854,20 @@ export default function QuranPageScreen({ route }) {
                   <TouchableOpacity
                     onPress={() => setShowAIModal(false)}
                     style={tw`flex-1 bg-gray-200 py-3 rounded-xl`}
+                    activeOpacity={0.8}
                   >
-                    <Text style={tw`text-gray-800 font-semibold text-center`}>
+                    <Text style={tw`text-black font-semibold text-center`}>
                       Close
                     </Text>
                   </TouchableOpacity>
                 </View>
               </View>
             ) : (
-              <View style={tw`flex-1 items-center justify-center py-20`}>
-                <Ionicons
-                  name="alert-circle-outline"
-                  size={48}
-                  color="#EF4444"
-                />
-                <Text style={tw`text-lg font-semibold text-gray-800 mt-4 mb-2`}>
-                  Failed to Load
-                </Text>
-                <Text style={tw`text-gray-600 text-center mb-6`}>
-                  Unable to generate explanation. Please try again.
-                </Text>
-                <TouchableOpacity
-                  onPress={handleAIExplanation}
-                  style={tw`bg-purple-600 px-6 py-3 rounded-xl`}
-                >
-                  <Text style={tw`text-white font-semibold`}>Retry</Text>
-                </TouchableOpacity>
-              </View>
+              <IOSErrorView
+                title="Failed to Load"
+                subtitle="Unable to generate explanation. Please check your connection and try again."
+                onRetry={handleAIExplanation}
+              />
             )}
           </ScrollView>
         </SafeAreaView>

@@ -165,7 +165,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
               <View style={tw`flex-1`}>
                 <Text style={tw`text-xl font-bold text-gray-900`}>
-                  Assalamu Alaikum
+                  Welcome
                   {userName ? `, ${getFirstName(userName)}` : ''}
                 </Text>
                 <Text style={tw`text-base text-gray-500`}>

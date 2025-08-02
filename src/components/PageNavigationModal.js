@@ -5,10 +5,66 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
-  FlatList,
+  ScrollView,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
+
+// iOS Settings Style Components
+const SectionHeader = ({ title }) => (
+  <View style={tw`px-4 py-2 bg-gray-100`}>
+    <Text style={tw`text-sm text-gray-500 uppercase font-normal tracking-wide`}>
+      {title}
+    </Text>
+  </View>
+);
+
+const SettingsItem = ({ 
+  title, 
+  subtitle, 
+  onPress, 
+  rightElement, 
+  isSelected = false,
+  showChevron = true 
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={[
+      tw`bg-white px-4 py-3 border-b border-gray-200`,
+      isSelected && tw`bg-blue-50`
+    ]}
+    activeOpacity={0.3}
+  >
+    <View style={tw`flex-row items-center justify-between`}>
+      <View style={tw`flex-1`}>
+        <Text style={[
+          tw`text-base text-black`,
+          isSelected && tw`text-blue-500 font-medium`
+        ]}>
+          {title}
+        </Text>
+        {subtitle && (
+          <Text style={tw`text-sm text-gray-500 mt-0.5`}>
+            {subtitle}
+          </Text>
+        )}
+      </View>
+      <View style={tw`flex-row items-center`}>
+        {rightElement}
+        {showChevron && (
+          <Ionicons 
+            name="chevron-forward" 
+            size={16} 
+            color="#C7C7CC" 
+            style={tw`ml-2`}
+          />
+        )}
+      </View>
+    </View>
+  </TouchableOpacity>
+);
 
 // Popular Quran pages with their corresponding Surahs
 const FAMOUS_PAGES = [
@@ -41,10 +97,18 @@ export default function PageNavigationModal({
   const [searchText, setSearchText] = useState('');
   const [inputPage, setInputPage] = useState(currentPage.toString());
 
+  useEffect(() => {
+    if (isVisible) {
+      setInputPage(currentPage.toString());
+      setSearchText('');
+    }
+  }, [isVisible, currentPage]);
+
   const filteredPages = FAMOUS_PAGES.filter(
     item =>
       item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchText.toLowerCase())
+      item.description.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.page.toString().includes(searchText)
   );
 
   const goToPage = () => {
@@ -55,6 +119,11 @@ export default function PageNavigationModal({
     }
   };
 
+  const handlePageSelect = (page) => {
+    onPageSelect(page);
+    onClose();
+  };
+
   return (
     <Modal
       visible={isVisible}
@@ -62,147 +131,148 @@ export default function PageNavigationModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={tw`flex-1 bg-white dark:bg-black`}>
-        {/* Header */}
-        <View
-          style={tw`px-4 pt-12 pb-4 border-b border-gray-200 dark:border-gray-700`}
-        >
-          <View style={tw`flex-row items-center justify-between mb-4`}>
-            <Text style={tw`text-xl font-bold text-black dark:text-white`}>
-              Navigate to Page
-            </Text>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Page Input */}
-          <View style={tw`flex-row items-center mb-4`}>
-            <View
-              style={tw`flex-1 flex-row items-center bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 mr-3`}
-            >
-              <TextInput
-                style={tw`flex-1 text-black dark:text-white text-lg`}
-                value={inputPage}
-                onChangeText={setInputPage}
-                keyboardType="numeric"
-                placeholder="Page number (1-604)"
-                placeholderTextColor="#9CA3AF"
-                maxLength={3}
-              />
-            </View>
+      <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
+        <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
+        
+        {/* iOS-Style Navigation Header */}
+        <View style={tw`bg-gray-100 border-b border-gray-200`}>
+          <View style={tw`flex-row items-center justify-between px-4 py-3`}>
             <TouchableOpacity
-              onPress={goToPage}
-              style={tw`bg-green-600 px-4 py-2 rounded-lg`}
+              onPress={onClose}
+              style={tw`py-1`}
+              activeOpacity={0.3}
             >
-              <Text style={tw`text-white font-semibold`}>Go</Text>
+              <Text style={tw`text-lg text-blue-500`}>Done</Text>
             </TouchableOpacity>
-          </View>
 
-          {/* Search */}
-          <View
-            style={tw`flex-row items-center bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2`}
-          >
-            <Ionicons
-              name="search"
-              size={20}
-              color="#9CA3AF"
-              style={tw`mr-2`}
-            />
-            <TextInput
-              style={tw`flex-1 text-black dark:text-white`}
-              value={searchText}
-              onChangeText={setSearchText}
-              placeholder="Search Surah..."
-              placeholderTextColor="#9CA3AF"
-            />
+            <Text style={tw`text-lg font-semibold text-black`}>
+              Go to Page
+            </Text>
+
+            <View style={tw`w-12`} />
           </View>
         </View>
 
-        {/* Quick Navigation */}
-        <View
-          style={tw`px-4 py-3 border-b border-gray-200 dark:border-gray-700`}
+        <ScrollView 
+          style={tw`flex-1`}
+          showsVerticalScrollIndicator={false}
         >
-          <Text
-            style={tw`text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2`}
-          >
-            Quick Jump
-          </Text>
-          <View style={tw`flex-row flex-wrap gap-2`}>
-            {[1, 50, 100, 200, 300, 400, 500, 600].map(page => (
-              <TouchableOpacity
-                key={page}
-                onPress={() => {
-                  onPageSelect(page);
-                  onClose();
-                }}
-                style={tw`px-3 py-1 rounded-full ${
-                  currentPage === page
-                    ? 'bg-green-600'
-                    : 'bg-gray-200 dark:bg-gray-700'
-                }`}
-              >
-                <Text
-                  style={tw`text-sm font-medium ${
-                    currentPage === page
-                      ? 'text-white'
-                      : 'text-gray-700 dark:text-gray-300'
-                  }`}
+          {/* Direct Page Input Section */}
+          <SectionHeader title="Jump to Page" />
+          <View style={tw`bg-white`}>
+            <View style={tw`px-4 py-3 border-b border-gray-200`}>
+              <View style={tw`flex-row items-center gap-3`}>
+                <View style={tw`flex-1 bg-gray-100 rounded-xl px-3 py-2`}>
+                  <TextInput
+                    style={tw`text-base text-black`}
+                    value={inputPage}
+                    onChangeText={setInputPage}
+                    keyboardType="numeric"
+                    placeholder="Page number (1-604)"
+                    placeholderTextColor="#8E8E93"
+                    maxLength={3}
+                    returnKeyType="go"
+                    onSubmitEditing={goToPage}
+                  />
+                </View>
+                <TouchableOpacity
+                  onPress={goToPage}
+                  style={tw`bg-blue-500 px-4 py-2 rounded-xl`}
+                  activeOpacity={0.8}
                 >
-                  {page}
-                </Text>
-              </TouchableOpacity>
+                  <Text style={tw`text-white font-semibold`}>Go</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          {/* Quick Navigation Section */}
+          <SectionHeader title="Quick Jump" />
+          <View style={tw`bg-white`}>
+            <View style={tw`px-4 py-3 border-b border-gray-200`}>
+              <View style={tw`flex-row flex-wrap gap-2`}>
+                {[1, 50, 100, 200, 300, 400, 500, 600].map(page => (
+                  <TouchableOpacity
+                    key={page}
+                    onPress={() => handlePageSelect(page)}
+                    style={[
+                      tw`px-3 py-2 rounded-xl`,
+                      currentPage === page 
+                        ? tw`bg-blue-500` 
+                        : tw`bg-gray-100`
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        tw`text-sm font-medium`,
+                        currentPage === page 
+                          ? tw`text-white` 
+                          : tw`text-black`
+                      ]}
+                    >
+                      {page}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          {/* Search Section */}
+          <SectionHeader title="Search Surah" />
+          <View style={tw`bg-white`}>
+            <View style={tw`px-4 py-3 border-b border-gray-200`}>
+              <View style={tw`flex-row items-center bg-gray-100 rounded-xl px-3 py-2`}>
+                <Ionicons
+                  name="search"
+                  size={16}
+                  color="#8E8E93"
+                  style={tw`mr-2`}
+                />
+                <TextInput
+                  style={tw`flex-1 text-base text-black`}
+                  value={searchText}
+                  onChangeText={setSearchText}
+                  placeholder="Search Surah..."
+                  placeholderTextColor="#8E8E93"
+                  returnKeyType="search"
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Famous Pages Section */}
+          <SectionHeader title="Popular Pages" />
+          <View style={tw`bg-white mb-4`}>
+            {filteredPages.map((item, index) => (
+              <SettingsItem
+                key={item.page}
+                title={item.name}
+                subtitle={item.description}
+                onPress={() => handlePageSelect(item.page)}
+                isSelected={currentPage === item.page}
+                rightElement={
+                  <View style={tw`items-end`}>
+                    <Text style={[
+                      tw`text-base font-semibold`,
+                      currentPage === item.page ? tw`text-blue-500` : tw`text-gray-500`
+                    ]}>
+                      Page {item.page}
+                    </Text>
+                    {currentPage === item.page && (
+                      <Text style={tw`text-xs text-blue-500 mt-0.5`}>
+                        Current
+                      </Text>
+                    )}
+                  </View>
+                }
+                showChevron={false}
+              />
             ))}
           </View>
-        </View>
-
-        {/* Famous Pages List */}
-        <FlatList
-          data={filteredPages}
-          keyExtractor={item => item.page.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => {
-                onPageSelect(item.page);
-                onClose();
-              }}
-              style={tw`px-4 py-3 border-b border-gray-100 dark:border-gray-800 ${
-                currentPage === item.page
-                  ? 'bg-green-50 dark:bg-green-900/20'
-                  : ''
-              }`}
-            >
-              <View style={tw`flex-row items-center justify-between`}>
-                <View style={tw`flex-1`}>
-                  <Text
-                    style={tw`text-lg font-semibold text-black dark:text-white`}
-                  >
-                    {item.name}
-                  </Text>
-                  <Text style={tw`text-sm text-gray-600 dark:text-gray-400`}>
-                    {item.description}
-                  </Text>
-                </View>
-                <View style={tw`items-end`}>
-                  <Text
-                    style={tw`text-lg font-bold text-green-600 dark:text-green-400`}
-                  >
-                    {item.page}
-                  </Text>
-                  {currentPage === item.page && (
-                    <Text
-                      style={tw`text-xs text-green-600 dark:text-green-400`}
-                    >
-                      Current
-                    </Text>
-                  )}
-                </View>
-              </View>
-            </TouchableOpacity>
-          )}
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
+        </ScrollView>
+      </SafeAreaView>
     </Modal>
   );
 }
