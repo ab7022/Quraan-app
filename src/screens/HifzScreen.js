@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Modal,
   TextInput,
   StatusBar,
@@ -14,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { IOSLoader } from '../components/IOSLoader';
+import { AlertManager } from '../components/AppleStyleAlert';
 
 const DAILY_TARGET_STORAGE_KEY = 'daily_target_data';
 
@@ -130,43 +130,35 @@ export default function HifzScreen({ navigation }) {
       setTargetData(data);
     } catch (error) {
       console.error('Error saving target data:', error);
-      Alert.alert(
+      AlertManager.alert(
         'Error', 
-        'Failed to save data. Please try again.',
-        [{ text: 'OK', style: 'default' }],
-        { userInterfaceStyle: 'light' }
+        'Failed to save data. Please try again.'
       );
     }
   };
 
   const handleSetupSubmit = () => {
     if (isStartingFresh === null) {
-      Alert.alert(
+      AlertManager.alert(
         'Missing Information',
-        'Please select if you are starting fresh or have already read some pages.',
-        [{ text: 'OK', style: 'default' }],
-        { userInterfaceStyle: 'light' }
+        'Please select if you are starting fresh or have already read some pages.'
       );
       return;
     }
 
     if (!dailyTarget) {
-      Alert.alert(
+      AlertManager.alert(
         'Missing Information',
-        'Please enter your daily pages target.',
-        [{ text: 'OK', style: 'default' }],
-        { userInterfaceStyle: 'light' }
+        'Please enter your daily pages target.'
       );
       return;
     }
 
     const target = parseInt(dailyTarget) || 0;
     if (target <= 0) {
-      Alert.alert(
+      AlertManager.alert(
         'Invalid Input', 
-        'Daily target must be greater than 0.',
-        [{ text: 'OK', style: 'default' }],
-        { userInterfaceStyle: 'light' }
+        'Daily target must be greater than 0.'
       );
       return;
     }
@@ -174,21 +166,17 @@ export default function HifzScreen({ navigation }) {
     let alreadyRead = 0;
     if (!isStartingFresh) {
       if (!pagesAlreadyRead) {
-        Alert.alert(
+        AlertManager.alert(
           'Missing Information',
-          'Please enter how many pages you have already read.',
-          [{ text: 'OK', style: 'default' }],
-          { userInterfaceStyle: 'light' }
+          'Please enter how many pages you have already read.'
         );
         return;
       }
       alreadyRead = parseInt(pagesAlreadyRead) || 0;
       if (alreadyRead < 0 || alreadyRead >= 604) {
-        Alert.alert(
+        AlertManager.alert(
           'Invalid Input',
-          'Pages already read must be between 0 and 603.',
-          [{ text: 'OK', style: 'default' }],
-          { userInterfaceStyle: 'light' }
+          'Pages already read must be between 0 and 603.'
         );
         return;
       }
@@ -212,22 +200,18 @@ export default function HifzScreen({ navigation }) {
 
   const handleTodaySubmit = () => {
     if (!todayProgress) {
-      Alert.alert(
+      AlertManager.alert(
         'Missing Information', 
-        "Please enter today's progress.",
-        [{ text: 'OK', style: 'default' }],
-        { userInterfaceStyle: 'light' }
+        "Please enter today's progress."
       );
       return;
     }
 
     const progress = parseInt(todayProgress) || 0;
     if (progress < 0) {
-      Alert.alert(
+      AlertManager.alert(
         'Invalid Input', 
-        'Progress cannot be negative.',
-        [{ text: 'OK', style: 'default' }],
-        { userInterfaceStyle: 'light' }
+        'Progress cannot be negative.'
       );
       return;
     }
@@ -250,22 +234,18 @@ export default function HifzScreen({ navigation }) {
 
   const handleEditSubmit = () => {
     if (!dailyTarget) {
-      Alert.alert(
+      AlertManager.alert(
         'Missing Information',
-        'Please enter your daily pages target.',
-        [{ text: 'OK', style: 'default' }],
-        { userInterfaceStyle: 'light' }
+        'Please enter your daily pages target.'
       );
       return;
     }
 
     const target = parseInt(dailyTarget) || 0;
     if (target <= 0) {
-      Alert.alert(
+      AlertManager.alert(
         'Invalid Input', 
-        'Daily target must be greater than 0.',
-        [{ text: 'OK', style: 'default' }],
-        { userInterfaceStyle: 'light' }        
+        'Daily target must be greater than 0.'      
       );
       return;
     }
@@ -291,7 +271,7 @@ export default function HifzScreen({ navigation }) {
   };
 
   const deleteTargetData = () => {
-    Alert.alert(
+    AlertManager.alert(
       'Reset Journey',
       'Are you sure you want to delete all your progress data? This action cannot be undone.',
       [
@@ -311,11 +291,7 @@ export default function HifzScreen({ navigation }) {
             }
           },
         },
-      ],
-      { 
-        cancelable: true,
-        userInterfaceStyle: 'light' // Force light mode for iOS
-      }
+      ]
     );
   };
 

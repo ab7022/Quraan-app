@@ -32,6 +32,7 @@ import OnboardingScreen from './src/screens/OnboardingScreen';
 import { QuranLogo } from './src/components/QuranLogo';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import analytics from './src/services/analyticsService';
+import { AppleStyleAlertProvider } from './src/components/AppleStyleAlert';
 
 export default function App() {
   const scheme = useColorScheme();
@@ -95,11 +96,13 @@ export default function App() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Provider store={store}>
           <SafeAreaProvider>
-            <StatusBar
-              style={scheme === 'dark' ? 'light' : 'dark'}
-              hidden={false}
-            />
-            <OnboardingScreen onComplete={handleOnboardingComplete} />
+            <AppleStyleAlertProvider>
+              <StatusBar
+                style={scheme === 'dark' ? 'light' : 'dark'}
+                hidden={false}
+              />
+              <OnboardingScreen onComplete={handleOnboardingComplete} />
+            </AppleStyleAlertProvider>
           </SafeAreaProvider>
         </Provider>
       </GestureHandlerRootView>
@@ -110,15 +113,17 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
         <SafeAreaProvider>
-          <NavigationContainer
-            theme={scheme === 'dark' ? DarkTheme : DefaultTheme}
-          >
-            <StatusBar
-              style={scheme === 'dark' ? 'light' : 'dark'}
-              hidden={false}
-            />
-            <MainNavigator />
-          </NavigationContainer>
+          <AppleStyleAlertProvider>
+            <NavigationContainer
+              theme={scheme === 'dark' ? DarkTheme : DefaultTheme}
+            >
+              <StatusBar
+                style={scheme === 'dark' ? 'light' : 'dark'}
+                hidden={false}
+              />
+              <MainNavigator />
+            </NavigationContainer>
+          </AppleStyleAlertProvider>
         </SafeAreaProvider>
       </Provider>
     </GestureHandlerRootView>

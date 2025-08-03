@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Alert,
   Dimensions,
   StatusBar,
 } from 'react-native';
@@ -18,6 +17,7 @@ import tw from 'twrnc';
 import { getMushafStyle, saveMushafStyle, getMushafImageUrl } from '../services/mushafService';
 import analytics from '../services/analyticsService';
 import { IOSLoader, IOSInlineLoader } from '../components/IOSLoader';
+import { AlertManager } from '../components/AppleStyleAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -29,7 +29,7 @@ const SectionHeader = ({ title }) => (
   </View>
 );
 
-const StyleItem = ({
+const StyleCard = ({
   styleNumber,
   isSelected,
   onPress,
@@ -38,57 +38,74 @@ const StyleItem = ({
   onImageLoadStart,
   onImageLoadEnd,
   onImageError,
-}) => (
-  <TouchableOpacity
-    onPress={onPress}
-    style={[
-      tw`bg-white px-4 py-4 border-b border-gray-200`,
-      isSelected && tw`bg-blue-50`
-    ]}
-    activeOpacity={0.3}
-  >
-    <View style={tw`flex-row items-center`}>
-      {/* Style Preview Thumbnail */}
-      <View style={tw`w-16 h-20 rounded-lg overflow-hidden bg-gray-100 mr-4 border border-gray-200`}>
-        {isLoading && (
-          <View style={tw`absolute inset-0 bg-gray-100 items-center justify-center z-10`}>
-            <ActivityIndicator size="small" color="#007AFF" />
-          </View>
-        )}
-        <Image
-          source={{ uri: getMushafImageUrl(22, styleNumber) }}
-          style={{ width: '100%', height: '100%' }}
-          resizeMode="cover"
-          onLoadStart={onImageLoadStart}
-          onLoadEnd={onImageLoadEnd}
-          onError={onImageError}
-        />
+}) => {
+  const cardWidth = (width - 48) / 2; // 48 = padding (16*2) + gap (16)
+  
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        tw`bg-white rounded-xl overflow-hidden`,
+        { width: cardWidth },
+        // Apple-style shadow
+        {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 3,
+        }
+      ]}
+      activeOpacity={0.95}
+    >
+      {/* Style Preview Image - Much Larger */}
+      <View style={tw`relative`}>
+        <View style={[tw`bg-gray-50 items-center justify-center`, { height: 180 }]}>
+          {isLoading && (
+            <View style={tw`absolute inset-0 bg-gray-50 items-center justify-center z-10`}>
+              <ActivityIndicator size="small" color="#007AFF" />
+            </View>
+          )}
+          <Image
+            source={{ uri: getMushafImageUrl(22, styleNumber) }}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
+            onLoadStart={onImageLoadStart}
+            onLoadEnd={onImageLoadEnd}
+            onError={onImageError}
+          />
+        </View>
+        
+        {/* Checkmark - Filled when selected, outline when not */}
+        <View style={tw`absolute top-3 right-3`}>
+          {isSelected ? (
+            <Ionicons 
+              name="checkmark-circle" 
+              size={28} 
+              color="#3c69e4ff" 
+            />
+          ) : (
+            <Ionicons 
+              name="checkmark-circle-outline" 
+              size={28} 
+              color="#38393bff" 
+            />
+          )}
+        </View>
       </View>
 
-      {/* Style Info */}
-      <View style={tw`flex-1`}>
-        <Text style={tw`text-base font-medium text-black mb-1`}>
+      {/* Compact Card Content */}
+      <View style={tw`px-3 py-2.5`}>
+        <Text style={tw`text-sm font-semibold text-gray-900 text-center mb-0.5`} numberOfLines={1}>
           {styleName}
         </Text>
-        <Text style={tw`text-sm text-gray-500`}>
+        <Text style={tw`text-xs text-gray-500 text-center`}>
           Style {styleNumber}
         </Text>
-        {isSelected && (
-          <Text style={tw`text-sm text-blue-500 mt-1 font-medium`}>
-            Currently Selected
-          </Text>
-        )}
       </View>
-
-      {/* Selection Indicator */}
-      {isSelected ? (
-        <Ionicons name="checkmark-circle" size={22} color="#007AFF" />
-      ) : (
-        <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
-      )}
-    </View>
-  </TouchableOpacity>
-);
+    </TouchableOpacity>
+  );
+};
 
 export default function MushafStyleScreen() {
   const navigation = useNavigation();
@@ -129,7 +146,7 @@ export default function MushafStyleScreen() {
           new_style: styleNumber,
         });
         
-        Alert.alert(
+        AlertManager.alert(
           'Style Updated',
           `${getStyleName(styleNumber)} has been selected as your Mushaf style.`,
           [{ 
@@ -144,10 +161,9 @@ export default function MushafStyleScreen() {
       }
     } catch (error) {
       console.error('[MUSHAF STYLE SCREEN] Error saving mushaf preference:', error);
-      Alert.alert(
+      AlertManager.alert(
         'Error',
-        'Failed to save your preference. Please try again.',
-        [{ text: 'OK' }]
+        'Failed to save your preference. Please try again.'
       );
     }
   };
@@ -199,6 +215,15 @@ export default function MushafStyleScreen() {
     return styleNames[styleNumber] || `Style ${styleNumber}`;
   };
 
+  // Helper function to chunk array into pairs
+  const chunkArray = (array, size) => {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += size) {
+      chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
+  };
+
   const handleBackPress = () => {
     navigation.goBack();
   };
@@ -246,29 +271,48 @@ export default function MushafStyleScreen() {
           <>
             <View style={tw`mt-6`}>
               <SectionHeader title="Current Selection" />
-              <View style={tw`bg-white border-t border-gray-200`}>
-                <View style={tw`px-4 py-4 border-b border-gray-200`}>
-                  <View style={tw`flex-row items-center`}>
-                    <View style={tw`w-16 h-20 rounded-lg overflow-hidden bg-gray-100 mr-4 border border-gray-200`}>
+              <View style={tw`px-4 py-4 bg-white`}>
+                <View style={[
+                  tw`bg-white rounded-2xl overflow-hidden`,
+                  {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.12,
+                    shadowRadius: 12,
+                    elevation: 5,
+                  }
+                ]}>
+                  {/* Style Preview Image */}
+                  <View style={tw`relative`}>
+                    <View style={[tw`bg-gray-50 items-center justify-center`, { height: 200 }]}>
                       <Image
                         source={{ uri: getMushafImageUrl(22, selectedStyle) }}
                         style={{ width: '100%', height: '100%' }}
                         resizeMode="cover"
                       />
                     </View>
-                    <View style={tw`flex-1`}>
-                      <Text style={tw`text-lg font-medium text-black mb-1`}>
-                        {getStyleName(selectedStyle)}
+                    
+                    {/* Active Badge */}
+                    <View style={tw`absolute top-4 right-4 bg-green-500 rounded-full px-3 py-1.5 flex-row items-center`}>
+                      <Ionicons name="checkmark-circle" size={14} color="white" />
+                      <Text style={tw`text-white text-xs font-medium ml-1`}>Active</Text>
+                    </View>
+                  </View>
+
+                  {/* Compact Card Content */}
+                  <View style={tw`px-4 py-4`}>
+                    <Text style={tw`text-lg font-semibold text-gray-900 text-center mb-1`}>
+                      {getStyleName(selectedStyle)}
+                    </Text>
+                    <Text style={tw`text-sm text-gray-500 text-center mb-3`}>
+                      Style {selectedStyle}
+                    </Text>
+                    
+                    <View style={tw`bg-green-50 rounded-xl p-3 flex-row items-center justify-center`}>
+                      <Ionicons name="checkmark-circle" size={16} color="#22C55E" />
+                      <Text style={tw`text-green-700 font-medium text-sm ml-2`}>
+                        Currently Active
                       </Text>
-                      <Text style={tw`text-base text-gray-500 mb-2`}>
-                        Style {selectedStyle}
-                      </Text>
-                      <View style={tw`flex-row items-center`}>
-                        <Ionicons name="checkmark-circle" size={16} color="#34C759" />
-                        <Text style={tw`text-sm text-green-600 ml-1 font-medium`}>
-                          Currently Active
-                        </Text>
-                      </View>
                     </View>
                   </View>
                 </View>
@@ -280,19 +324,25 @@ export default function MushafStyleScreen() {
         {/* Available Styles Section */}
         <View style={tw`mt-8`}>
           <SectionHeader title="Available Styles" />
-          <View style={tw`bg-white border-t border-gray-200`}>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((styleNumber, index) => (
-              <StyleItem
-                key={styleNumber}
-                styleNumber={styleNumber}
-                styleName={getStyleName(styleNumber)}
-                isSelected={selectedStyle === styleNumber}
-                isLoading={imageLoadingStates[styleNumber]}
-                onPress={() => handleStyleSelect(styleNumber)}
-                onImageLoadStart={() => handleImageLoadStart(styleNumber)}
-                onImageLoadEnd={() => handleImageLoadEnd(styleNumber)}
-                onImageError={() => handleImageError(styleNumber)}
-              />
+          <View style={tw`px-4 py-6 bg-white`}>
+            {chunkArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 2).map((pair, rowIndex) => (
+              <View key={rowIndex} style={tw`flex-row justify-between mb-5`}>
+                {pair.map((styleNumber) => (
+                  <StyleCard
+                    key={styleNumber}
+                    styleNumber={styleNumber}
+                    styleName={getStyleName(styleNumber)}
+                    isSelected={selectedStyle === styleNumber}
+                    isLoading={imageLoadingStates[styleNumber]}
+                    onPress={() => handleStyleSelect(styleNumber)}
+                    onImageLoadStart={() => handleImageLoadStart(styleNumber)}
+                    onImageLoadEnd={() => handleImageLoadEnd(styleNumber)}
+                    onImageError={() => handleImageError(styleNumber)}
+                  />
+                ))}
+                {/* Fill empty space if odd number of items in last row */}
+                {pair.length === 1 && <View style={{ width: (width - 48) / 2 }} />}
+              </View>
             ))}
           </View>
         </View>

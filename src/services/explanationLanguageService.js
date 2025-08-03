@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AlertManager } from '../components/AppleStyleAlert';
 
 // Get the user's preferred explanation language
 export const getExplanationLanguage = async () => {
@@ -31,39 +32,37 @@ export const promptForExplanationLanguage = () => {
   ];
 
   return new Promise((resolve, reject) => {
-    import('react-native').then(({ Alert }) => {
-      const buttons = languages.map(lang => ({
-        text: `${lang.flag} ${lang.name}`,
-        onPress: async () => {
-          try {
-            // Save the selected language
-            const savedSettings =
-              await AsyncStorage.getItem('quran_app_settings');
-            const settings = savedSettings ? JSON.parse(savedSettings) : {};
-            const updatedSettings = { ...settings, explanationLanguage: lang };
-            await AsyncStorage.setItem(
-              'quran_app_settings',
-              JSON.stringify(updatedSettings)
-            );
-            resolve(lang);
-          } catch (error) {
-            reject(error);
-          }
-        },
-      }));
+    const buttons = languages.map(lang => ({
+      text: `${lang.flag} ${lang.name}`,
+      onPress: async () => {
+        try {
+          // Save the selected language
+          const savedSettings =
+            await AsyncStorage.getItem('quran_app_settings');
+          const settings = savedSettings ? JSON.parse(savedSettings) : {};
+          const updatedSettings = { ...settings, explanationLanguage: lang };
+          await AsyncStorage.setItem(
+            'quran_app_settings',
+            JSON.stringify(updatedSettings)
+          );
+          resolve(lang);
+        } catch (error) {
+          reject(error);
+        }
+      },
+    }));
 
-      buttons.push({
-        text: 'Cancel',
-        style: 'cancel',
-        onPress: () => resolve(null),
-      });
-
-      Alert.alert(
-        'Select Explanation Language',
-        'Choose your preferred language for Quran explanations and tafseer',
-        buttons
-      );
+    buttons.push({
+      text: 'Cancel',
+      style: 'cancel',
+      onPress: () => resolve(null),
     });
+
+    AlertManager.alert(
+      'Select Explanation Language',
+      'Choose your preferred language for Quran explanations and tafseer',
+      buttons
+    );
   });
 };
 

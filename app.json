@@ -28,7 +28,8 @@
         "foregroundImage": "./assets/logo2.png",
         "backgroundColor": "#FAF3E7"
       },
-      "package": "com.quranapp.mobile"
+      "package": "com.quranapp.mobile",
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -9,9 +9,9 @@ import {
   ActivityIndicator,
   Modal,
   ScrollView,
-  Alert,
   Switch,
   Animated,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +28,7 @@ import analytics from '../services/analyticsService';
 import rateLimitService from '../services/rateLimitService';
 import RateLimitStatus from '../components/RateLimitStatus';
 import { getMushafStyle, getMushafImageUrl } from '../services/mushafService';
+import { AlertManager } from '../components/AppleStyleAlert';
 
 const { width, height } = Dimensions.get('window');
 
@@ -55,6 +56,7 @@ export default function QuranPageScreen({ route }) {
   const [preloadedPages, setPreloadedPages] = useState(new Set()); // Track preloaded pages
   const [isTransitioning, setIsTransitioning] = useState(false); // Prevent multiple transitions
   const [mushafStyle, setMushafStyle] = useState(9); // Default to style 9
+  const [showBackConfirmModal, setShowBackConfirmModal] = useState(false); // Apple-style back confirmation
 
   // Animation references
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -184,7 +186,7 @@ export default function QuranPageScreen({ route }) {
       await proceedWithAIExplanation(languageCode);
     } catch (error) {
       console.error('Error saving language preference:', error);
-      Alert.alert(
+      AlertManager.alert(
         'Error',
         'Failed to save language preference. Please try again.'
       );
@@ -216,11 +218,34 @@ export default function QuranPageScreen({ route }) {
       loadMushafStyle();
     });
 
+    // Handle hardware back button and gesture navigation
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      console.log('[QURAN SCREEN] Hardware back button pressed');
+      handleBackPress();
+      return true; // Prevent default back behavior
+    });
+
+    // Add beforeRemove listener to intercept navigation away from screen
+    const unsubscribeBeforeRemove = navigation.addListener('beforeRemove', (e) => {
+      // If we're already showing the modal, allow navigation
+      if (showBackConfirmModal) {
+        return;
+      }
+
+      // Prevent default behavior of leaving the screen
+      e.preventDefault();
+
+      console.log('[QURAN SCREEN] Navigation intercepted, showing confirmation');
+      handleBackPress();
+    });
+
     return () => {
       console.log('[QURAN SCREEN] Component unmounting');
       unsubscribe();
+      backHandler.remove();
+      unsubscribeBeforeRemove();
     };
-  }, []);
+  }, [showBackConfirmModal]);
 
   const loadMushafStyle = async () => {
     try {
@@ -236,6 +261,16 @@ export default function QuranPageScreen({ route }) {
         // Force image reload by triggering loading state
         setLoading(true);
         setImageError(false);
+        
+        // Clear preloaded pages cache since URLs have changed
+        console.log('[QURAN SCREEN] Clearing preloaded pages cache due to style change');
+        setPreloadedPages(new Set());
+        
+        // Preload adjacent pages with new style after a short delay
+        setTimeout(() => {
+          console.log('[QURAN SCREEN] Starting preload with new mushaf style');
+          preloadAdjacentPages(currentPage);
+        }, 500);
         
         console.log('[QURAN SCREEN] mushafStyle state set to:', style);
       }
@@ -398,11 +433,8 @@ export default function QuranPageScreen({ route }) {
   };
 
   const handleBackPress = () => {
-    console.log('[QURAN SCREEN] Back button pressed, navigating to Juz List');
-    navigation.navigate('Quran', {
-      screen: 'QuranTabs',
-      params: { screen: 'JuzList' },
-    });
+    console.log('[QURAN SCREEN] Back button pressed, showing confirmation');
+    setShowBackConfirmModal(true);
   };
 
   const handleModalClose = () => {
@@ -433,10 +465,9 @@ export default function QuranPageScreen({ route }) {
         const resetTime = rateLimitService.getTimeUntilReset(
           rateLimitResult.resetTime
         );
-        Alert.alert(
+        AlertManager.alert(
           'Rate Limit Exceeded',
-          `You've reached the maximum number of AI Tafseer requests (${rateLimitResult.maxRequests}) for this hour. Please try again in ${resetTime}.`,
-          [{ text: 'OK' }]
+          `You've reached the maximum number of AI Tafseer requests (${rateLimitResult.maxRequests}) for this hour. Please try again in ${resetTime}.`
         );
         return;
       }
@@ -585,7 +616,7 @@ export default function QuranPageScreen({ route }) {
       setAnalysisComplete(false);
 
       // Show user-friendly error message
-      Alert.alert(
+      AlertManager.alert(
         'Connection Error',
         'Unable to get explanation. Please check your internet connection and try again.',
         [
@@ -597,43 +628,85 @@ export default function QuranPageScreen({ route }) {
   };
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['left', 'right', 'bottom']}>
+    <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['left', 'right']}>
       <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
 
       {/* iOS-Style Navigation Header */}
-      <View style={tw`bg-gray-100 border-b border-gray-200`}>
-        <View style={tw`flex-row items-center justify-between px-4 py-3`}>
+      <View
+        style={[
+          tw`bg-white border-b`,
+          {
+            borderBottomColor: 'rgba(60, 60, 67, 0.12)',
+            borderBottomWidth: 0.5,
+            shadowColor: 'rgba(0, 0, 0, 0.1)',
+            shadowOffset: { width: 0, height: 0.5 },
+            shadowOpacity: 1,
+            shadowRadius: 0,
+          },
+        ]}
+      >
+        <View
+          style={tw`flex-row items-center justify-between px-4 py-3 min-h-[44px]`}
+        >
+          {/* Back Button */}
           <TouchableOpacity
             onPress={handleBackPress}
-            style={tw`flex-row items-center py-1`}
-            activeOpacity={0.3}
+            style={tw`flex-row items-center py-1 -ml-1`}
+            activeOpacity={0.4}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="chevron-back" size={24} color="#007AFF" />
-            <Text style={tw`text-lg text-blue-500 ml-1 font-normal`}>Back</Text>
+            <Ionicons name="chevron-back" size={22} color="#007AFF" />
+            <Text
+              style={[
+                tw`text-blue-500 ml-1`,
+                { fontSize: 17, fontWeight: '400', letterSpacing: -0.4 },
+              ]}
+            >
+              Back
+            </Text>
           </TouchableOpacity>
 
+          {/* Center Title */}
           <TouchableOpacity
             onPress={() => setShowNavModal(true)}
-            style={tw`px-3 py-1`}
-            activeOpacity={0.3}
+            style={tw`flex-row items-center justify-center flex-1 mx-4`}
+            activeOpacity={0.4}
+            hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
           >
-            <Text style={tw`text-lg font-semibold text-black`}>
-              Page {currentPage}
-            </Text>
-            <Ionicons
-              name="chevron-down"
-              size={16}
-              color="#8E8E93"
-              style={tw`absolute -right-2 top-3`}
-            />
+            <View style={tw`flex-row items-center`}>
+              <Text
+                style={[
+                  tw`text-black text-center`,
+                  { fontSize: 17, fontWeight: '600', letterSpacing: -0.4 },
+                ]}
+              >
+                Page {currentPage}
+              </Text>
+              <Ionicons
+                name="chevron-down"
+                size={14}
+                color="#8E8E93"
+                style={tw`ml-1`}
+              />
+            </View>
           </TouchableOpacity>
 
+          {/* Settings Button */}
           <TouchableOpacity
             onPress={() => navigation.navigate('MushafStyle')}
-            style={tw`p-1`}
-            activeOpacity={0.3}
+            style={tw`flex-row items-center py-1 -mr-1`}
+            activeOpacity={0.4}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="book-outline" size={24} color="#007AFF" />
+            <Ionicons name="book-outline" size={20} color="#007AFF" style={tw`mr-1`} />
+            <Text
+              style={[
+                tw`text-blue-500`,
+                { fontSize: 17, fontWeight: '400', letterSpacing: -0.4 },
+              ]}
+            >
+              Style
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -646,15 +719,15 @@ export default function QuranPageScreen({ route }) {
         >
           <View style={tw`flex-1 justify-center items-center`}>
             {loading && !isTransitioning && (
-              <IOSLoader 
+              <IOSLoader
                 title="Loading Page"
                 subtitle="Please wait while we load the Quran page"
                 overlay={true}
               />
             )}
-            
+
             {imageError ? (
-              <IOSErrorView 
+              <IOSErrorView
                 title="Unable to Load Page"
                 subtitle="Please check your internet connection and try again."
                 onRetry={() => {
@@ -667,10 +740,9 @@ export default function QuranPageScreen({ route }) {
                 source={{ uri: getPageImageUrl(currentPage) }}
                 style={{
                   width: width,
-                  height: height * 0.73,
-                  backgroundColor: '#FFFFFF',
+                  height: height * 0.76,
                 }}
-                resizeMode="contain"
+                resizeMode="stretch"
                 onLoad={handleImageLoad}
                 onError={handleImageError}
               />
@@ -680,27 +752,29 @@ export default function QuranPageScreen({ route }) {
       </View>
 
       {/* iOS-Style Bottom Controls */}
-      <View style={tw`bg-gray-100 border-t border-gray-200 px-4 py-3`}>
+      <View style={tw`bg-white border-t border-gray-200 px-4 py-3`}>
         <View style={tw`flex-row items-center justify-between`}>
           {/* Next Button (moved to left) */}
           <TouchableOpacity
             onPress={nextPage}
             disabled={currentPage >= totalPages}
             style={[
-              tw`flex-row items-center px-4 py-2 rounded-xl`,
-              currentPage >= totalPages ? tw`opacity-50` : tw`bg-white`
+              tw`flex-row items-center px-4 py-3 rounded-xl `,
+              currentPage >= totalPages ? tw`opacity-50` : tw`bg-gray-50`,
             ]}
             activeOpacity={0.3}
           >
-            <Ionicons 
-              name="chevron-back" 
-              size={20} 
-              color={currentPage >= totalPages ? "#8E8E93" : "#007AFF"} 
+            <Ionicons
+              name="chevron-back"
+              size={20}
+              color={currentPage >= totalPages ? '#8E8E93' : '#007AFF'}
             />
-            <Text style={[
-              tw`ml-1 font-medium`,
-              { color: currentPage >= totalPages ? "#8E8E93" : "#007AFF" }
-            ]}>
+            <Text
+              style={[
+                tw`ml-1 font-medium`,
+                { color: currentPage >= totalPages ? '#8E8E93' : '#007AFF' },
+              ]}
+            >
               Next
             </Text>
           </TouchableOpacity>
@@ -708,7 +782,7 @@ export default function QuranPageScreen({ route }) {
           {/* Tafseer Button */}
           <TouchableOpacity
             onPress={handleAIExplanation}
-            style={tw`bg-blue-500 px-6 py-2 rounded-xl flex-row items-center`}
+            style={tw`bg-blue-500 px-6 py-3 rounded-xl flex-row items-center`}
             activeOpacity={0.8}
           >
             <Ionicons name="book" size={18} color="white" style={tw`mr-2`} />
@@ -720,21 +794,23 @@ export default function QuranPageScreen({ route }) {
             onPress={prevPage}
             disabled={currentPage <= 1}
             style={[
-              tw`flex-row items-center px-4 py-2 rounded-xl`,
-              currentPage <= 1 ? tw`opacity-50` : tw`bg-white`
+              tw`flex-row items-center px-4 py-3 rounded-xl`,
+              currentPage <= 1 ? tw`opacity-50` : tw`bg-gray-50`,
             ]}
             activeOpacity={0.3}
           >
-            <Text style={[
-              tw`mr-1 font-medium`,
-              { color: currentPage <= 1 ? "#8E8E93" : "#007AFF" }
-            ]}>
-              Previous
+            <Text
+              style={[
+                tw`mr-1 font-medium`,
+                { color: currentPage <= 1 ? '#8E8E93' : '#007AFF' },
+              ]}
+            >
+              Prev
             </Text>
-            <Ionicons 
-              name="chevron-forward" 
-              size={20} 
-              color={currentPage <= 1 ? "#8E8E93" : "#007AFF"} 
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={currentPage <= 1 ? '#8E8E93' : '#007AFF'}
             />
           </TouchableOpacity>
         </View>
@@ -749,7 +825,7 @@ export default function QuranPageScreen({ route }) {
       >
         <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
           <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
-          
+
           {/* Modal Header */}
           <View style={tw`bg-gray-100 border-b border-gray-200`}>
             <View style={tw`flex-row items-center justify-between px-4 py-3`}>
@@ -776,17 +852,20 @@ export default function QuranPageScreen({ route }) {
           >
             {aiLoading ? (
               <IOSProgressLoader
-                title={analysisComplete ? 'Analysis Complete!' : 'Analyzing Page...'}
-                subtitle={analysisComplete 
-                  ? 'Preparing your Tafseer explanation' 
-                  : 'AI is processing the Quranic text and generating insights'
+                title={
+                  analysisComplete ? 'Analysis Complete!' : 'Analyzing Page...'
+                }
+                subtitle={
+                  analysisComplete
+                    ? 'Preparing your Tafseer explanation'
+                    : 'AI is processing the Quranic text and generating insights'
                 }
                 steps={[
                   'Analyzing Arabic text...',
                   'Processing meanings...',
                   'Consulting sources...',
                   'Generating explanation...',
-                  'Finalizing Tafseer...'
+                  'Finalizing Tafseer...',
                 ]}
                 currentStep={analysisStep}
                 overlay={false}
@@ -794,7 +873,9 @@ export default function QuranPageScreen({ route }) {
             ) : aiResponse ? (
               <View style={tw`bg-white rounded-xl p-6 shadow-sm`}>
                 <View style={tw`flex-row items-center mb-4`}>
-                  <View style={tw`w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3`}>
+                  <View
+                    style={tw`w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3`}
+                  >
                     <Ionicons name="sparkles" size={20} color="#007AFF" />
                   </View>
                   <Text style={tw`text-lg font-semibold text-black`}>
@@ -805,9 +886,24 @@ export default function QuranPageScreen({ route }) {
                 <Markdown
                   style={{
                     body: { fontSize: 16, lineHeight: 24, color: '#1f2937' },
-                    heading1: { fontSize: 22, fontWeight: 'bold', color: '#111827', marginBottom: 12 },
-                    heading2: { fontSize: 20, fontWeight: 'bold', color: '#1f2937', marginBottom: 10 },
-                    heading3: { fontSize: 18, fontWeight: '600', color: '#374151', marginBottom: 8 },
+                    heading1: {
+                      fontSize: 22,
+                      fontWeight: 'bold',
+                      color: '#111827',
+                      marginBottom: 12,
+                    },
+                    heading2: {
+                      fontSize: 20,
+                      fontWeight: 'bold',
+                      color: '#1f2937',
+                      marginBottom: 10,
+                    },
+                    heading3: {
+                      fontSize: 18,
+                      fontWeight: '600',
+                      color: '#374151',
+                      marginBottom: 8,
+                    },
                     paragraph: { marginBottom: 12, lineHeight: 22 },
                     strong: { fontWeight: 'bold', color: '#111827' },
                     blockquote: {
@@ -827,14 +923,20 @@ export default function QuranPageScreen({ route }) {
                 {/* Disclaimer */}
                 <View style={tw`bg-gray-50 rounded-xl p-4 mt-6`}>
                   <View style={tw`flex-row items-start`}>
-                    <Ionicons name="information-circle" size={20} color="#8E8E93" style={tw`mr-2 mt-0.5`} />
+                    <Ionicons
+                      name="information-circle"
+                      size={20}
+                      color="#8E8E93"
+                      style={tw`mr-2 mt-0.5`}
+                    />
                     <View style={tw`flex-1`}>
                       <Text style={tw`text-gray-600 font-medium text-sm mb-1`}>
                         Important Note
                       </Text>
                       <Text style={tw`text-gray-500 text-sm leading-5`}>
-                        This AI-generated explanation is for educational purposes. 
-                        Please consult qualified Islamic scholars for authoritative interpretation.
+                        This AI-generated explanation is for educational
+                        purposes. Please consult qualified Islamic scholars for
+                        authoritative interpretation.
                       </Text>
                     </View>
                   </View>
@@ -970,7 +1072,112 @@ export default function QuranPageScreen({ route }) {
         }}
       />
 
-   
+      {/* Apple-Style Back Confirmation Modal */}
+      <Modal
+        visible={showBackConfirmModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowBackConfirmModal(false)}
+      >
+        <View style={[
+          tw`flex-1 justify-center items-center px-4`,
+          { backgroundColor: 'rgba(0, 0, 0, 0.4)' }
+        ]}>
+          {/* Simple Modal Card */}
+          <View style={[
+            tw`w-full max-w-sm mx-4 bg-white rounded-2xl overflow-hidden`,
+            {
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 10,
+              elevation: 10,
+            }
+          ]}>
+            {/* Modal Header */}
+            <View style={tw`px-6 pt-6 pb-4`}>
+              <Text style={[
+                tw`text-center text-black mb-2`,
+                { 
+                  fontSize: 17, 
+                  fontWeight: '600', 
+                  letterSpacing: -0.4,
+                }
+              ]}>
+                🌟 Amazing Progress! 
+              </Text>
+              <Text style={[
+                tw`text-center leading-5 text-gray-600`,
+                { 
+                  fontSize: 13, 
+                  letterSpacing: -0.2,
+                }
+              ]}>
+                MashAllah! You're building such a beautiful habit. How about blessing yourself with just one more page? 📖✨
+              </Text>
+            </View>
+
+            {/* Modal Buttons */}
+            <View style={tw`border-t border-gray-200`}>
+              <TouchableOpacity
+                onPress={() => {
+                  console.log('[QURAN SCREEN] User chose to read one more page');
+                  analytics.trackUserAction('encouraged_reading', {
+                    from_page: currentPage,
+                    to_page: currentPage + 1,
+                  });
+                  setShowBackConfirmModal(false);
+                  nextPage();
+                }}
+                style={tw`py-4 border-b border-gray-200`}
+                activeOpacity={0.4}
+              >
+                <Text style={[
+                  tw`text-center`,
+                  { 
+                    fontSize: 17, 
+                    fontWeight: '600', 
+                    letterSpacing: -0.4,
+                    color: '#007AFF',
+                  }
+                ]}>
+                  Yes! Read 1 More Page 🤲
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  console.log('[QURAN SCREEN] User confirmed back navigation');
+                  setShowBackConfirmModal(false);
+                  // Use reset to properly navigate back and allow the navigation
+                  navigation.dispatch(
+                    navigation.getState().index > 0 
+                      ? navigation.goBack() 
+                      : navigation.navigate('Quran', {
+                          screen: 'QuranTabs',
+                          params: { screen: 'JuzList' },
+                        })
+                  );
+                }}
+                style={tw`py-4`}
+                activeOpacity={0.4}
+              >
+                <Text style={[
+                  tw`text-center`,
+                  { 
+                    fontSize: 17, 
+                    fontWeight: '400', 
+                    letterSpacing: -0.4,
+                    color: '#007AFF',
+                  }
+                ]}>
+                  Maybe Later 😊
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

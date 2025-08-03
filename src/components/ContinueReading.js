@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import tw from 'twrnc';
 import { useSelector } from 'react-redux';
 import analytics from '../services/analyticsService';
+import { AlertManager } from './AppleStyleAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -311,7 +312,7 @@ const ContinueReading = ({ navigation }) => {
   const lastReadPage = useSelector(s => s.streak.lastReadPage);
 
   const handleContinueReading = () => {
-    Alert.alert(
+    AlertManager.alert(
       'Continue Reading',
       `Continue reading ${lastReadPage.name}?`,
       [
@@ -328,7 +329,7 @@ const ContinueReading = ({ navigation }) => {
   };
 
   const handleStartFresh = () => {
-    Alert.alert(
+    AlertManager.alert(
       'Start Reading',
       'Where would you like to start?',
       [

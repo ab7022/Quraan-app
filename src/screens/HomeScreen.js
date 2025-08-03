@@ -278,7 +278,6 @@ export default function HomeScreen() {
             </LinearGradient>
           </TouchableOpacity>
         </View>
-        {/* Continue Reading Section */}
 
         {/* Quick Actions */}
         <QuickActions navigation={navigation} />

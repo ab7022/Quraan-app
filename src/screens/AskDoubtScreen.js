@@ -6,13 +6,9 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
-  FlatList,
   StatusBar,
-  Keyboard,
-  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
@@ -24,6 +20,7 @@ import analytics from '../services/analyticsService';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { IOSLoader, IOSInlineLoader } from '../components/IOSLoader';
+import { AlertManager } from '../components/AppleStyleAlert';
 
 // Maximum number of chat messages to keep in history
 const MAX_CHAT_MESSAGES = 20;
@@ -64,16 +61,15 @@ export default function AskDoubtScreen() {
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showChat, setShowChat] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [screenHeight, setScreenHeight] = useState(Dimensions.get('window').height);
-  const flatListRef = useRef(null);
+  const scrollViewRef = useRef(null);
 
   // Hide tab bar completely on this screen
   useEffect(() => {
     const parent = navigation.getParent();
     if (parent) {
       parent.setOptions({
-        tabBarStyle: { display: 'none' }
+        tabBarStyle: { display: 'none' },
+        tabBarHideOnKeyboard: true // Hide tab bar when keyboard appears
       });
     }
 
@@ -104,37 +100,11 @@ export default function AskDoubtScreen() {
             shadowRadius: 0,
             elevation: 0,
           },
+          tabBarHideOnKeyboard: true
         });
       }
     };
   }, [navigation]);
-
-  // Keyboard listeners for dynamic positioning
-  useEffect(() => {
-    const keyboardWillShowListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (event) => {
-        setKeyboardHeight(event.endCoordinates.height);
-      }
-    );
-
-    const keyboardWillHideListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => {
-        setKeyboardHeight(0);
-      }
-    );
-
-    const dimensionListener = Dimensions.addEventListener('change', ({ window }) => {
-      setScreenHeight(window.height);
-    });
-
-    return () => {
-      keyboardWillShowListener.remove();
-      keyboardWillHideListener.remove();
-      dimensionListener?.remove();
-    };
-  }, []);
 
   // Load chat history on component mount
   useEffect(() => {
@@ -147,12 +117,12 @@ export default function AskDoubtScreen() {
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (flatListRef.current && !isLoading) {
+    if (scrollViewRef.current && !isLoading) {
       setTimeout(() => {
-        flatListRef.current.scrollToEnd({ animated: true });
+        scrollViewRef.current.scrollToEnd({ animated: true });
       }, 100);
     }
-  }, [chatMessages, isLoading]);
+  }, [chatMessages, isLoading, isTyping]);
 
   // Load chat history from AsyncStorage
   const loadChatHistory = async () => {
@@ -294,10 +264,9 @@ export default function AskDoubtScreen() {
         const resetTime = rateLimitService.getTimeUntilReset(
           rateLimitResult.resetTime
         );
-        Alert.alert(
+        AlertManager.alert(
           'Rate Limit Exceeded',
-          `You've reached the maximum number of AI questions (${rateLimitResult.maxRequests}) for this hour. Please try again in ${resetTime}.`,
-          [{ text: 'OK' }]
+          `You've reached the maximum number of AI questions (${rateLimitResult.maxRequests}) for this hour. Please try again in ${resetTime}.`
         );
         return;
       }
@@ -551,7 +520,7 @@ export default function AskDoubtScreen() {
   };
 
   const handleClearChat = () => {
-    Alert.alert(
+    AlertManager.alert(
       'Clear Chat History',
       'Are you sure you want to clear all chat messages? This action cannot be undone.',
       [
@@ -567,113 +536,160 @@ export default function AskDoubtScreen() {
 
   if (showChat || chatMessages.length > 0) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['left', 'right']}>
-        <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
-          {/* iOS-Style Navigation Header */}
-          <View style={tw`bg-gray-100 `}>
-            <View style={tw`flex-row items-center justify-between px-4 py-3
-`}>
- </View>
- </View>
-        <View style={tw`flex-1 bg-white`}>
-          {/* iOS-Style Navigation Header */}
-          <View style={tw`bg-gray-100 border-b border-gray-200`}>
-            <View style={tw`flex-row items-center justify-between px-4 py-3`}>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Home')}
-                style={tw`flex-row items-center py-1`}
-                activeOpacity={0.3}
-              >
-                <Ionicons name="chevron-back" size={24} color="#007AFF" />
-                <Text style={tw`text-lg text-blue-500 ml-1 font-normal`}>Home</Text>
-              </TouchableOpacity>
-
-              <Text style={tw`text-lg font-semibold text-black`}>
-                Islamic Q&A
-              </Text>
-
-              <TouchableOpacity
-                onPress={handleClearChat}
-                style={tw`p-2 -mr-2`}
-                activeOpacity={0.3}
-              >
-                <Ionicons name="trash-outline" size={22} color="#FF3B30" />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Chat Messages */}
-          <View 
-            style={[
-              tw`flex-1 bg-white`,
-              { 
-                marginBottom: keyboardHeight > 0 
-                  ? keyboardHeight + 80 // Input height + padding when keyboard is open
-                  : 80 // Just input height when keyboard is closed
-              }
-            ]}
-          >
-            {isLoading ? (
-              <IOSLoader 
-                title="Loading Messages"
-                subtitle="Please wait while we load your chat history"
-                overlay={false}
-              />
-            ) : (
-              <FlatList
-                ref={flatListRef}
-                data={chatMessages}
-                renderItem={renderMessage}
-                keyExtractor={item => item.id}
-                style={tw`flex-1`}
-                contentContainerStyle={tw`py-4`}
-                showsVerticalScrollIndicator={false}
-              />
-            )}
-          </View>
-
-          {/* Message Input - Positioned absolutely to stay above keyboard */}
-          <View 
-            style={[
-              tw`absolute left-0 right-0 bg-gray-100 border-t border-gray-200 px-4 py-3`,
-              { 
-                bottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom + 12
-              }
-            ]}
-          >
-            <View style={tw`flex-row items-end`}>
-              <View style={tw`flex-1 bg-white rounded-2xl border border-gray-300 mr-3 px-4 py-3`}>
-                <TextInput
-                  style={tw`text-black text-base max-h-24 leading-5`}
-                  placeholder="Ask your Islamic question..."
-                  placeholderTextColor="#8E8E93"
-                  value={message}
-                  onChangeText={setMessage}
-                  multiline
-                  textAlignVertical="top"
-                  maxLength={1000}
-                  selectionColor="#007AFF"
-                />
+    
+        <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['left', 'right']}>
+          <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
+          <View style={tw` bg-white mt-12`}>
+            <View style={tw`bg-gray-100 border-b border-gray-200`}>
               </View>
-              <TouchableOpacity
-                onPress={sendMessage}
-                disabled={isSending || !message.trim()}
-                style={[
-                  tw`w-12 h-12 bg-blue-500 rounded-full items-center justify-center`,
-                  (isSending || !message.trim()) && tw`opacity-40`,
-                ]}
-                activeOpacity={0.3}
-              >
-                {isSending ? (
-                  <Ionicons name="hourglass-outline" size={20} color="white" />
-                ) : (
-                  <Ionicons name="send" size={18} color="white" />
-                )}
-              </TouchableOpacity>
+              </View>
+          <View style={tw`flex-1 bg-white`}>
+            {/* iOS-Style Navigation Header */}
+            <View style={tw`bg-gray-100 border-b border-gray-200`}>
+              <View style={tw`flex-row items-center justify-between px-4 py-3`}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('Home')}
+                  style={tw`flex-row items-center py-1`}
+                  activeOpacity={0.3}
+                >
+                  <Ionicons name="chevron-back" size={24} color="#007AFF" />
+                  <Text style={tw`text-lg text-blue-500 ml-1 font-normal`}>Home</Text>
+                </TouchableOpacity>
+
+                <Text style={tw`text-lg font-semibold text-black`}>
+                  Islamic Q&A
+                </Text>
+
+                <TouchableOpacity
+                  onPress={handleClearChat}
+                  style={tw`p-2 -mr-2`}
+                  activeOpacity={0.3}
+                >
+                  <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+                </TouchableOpacity>
+              </View>
             </View>
+
+            {/* Chat Messages */}
+            <ScrollView
+              ref={scrollViewRef}
+              style={tw`flex-1`}
+              contentContainerStyle={tw`py-4`}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {isLoading ? (
+                <IOSLoader 
+                  title="Loading Messages"
+                  subtitle="Please wait while we load your chat history"
+                  overlay={false}
+                />
+              ) : (
+                chatMessages.map((item) => (
+                  <View key={item.id} style={tw`mb-4 px-4`}>
+                    <View
+                      style={[
+                        tw`flex-row`,
+                        item.isUser ? tw`justify-end` : tw`justify-start`,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          tw`max-w-[80%] rounded-2xl px-4 py-3`,
+                          item.isUser
+                            ? tw`bg-blue-500`
+                            : item.isError
+                              ? tw`bg-red-50 border border-red-200`
+                              : tw`bg-gray-100 border border-gray-200`,
+                        ]}
+                      >
+                        {!item.isUser && (
+                          <Text style={tw`text-xs font-medium text-gray-500 mb-2`}>
+                            {item.sender || 'Islamic Scholar'}
+                          </Text>
+                        )}
+                        {item.isUser ? (
+                          <Text style={tw`text-base leading-5 text-white`}>
+                            {item.text}
+                          </Text>
+                        ) : (
+                          <Markdown style={markdownStyles}>{item.text}</Markdown>
+                        )}
+                        <Text
+                          style={[
+                            tw`text-xs mt-2`,
+                            item.isUser
+                              ? tw`text-blue-200 text-right`
+                              : tw`text-gray-400 text-right`,
+                          ]}
+                        >
+                          {formatTime(item.timestamp)}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                ))
+              )}
+
+              {/* Typing Indicator */}
+              {isTyping && (
+                <View style={tw`px-4 pb-2`}>
+                  <View style={tw`flex-row justify-start`}>
+                    <View style={tw`bg-gray-100 border border-gray-200 rounded-2xl px-4 py-3 max-w-[80%]`}>
+                      <IOSInlineLoader message="Thinking..." />
+                    </View>
+                  </View>
+                </View>
+              )}
+            </ScrollView>
+  <KeyboardAvoidingView
+        style={tw``}
+        behavior={Platform.OS === 'ios' ? 'padding' : "height"}
+      >
+            {/* Message Input */}
+            <View style={tw`bg-gray-100 border-t border-gray-200 px-4 py-3`}>
+              <View style={tw`flex-row items-end`}>
+                <View style={tw`flex-1 bg-white rounded-2xl border border-gray-300 mr-3 px-4 py-3`}>
+                  <TextInput
+                    style={tw`text-black text-base max-h-24 leading-5`}
+                    placeholder="Ask your Islamic question..."
+                    placeholderTextColor="#8E8E93"
+                    value={message}
+                    onChangeText={setMessage}
+                    multiline
+                    textAlignVertical="top"
+                    maxLength={1000}
+                    selectionColor="#007AFF"
+                    blurOnSubmit={false}
+                    returnKeyType="send"
+                    onSubmitEditing={() => {
+                      if (message.trim()) {
+                        sendMessage();
+                      }
+                    }}
+                  />
+                </View>
+                <TouchableOpacity
+                  onPress={sendMessage}
+                  disabled={isSending || !message.trim()}
+                  style={[
+                    tw`w-12 flex flex-row align-center mb-2 h-12 bg-blue-500 rounded-full items-center justify-center`,
+                    (isSending || !message.trim()) && tw`opacity-40`,
+                  ]}
+                  activeOpacity={0.3}
+                >
+                  {isSending ? (
+                    <Ionicons name="hourglass-outline" size={20} color="white" />
+                  ) : (
+                    <Ionicons name="send" size={18} color="white" />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
           </View>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      
     );
     } 
      return (

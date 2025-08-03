@@ -5,13 +5,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
-  Alert,
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import analytics from '../services/analyticsService';
+import { AlertManager } from '../components/AppleStyleAlert';
 
 const SectionHeader = ({ title }) => (
   <View style={tw`px-4 py-3 bg-gray-100`}>
@@ -101,10 +101,9 @@ export default function LearnQuranScreen({ navigation }) {
       })
       .catch(err => {
         console.error('Error opening WhatsApp:', err);
-        Alert.alert(
+        AlertManager.alert(
           'WhatsApp Not Available',
-          'Please install WhatsApp or contact us directly at: +91 ' + phoneNumber,
-          [{ text: 'OK' }]
+          'Please install WhatsApp or contact us directly at: +91 ' + phoneNumber
         );
       });
   };
@@ -122,12 +121,12 @@ export default function LearnQuranScreen({ navigation }) {
         if (supported) {
           return Linking.openURL(url);
         } else {
-          Alert.alert('Phone Not Available', 'Unable to make phone calls on this device');
+          AlertManager.alert('Phone Not Available', 'Unable to make phone calls on this device');
         }
       })
       .catch(err => {
         console.error('Error making phone call:', err);
-        Alert.alert('Error', 'Unable to make phone call');
+        AlertManager.alert('Error', 'Unable to make phone call');
       });
   };
 
