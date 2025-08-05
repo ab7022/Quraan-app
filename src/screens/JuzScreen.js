@@ -28,7 +28,9 @@ const JuzItem = ({ item, onPress }) => (
   >
     <View style={tw`flex-row items-center`}>
       {/* Juz Number */}
-      <View style={tw`w-12 h-12 rounded-lg bg-gray-100 items-center justify-center mr-3`}>
+      <View
+        style={tw`w-12 h-12 rounded-lg bg-gray-100 items-center justify-center mr-3`}
+      >
         <Text style={tw`text-lg font-semibold text-gray-700`}>
           {item.juz_number}
         </Text>
@@ -188,10 +190,7 @@ export default function JuzScreen() {
             data={juzList}
             keyExtractor={item => item.juz_number.toString()}
             renderItem={({ item }) => (
-              <JuzItem
-                item={item}
-                onPress={() => handleJuzPress(item)}
-              />
+              <JuzItem item={item} onPress={() => handleJuzPress(item)} />
             )}
             style={tw`bg-white border-t border-gray-200`}
             showsVerticalScrollIndicator={false}

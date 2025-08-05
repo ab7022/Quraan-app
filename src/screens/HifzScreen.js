@@ -25,39 +25,40 @@ const SectionHeader = ({ title }) => (
   </View>
 );
 
-const StatCard = ({ title, value, subtitle, icon, color = "#007AFF" }) => (
+const StatCard = ({ title, value, subtitle, icon, color = '#007AFF' }) => (
   <View style={tw`bg-white px-4 py-4 border-b border-gray-200`}>
     <View style={tw`flex-row items-center`}>
-      <View style={[tw`w-10 h-10 rounded-full items-center justify-center mr-3`, { backgroundColor: `${color}20` }]}>
+      <View
+        style={[
+          tw`w-10 h-10 rounded-full items-center justify-center mr-3`,
+          { backgroundColor: `${color}20` },
+        ]}
+      >
         <Ionicons name={icon} size={20} color={color} />
       </View>
       <View style={tw`flex-1`}>
-        <Text style={tw`text-sm text-gray-500 font-medium uppercase tracking-wide mb-1`}>
+        <Text
+          style={tw`text-sm text-gray-500 font-medium uppercase tracking-wide mb-1`}
+        >
           {title}
         </Text>
-        <Text style={tw`text-2xl font-light text-black mb-1`}>
-          {value}
-        </Text>
-        {subtitle && (
-          <Text style={tw`text-sm text-gray-500`}>
-            {subtitle}
-          </Text>
-        )}
+        <Text style={tw`text-2xl font-light text-black mb-1`}>{value}</Text>
+        {subtitle && <Text style={tw`text-sm text-gray-500`}>{subtitle}</Text>}
       </View>
     </View>
   </View>
 );
 
-const ProgressBar = ({ progress, total, color = "#007AFF" }) => {
+const ProgressBar = ({ progress, total, color = '#007AFF' }) => {
   const percentage = total > 0 ? (progress / total) * 100 : 0;
   return (
     <View style={tw`flex-1`}>
       <View style={tw`h-2 bg-gray-200 rounded-full overflow-hidden`}>
-        <View 
+        <View
           style={[
             tw`h-full rounded-full`,
-            { backgroundColor: color, width: `${Math.min(percentage, 100)}%` }
-          ]} 
+            { backgroundColor: color, width: `${Math.min(percentage, 100)}%` },
+          ]}
         />
       </View>
       <Text style={tw`text-xs text-gray-500 mt-1 text-center`}>
@@ -67,24 +68,31 @@ const ProgressBar = ({ progress, total, color = "#007AFF" }) => {
   );
 };
 
-const ActionButton = ({ icon, title, subtitle, onPress, color = "#007AFF" }) => (
+const ActionButton = ({
+  icon,
+  title,
+  subtitle,
+  onPress,
+  color = '#007AFF',
+}) => (
   <TouchableOpacity
     onPress={onPress}
     style={tw`bg-white px-4 py-4 border-b border-gray-200`}
     activeOpacity={0.3}
   >
     <View style={tw`flex-row items-center`}>
-      <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-4`, { backgroundColor: `${color}20` }]}>
+      <View
+        style={[
+          tw`w-12 h-12 rounded-xl items-center justify-center mr-4`,
+          { backgroundColor: `${color}20` },
+        ]}
+      >
         <Ionicons name={icon} size={24} color={color} />
       </View>
       <View style={tw`flex-1`}>
-        <Text style={tw`text-lg font-medium text-black mb-1`}>
-          {title}
-        </Text>
+        <Text style={tw`text-lg font-medium text-black mb-1`}>{title}</Text>
         {subtitle && (
-          <Text style={tw`text-base text-gray-500`}>
-            {subtitle}
-          </Text>
+          <Text style={tw`text-base text-gray-500`}>{subtitle}</Text>
         )}
       </View>
       <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
@@ -130,10 +138,7 @@ export default function HifzScreen({ navigation }) {
       setTargetData(data);
     } catch (error) {
       console.error('Error saving target data:', error);
-      AlertManager.alert(
-        'Error', 
-        'Failed to save data. Please try again.'
-      );
+      AlertManager.alert('Error', 'Failed to save data. Please try again.');
     }
   };
 
@@ -157,7 +162,7 @@ export default function HifzScreen({ navigation }) {
     const target = parseInt(dailyTarget) || 0;
     if (target <= 0) {
       AlertManager.alert(
-        'Invalid Input', 
+        'Invalid Input',
         'Daily target must be greater than 0.'
       );
       return;
@@ -201,7 +206,7 @@ export default function HifzScreen({ navigation }) {
   const handleTodaySubmit = () => {
     if (!todayProgress) {
       AlertManager.alert(
-        'Missing Information', 
+        'Missing Information',
         "Please enter today's progress."
       );
       return;
@@ -209,10 +214,7 @@ export default function HifzScreen({ navigation }) {
 
     const progress = parseInt(todayProgress) || 0;
     if (progress < 0) {
-      AlertManager.alert(
-        'Invalid Input', 
-        'Progress cannot be negative.'
-      );
+      AlertManager.alert('Invalid Input', 'Progress cannot be negative.');
       return;
     }
 
@@ -244,8 +246,8 @@ export default function HifzScreen({ navigation }) {
     const target = parseInt(dailyTarget) || 0;
     if (target <= 0) {
       AlertManager.alert(
-        'Invalid Input', 
-        'Daily target must be greater than 0.'      
+        'Invalid Input',
+        'Daily target must be greater than 0.'
       );
       return;
     }
@@ -275,9 +277,9 @@ export default function HifzScreen({ navigation }) {
       'Reset Journey',
       'Are you sure you want to delete all your progress data? This action cannot be undone.',
       [
-        { 
-          text: 'Cancel', 
-          style: 'cancel' 
+        {
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
           text: 'Reset',
@@ -341,7 +343,6 @@ export default function HifzScreen({ navigation }) {
     return { current: currentStreak, best: bestStreak };
   };
 
-  
   const calculateCompletionInfo = (dailyTarget, alreadyRead = 0) => {
     const totalPages = 604;
     const remainingPages = totalPages - alreadyRead;
@@ -369,27 +370,29 @@ export default function HifzScreen({ navigation }) {
       activeOpacity={0.3}
     >
       <View style={tw`flex-row items-center`}>
-        <View style={[
-          tw`w-6 h-6 rounded-full border-2 mr-4 items-center justify-center`,
-          { borderColor: isStartingFresh === isFresh ? '#007AFF' : '#C7C7CC' }
-        ]}>
+        <View
+          style={[
+            tw`w-6 h-6 rounded-full border-2 mr-4 items-center justify-center`,
+            {
+              borderColor: isStartingFresh === isFresh ? '#007AFF' : '#C7C7CC',
+            },
+          ]}
+        >
           {isStartingFresh === isFresh && (
-            <View style={[tw`w-3 h-3 rounded-full`, { backgroundColor: '#007AFF' }]} />
+            <View
+              style={[tw`w-3 h-3 rounded-full`, { backgroundColor: '#007AFF' }]}
+            />
           )}
         </View>
-        <Ionicons 
-          name={icon} 
-          size={20} 
-          color={isStartingFresh === isFresh ? '#007AFF' : '#8E8E93'} 
-          style={tw`mr-3`} 
+        <Ionicons
+          name={icon}
+          size={20}
+          color={isStartingFresh === isFresh ? '#007AFF' : '#8E8E93'}
+          style={tw`mr-3`}
         />
         <View style={tw`flex-1`}>
-          <Text style={tw`text-lg font-medium text-black mb-1`}>
-            {title}
-          </Text>
-          <Text style={tw`text-sm text-gray-500`}>
-            {description}
-          </Text>
+          <Text style={tw`text-lg font-medium text-black mb-1`}>{title}</Text>
+          <Text style={tw`text-sm text-gray-500`}>{description}</Text>
         </View>
         {isStartingFresh === isFresh && (
           <Ionicons name="checkmark" size={20} color="#007AFF" />
@@ -402,7 +405,7 @@ export default function HifzScreen({ navigation }) {
     return (
       <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
         <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
-        <IOSLoader 
+        <IOSLoader
           title="Loading Journey"
           subtitle="Please wait while we load your Hifz progress"
           overlay={false}
@@ -414,7 +417,7 @@ export default function HifzScreen({ navigation }) {
   return (
     <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
       <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
-      
+
       {/* iOS-Style Navigation Header */}
       <View style={tw`bg-gray-100 border-b border-gray-200`}>
         <View style={tw`flex-row items-center justify-between px-4 py-3`}>
@@ -427,9 +430,7 @@ export default function HifzScreen({ navigation }) {
             <Text style={tw`text-lg text-blue-500 ml-1 font-normal`}>Back</Text>
           </TouchableOpacity>
 
-          <Text style={tw`text-lg font-semibold text-black`}>
-            Daily Quran
-          </Text>
+          <Text style={tw`text-lg font-semibold text-black`}>Daily Quran</Text>
 
           {targetData && (
             <TouchableOpacity
@@ -440,7 +441,11 @@ export default function HifzScreen({ navigation }) {
               style={tw`p-1`}
               activeOpacity={0.3}
             >
-              <Ionicons name="ellipsis-horizontal-circle" size={24} color="#007AFF" />
+              <Ionicons
+                name="ellipsis-horizontal-circle"
+                size={24}
+                color="#007AFF"
+              />
             </TouchableOpacity>
           )}
           {!targetData && <View style={tw`w-6`} />}
@@ -460,14 +465,21 @@ export default function HifzScreen({ navigation }) {
               <SectionHeader title="Set Up Your Journey" />
               <View style={tw`bg-white px-4 py-6`}>
                 <View style={tw`items-center mb-6`}>
-                  <View style={tw`w-20 h-20 rounded-full bg-blue-100 items-center justify-center mb-4`}>
+                  <View
+                    style={tw`w-20 h-20 rounded-full bg-blue-100 items-center justify-center mb-4`}
+                  >
                     <Ionicons name="book" size={40} color="#007AFF" />
                   </View>
-                  <Text style={tw`text-xl font-bold text-black text-center mb-2`}>
+                  <Text
+                    style={tw`text-xl font-bold text-black text-center mb-2`}
+                  >
                     Daily Quran Reading
                   </Text>
-                  <Text style={tw`text-base text-gray-500 text-center leading-6`}>
-                    Build a consistent reading habit with personalized daily goals
+                  <Text
+                    style={tw`text-base text-gray-500 text-center leading-6`}
+                  >
+                    Build a consistent reading habit with personalized daily
+                    goals
                   </Text>
                 </View>
               </View>
@@ -478,14 +490,14 @@ export default function HifzScreen({ navigation }) {
               <SectionHeader title="Starting Point" />
               <View style={tw`bg-white`}>
                 {renderStartingOption(
-                  true, 
-                  'Fresh Start', 
+                  true,
+                  'Fresh Start',
                   'Beginning from page 1',
                   'play-circle'
                 )}
                 {renderStartingOption(
-                  false, 
-                  'Continue Reading', 
+                  false,
+                  'Continue Reading',
                   'I have already made progress',
                   'bookmark'
                 )}
@@ -500,7 +512,9 @@ export default function HifzScreen({ navigation }) {
                   <Text style={tw`text-base font-medium text-black mb-3`}>
                     Pages Completed (0-603)
                   </Text>
-                  <View style={tw`bg-gray-50 rounded-xl border border-gray-200`}>
+                  <View
+                    style={tw`bg-gray-50 rounded-xl border border-gray-200`}
+                  >
                     <TextInput
                       style={tw`px-4 py-3 text-lg text-black`}
                       placeholder="Enter pages completed"
@@ -522,7 +536,9 @@ export default function HifzScreen({ navigation }) {
                   <Text style={tw`text-base font-medium text-black mb-3`}>
                     Pages Per Day
                   </Text>
-                  <View style={tw`bg-gray-50 rounded-xl border border-gray-200`}>
+                  <View
+                    style={tw`bg-gray-50 rounded-xl border border-gray-200`}
+                  >
                     <TextInput
                       style={tw`px-4 py-3 text-lg text-black`}
                       placeholder="Enter daily target"
@@ -545,18 +561,31 @@ export default function HifzScreen({ navigation }) {
                 <SectionHeader title="Completion Forecast" />
                 <View style={tw`bg-white px-4 py-4`}>
                   {(() => {
-                    const alreadyRead = isStartingFresh ? 0 : parseInt(pagesAlreadyRead) || 0;
+                    const alreadyRead = isStartingFresh
+                      ? 0
+                      : parseInt(pagesAlreadyRead) || 0;
                     const target = parseInt(dailyTarget) || 0;
                     if (target > 0) {
-                      const completion = calculateCompletionInfo(target, alreadyRead);
+                      const completion = calculateCompletionInfo(
+                        target,
+                        alreadyRead
+                      );
                       return (
                         <View>
                           <View style={tw`flex-row items-center mb-3`}>
-                            <View style={tw`w-10 h-10 rounded-full bg-green-100 items-center justify-center mr-3`}>
-                              <Ionicons name="calendar" size={20} color="#34C759" />
+                            <View
+                              style={tw`w-10 h-10 rounded-full bg-green-100 items-center justify-center mr-3`}
+                            >
+                              <Ionicons
+                                name="calendar"
+                                size={20}
+                                color="#34C759"
+                              />
                             </View>
                             <View style={tw`flex-1`}>
-                              <Text style={tw`text-lg font-semibold text-black`}>
+                              <Text
+                                style={tw`text-lg font-semibold text-black`}
+                              >
                                 {completion.completionDate}
                               </Text>
                               <Text style={tw`text-sm text-gray-500`}>
@@ -566,12 +595,20 @@ export default function HifzScreen({ navigation }) {
                           </View>
                           <View style={tw`bg-gray-50 rounded-xl p-4`}>
                             <View style={tw`flex-row justify-between mb-2`}>
-                              <Text style={tw`text-sm text-gray-500`}>Days needed</Text>
-                              <Text style={tw`text-sm font-medium text-black`}>{completion.daysNeeded}</Text>
+                              <Text style={tw`text-sm text-gray-500`}>
+                                Days needed
+                              </Text>
+                              <Text style={tw`text-sm font-medium text-black`}>
+                                {completion.daysNeeded}
+                              </Text>
                             </View>
                             <View style={tw`flex-row justify-between`}>
-                              <Text style={tw`text-sm text-gray-500`}>Pages remaining</Text>
-                              <Text style={tw`text-sm font-medium text-black`}>{completion.remainingPages}</Text>
+                              <Text style={tw`text-sm text-gray-500`}>
+                                Pages remaining
+                              </Text>
+                              <Text style={tw`text-sm font-medium text-black`}>
+                                {completion.remainingPages}
+                              </Text>
                             </View>
                           </View>
                         </View>
@@ -587,21 +624,33 @@ export default function HifzScreen({ navigation }) {
             <View style={tw`mt-8 px-4 pb-6`}>
               <TouchableOpacity
                 onPress={handleSetupSubmit}
-                disabled={!(dailyTarget && isStartingFresh !== null && (isStartingFresh || pagesAlreadyRead))}
+                disabled={
+                  !(
+                    dailyTarget &&
+                    isStartingFresh !== null &&
+                    (isStartingFresh || pagesAlreadyRead)
+                  )
+                }
                 style={[
                   tw`rounded-xl py-4 items-center`,
-                  dailyTarget && isStartingFresh !== null && (isStartingFresh || pagesAlreadyRead)
+                  dailyTarget &&
+                  isStartingFresh !== null &&
+                  (isStartingFresh || pagesAlreadyRead)
                     ? { backgroundColor: '#007AFF' }
-                    : { backgroundColor: '#C7C7CC' }
+                    : { backgroundColor: '#C7C7CC' },
                 ]}
                 activeOpacity={0.8}
               >
-                <Text style={[
-                  tw`text-lg font-semibold`,
-                  dailyTarget && isStartingFresh !== null && (isStartingFresh || pagesAlreadyRead)
-                    ? tw`text-white`
-                    : tw`text-gray-500`
-                ]}>
+                <Text
+                  style={[
+                    tw`text-lg font-semibold`,
+                    dailyTarget &&
+                    isStartingFresh !== null &&
+                    (isStartingFresh || pagesAlreadyRead)
+                      ? tw`text-white`
+                      : tw`text-gray-500`,
+                  ]}
+                >
                   Begin Journey
                 </Text>
               </TouchableOpacity>
@@ -624,8 +673,6 @@ export default function HifzScreen({ navigation }) {
                 </View>
               </View>
             </View>
-
-            
 
             {/* Statistics */}
             <View style={tw`mt-8`}>
@@ -660,13 +707,19 @@ export default function HifzScreen({ navigation }) {
               <SectionHeader title="Journey Overview" />
               <View style={tw`bg-white px-4 py-4`}>
                 {(() => {
-                  const completion = calculateCompletionInfo(targetData.dailyTarget, targetData.totalCompleted);
-                  const progressPercent = (targetData.totalCompleted / 604) * 100;
+                  const completion = calculateCompletionInfo(
+                    targetData.dailyTarget,
+                    targetData.totalCompleted
+                  );
+                  const progressPercent =
+                    (targetData.totalCompleted / 604) * 100;
 
                   return (
                     <View>
                       <View style={tw`mb-6`}>
-                        <View style={tw`flex-row justify-between items-center mb-3`}>
+                        <View
+                          style={tw`flex-row justify-between items-center mb-3`}
+                        >
                           <Text style={tw`text-lg font-semibold text-black`}>
                             Overall Progress
                           </Text>
@@ -674,28 +727,49 @@ export default function HifzScreen({ navigation }) {
                             {progressPercent.toFixed(1)}%
                           </Text>
                         </View>
-                        <View style={tw`h-3 bg-gray-200 rounded-full overflow-hidden`}>
-                          <View 
+                        <View
+                          style={tw`h-3 bg-gray-200 rounded-full overflow-hidden`}
+                        >
+                          <View
                             style={[
                               tw`h-full rounded-full`,
-                              { backgroundColor: '#34C759', width: `${progressPercent}%` }
-                            ]} 
+                              {
+                                backgroundColor: '#34C759',
+                                width: `${progressPercent}%`,
+                              },
+                            ]}
                           />
                         </View>
                       </View>
 
                       <View style={tw`bg-gray-50 rounded-xl p-4`}>
-                        <View style={tw`flex-row justify-between items-center mb-3`}>
-                          <Text style={tw`text-sm text-gray-500`}>Pages remaining</Text>
-                          <Text style={tw`text-sm font-medium text-black`}>{completion.remainingPages}</Text>
+                        <View
+                          style={tw`flex-row justify-between items-center mb-3`}
+                        >
+                          <Text style={tw`text-sm text-gray-500`}>
+                            Pages remaining
+                          </Text>
+                          <Text style={tw`text-sm font-medium text-black`}>
+                            {completion.remainingPages}
+                          </Text>
                         </View>
-                        <View style={tw`flex-row justify-between items-center mb-3`}>
-                          <Text style={tw`text-sm text-gray-500`}>Days remaining</Text>
-                          <Text style={tw`text-sm font-medium text-black`}>{completion.daysNeeded}</Text>
+                        <View
+                          style={tw`flex-row justify-between items-center mb-3`}
+                        >
+                          <Text style={tw`text-sm text-gray-500`}>
+                            Days remaining
+                          </Text>
+                          <Text style={tw`text-sm font-medium text-black`}>
+                            {completion.daysNeeded}
+                          </Text>
                         </View>
                         <View style={tw`flex-row justify-between items-center`}>
-                          <Text style={tw`text-sm text-gray-500`}>Expected completion</Text>
-                          <Text style={tw`text-sm font-medium text-black`}>{completion.completionDate}</Text>
+                          <Text style={tw`text-sm text-gray-500`}>
+                            Expected completion
+                          </Text>
+                          <Text style={tw`text-sm font-medium text-black`}>
+                            {completion.completionDate}
+                          </Text>
                         </View>
                       </View>
                     </View>
@@ -738,7 +812,9 @@ export default function HifzScreen({ navigation }) {
                   activeOpacity={0.3}
                 >
                   <View style={tw`flex-row items-center`}>
-                    <View style={tw`w-10 h-10 rounded-full bg-red-100 items-center justify-center mr-3`}>
+                    <View
+                      style={tw`w-10 h-10 rounded-full bg-red-100 items-center justify-center mr-3`}
+                    >
                       <Ionicons name="trash" size={20} color="#FF3B30" />
                     </View>
                     <Text style={tw`text-lg font-medium text-red-500`}>
@@ -760,7 +836,7 @@ export default function HifzScreen({ navigation }) {
       >
         <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
           <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
-          
+
           {/* Modal Header */}
           <View style={tw`bg-gray-100 border-b border-gray-200`}>
             <View style={tw`flex-row items-center justify-between px-4 py-3`}>
@@ -785,10 +861,12 @@ export default function HifzScreen({ navigation }) {
                 style={tw`py-1`}
                 activeOpacity={0.3}
               >
-                <Text style={[
-                  tw`text-lg font-semibold`,
-                  todayProgress ? tw`text-blue-500` : tw`text-gray-400`
-                ]}>
+                <Text
+                  style={[
+                    tw`text-lg font-semibold`,
+                    todayProgress ? tw`text-blue-500` : tw`text-gray-400`,
+                  ]}
+                >
                   Done
                 </Text>
               </TouchableOpacity>
@@ -797,7 +875,9 @@ export default function HifzScreen({ navigation }) {
 
           <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 py-6`}>
             <View style={tw`items-center mb-8`}>
-              <View style={tw`w-16 h-16 rounded-full bg-blue-100 items-center justify-center mb-4`}>
+              <View
+                style={tw`w-16 h-16 rounded-full bg-blue-100 items-center justify-center mb-4`}
+              >
                 <Ionicons name="add" size={32} color="#007AFF" />
               </View>
               <Text style={tw`text-2xl font-bold text-black text-center mb-2`}>
@@ -841,7 +921,7 @@ export default function HifzScreen({ navigation }) {
       >
         <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
           <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
-          
+
           {/* Modal Header */}
           <View style={tw`bg-gray-100 border-b border-gray-200`}>
             <View style={tw`flex-row items-center justify-between px-4 py-3`}>
@@ -866,10 +946,12 @@ export default function HifzScreen({ navigation }) {
                 style={tw`py-1`}
                 activeOpacity={0.3}
               >
-                <Text style={[
-                  tw`text-lg font-semibold`,
-                  dailyTarget ? tw`text-blue-500` : tw`text-gray-400`
-                ]}>
+                <Text
+                  style={[
+                    tw`text-lg font-semibold`,
+                    dailyTarget ? tw`text-blue-500` : tw`text-gray-400`,
+                  ]}
+                >
                   Save
                 </Text>
               </TouchableOpacity>
@@ -878,7 +960,9 @@ export default function HifzScreen({ navigation }) {
 
           <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 py-6`}>
             <View style={tw`items-center mb-8`}>
-              <View style={tw`w-16 h-16 rounded-full bg-blue-100 items-center justify-center mb-4`}>
+              <View
+                style={tw`w-16 h-16 rounded-full bg-blue-100 items-center justify-center mb-4`}
+              >
                 <Ionicons name="target" size={32} color="#007AFF" />
               </View>
               <Text style={tw`text-2xl font-bold text-black text-center mb-2`}>

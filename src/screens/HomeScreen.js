@@ -159,7 +159,9 @@ export default function HomeScreen() {
                 onPress={() => navigation.navigate('Settings')}
                 activeOpacity={0.7}
               >
-                <View style={tw`w-11 h-11 rounded-full bg-gray-200 border-2 border-gray-300 items-center justify-center`}>
+                <View
+                  style={tw`w-11 h-11 rounded-full bg-gray-200 border-2 border-gray-300 items-center justify-center`}
+                >
                   <Ionicons name="person" size={24} color="#6B7280" />
                 </View>
               </TouchableOpacity>

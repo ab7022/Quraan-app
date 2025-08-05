@@ -329,57 +329,53 @@ const ContinueReading = ({ navigation }) => {
   };
 
   const handleStartFresh = () => {
-    AlertManager.alert(
-      'Start Reading',
-      'Where would you like to start?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
+    AlertManager.alert('Start Reading', 'Where would you like to start?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'From Start',
+        onPress: () => {
+          // Track start fresh action
+          analytics.trackUserAction('start_fresh', {
+            starting_point: 'beginning',
+            page: 1,
+          });
+
+          analytics.trackNavigationEvent(
+            'StartFresh',
+            'QuranPageScreen',
+            'start_beginning'
+          );
+
+          navigation.navigate('Quran', {
+            screen: 'QuranPage',
+            params: { initialPage: 1 },
+          });
         },
-        {
-          text: 'From Start',
-          onPress: () => {
-            // Track start fresh action
-            analytics.trackUserAction('start_fresh', {
-              starting_point: 'beginning',
-              page: 1,
-            });
+      },
+      {
+        text: 'Choose Chapter',
+        onPress: () => {
+          // Track start fresh action
+          analytics.trackUserAction('start_fresh', {
+            starting_point: 'surahs_list',
+          });
 
-            analytics.trackNavigationEvent(
-              'StartFresh',
-              'QuranPageScreen',
-              'start_beginning'
-            );
+          analytics.trackNavigationEvent(
+            'StartFresh',
+            'SurahsScreen',
+            'browse_surahs'
+          );
 
-            navigation.navigate('Quran', {
-              screen: 'QuranPage',
-              params: { initialPage: 1 },
-            });
-          },
+          navigation.navigate('Quran', {
+            screen: 'QuranTabs',
+            params: { screen: 'SurahsList' },
+          });
         },
-        {
-          text: 'Choose Chapter',
-          onPress: () => {
-            // Track start fresh action
-            analytics.trackUserAction('start_fresh', {
-              starting_point: 'surahs_list',
-            });
-
-            analytics.trackNavigationEvent(
-              'StartFresh',
-              'SurahsScreen',
-              'browse_surahs'
-            );
-
-            navigation.navigate('Quran', {
-              screen: 'QuranTabs',
-              params: { screen: 'SurahsList' },
-            });
-          },
-        },
-      ]
-    );
+      },
+    ]);
   };
 
   const navigateToLastPage = () => {
@@ -476,7 +472,7 @@ const ContinueReading = ({ navigation }) => {
               shadowOpacity: 0.15,
               shadowRadius: 8,
               elevation: 6,
-            }
+            },
           ]}
           accessibilityLabel={`Continue reading ${lastReadPage.name}`}
           activeOpacity={0.9}
@@ -492,16 +488,25 @@ const ContinueReading = ({ navigation }) => {
               <Ionicons name="book" size={60} color="white" />
             </View>
 
-            <View style={tw`flex-row items-center justify-between relative z-10`}>
+            <View
+              style={tw`flex-row items-center justify-between relative z-10`}
+            >
               {/* Left Content */}
               <View style={tw`flex-1 mr-3`}>
                 <View style={tw`flex-row items-center mb-2`}>
-                  <View style={tw`w-8 h-8 bg-white/25 rounded-xl items-center justify-center mr-3`}>
+                  <View
+                    style={tw`w-8 h-8 bg-white/25 rounded-xl items-center justify-center mr-3`}
+                  >
                     <Ionicons name="play-circle" size={18} color="white" />
                   </View>
                   <View style={tw`flex-1`}>
-                    <Text style={tw`text-white/90 text-xs font-medium`}>Continue Reading</Text>
-                    <Text style={tw`text-white font-bold text-base`} numberOfLines={1}>
+                    <Text style={tw`text-white/90 text-xs font-medium`}>
+                      Continue Reading
+                    </Text>
+                    <Text
+                      style={tw`text-white font-bold text-base`}
+                      numberOfLines={1}
+                    >
                       {lastReadPage.name}
                     </Text>
                   </View>
@@ -516,12 +521,19 @@ const ContinueReading = ({ navigation }) => {
                       </Text>
                     </View>
                     {(() => {
-                      const surahInfo = getSurahForPage(lastReadPage.pageNumber);
+                      const surahInfo = getSurahForPage(
+                        lastReadPage.pageNumber
+                      );
                       const juzNumber = getJuzForPage(lastReadPage.pageNumber);
                       return (
                         <>
-                          <View style={tw`bg-white/20 rounded-lg px-2 py-1 flex-1 min-w-0`}>
-                            <Text style={tw`text-white text-xs font-medium`} numberOfLines={1}>
+                          <View
+                            style={tw`bg-white/20 rounded-lg px-2 py-1 flex-1 min-w-0`}
+                          >
+                            <Text
+                              style={tw`text-white text-xs font-medium`}
+                              numberOfLines={1}
+                            >
                               {surahInfo.name}
                             </Text>
                           </View>
@@ -539,7 +551,9 @@ const ContinueReading = ({ navigation }) => {
 
               {/* Right Action */}
               <View style={tw`items-center`}>
-                <View style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center border border-white/30`}>
+                <View
+                  style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center border border-white/30`}
+                >
                   <Ionicons name="play" size={20} color="white" />
                 </View>
               </View>
@@ -559,7 +573,7 @@ const ContinueReading = ({ navigation }) => {
                 shadowOpacity: 0.15,
                 shadowRadius: 8,
                 elevation: 6,
-              }
+              },
             ]}
             accessibilityLabel="Start reading the Quran"
             activeOpacity={0.9}
@@ -573,36 +587,55 @@ const ContinueReading = ({ navigation }) => {
               {/* Subtle background pattern */}
               <View style={[tw`absolute right-2 top-2 opacity-10`]}>
                 <Ionicons name="star" size={40} color="white" />
-                <Ionicons name="moon" size={30} color="white" style={tw`ml-2 mt-1`} />
+                <Ionicons
+                  name="moon"
+                  size={30}
+                  color="white"
+                  style={tw`ml-2 mt-1`}
+                />
               </View>
 
-              <View style={tw`flex-row items-center justify-between relative z-10`}>
+              <View
+                style={tw`flex-row items-center justify-between relative z-10`}
+              >
                 {/* Left Content */}
                 <View style={tw`flex-1 mr-3`}>
                   <View style={tw`flex-row items-center mb-2`}>
-                    <View style={tw`w-8 h-8 bg-white/25 rounded-xl items-center justify-center mr-3`}>
+                    <View
+                      style={tw`w-8 h-8 bg-white/25 rounded-xl items-center justify-center mr-3`}
+                    >
                       <Ionicons name="book-outline" size={18} color="white" />
                     </View>
                     <View style={tw`flex-1`}>
-                      <Text style={tw`text-white font-bold text-base`}>Start Reading</Text>
-                      <Text style={tw`text-white/90 text-xs`}>Begin your journey</Text>
+                      <Text style={tw`text-white font-bold text-base`}>
+                        Start Reading
+                      </Text>
+                      <Text style={tw`text-white/90 text-xs`}>
+                        Begin your journey
+                      </Text>
                     </View>
                   </View>
 
                   {/* Compact Features */}
                   <View style={tw`flex-row items-center flex-wrap gap-1 mt-1`}>
                     <View style={tw`bg-white/20 rounded-lg px-2 py-1`}>
-                      <Text style={tw`text-white text-xs font-medium`}>🌟 New Start</Text>
+                      <Text style={tw`text-white text-xs font-medium`}>
+                        🌟 New Start
+                      </Text>
                     </View>
                     <View style={tw`bg-white/20 rounded-lg px-2 py-1`}>
-                      <Text style={tw`text-white text-xs font-medium`}>📖 All Chapters</Text>
+                      <Text style={tw`text-white text-xs font-medium`}>
+                        📖 All Chapters
+                      </Text>
                     </View>
                   </View>
                 </View>
 
                 {/* Right Action */}
                 <View style={tw`items-center`}>
-                  <View style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center border border-white/30`}>
+                  <View
+                    style={tw`w-12 h-12 bg-white/20 rounded-full items-center justify-center border border-white/30`}
+                  >
                     <Ionicons name="arrow-forward" size={20} color="white" />
                   </View>
                 </View>
@@ -614,7 +647,9 @@ const ContinueReading = ({ navigation }) => {
           <View style={tw`flex-row gap-2`}>
             <TouchableOpacity
               onPress={() => {
-                analytics.trackUserAction('quick_start', { starting_point: 'al_fatihah' });
+                analytics.trackUserAction('quick_start', {
+                  starting_point: 'al_fatihah',
+                });
                 navigation.navigate('Quran', {
                   screen: 'QuranPage',
                   params: { initialPage: 1 },
@@ -623,18 +658,24 @@ const ContinueReading = ({ navigation }) => {
               style={tw`flex-1 bg-emerald-50 rounded-xl p-3 flex-row items-center border border-emerald-200`}
               activeOpacity={0.7}
             >
-              <View style={tw`w-8 h-8 bg-emerald-100 rounded-full items-center justify-center mr-2`}>
+              <View
+                style={tw`w-8 h-8 bg-emerald-100 rounded-full items-center justify-center mr-2`}
+              >
                 <Text style={tw`text-emerald-600 text-sm`}>🕌</Text>
               </View>
               <View style={tw`flex-1`}>
-                <Text style={tw`text-emerald-700 font-medium text-sm`}>Al-Fatihah</Text>
+                <Text style={tw`text-emerald-700 font-medium text-sm`}>
+                  Al-Fatihah
+                </Text>
                 <Text style={tw`text-emerald-600 text-xs`}>Start here</Text>
               </View>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               onPress={() => {
-                analytics.trackUserAction('quick_start', { starting_point: 'browse_surahs' });
+                analytics.trackUserAction('quick_start', {
+                  starting_point: 'browse_surahs',
+                });
                 navigation.navigate('Quran', {
                   screen: 'QuranTabs',
                   params: { screen: 'SurahsList' },
@@ -643,11 +684,15 @@ const ContinueReading = ({ navigation }) => {
               style={tw`flex-1 bg-blue-50 rounded-xl p-3 flex-row items-center border border-blue-200`}
               activeOpacity={0.7}
             >
-              <View style={tw`w-8 h-8 bg-blue-100 rounded-full items-center justify-center mr-2`}>
+              <View
+                style={tw`w-8 h-8 bg-blue-100 rounded-full items-center justify-center mr-2`}
+              >
                 <Ionicons name="list" size={16} color="#3B82F6" />
               </View>
               <View style={tw`flex-1`}>
-                <Text style={tw`text-blue-700 font-medium text-sm`}>See All</Text>
+                <Text style={tw`text-blue-700 font-medium text-sm`}>
+                  See All
+                </Text>
                 <Text style={tw`text-blue-600 text-xs`}>Pick chapter</Text>
               </View>
             </TouchableOpacity>

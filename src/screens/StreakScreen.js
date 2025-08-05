@@ -10,7 +10,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { useSelector, useDispatch } from 'react-redux';
-import { loadStreak, getLast7DaysStreak, getLast30DaysStreak } from '../store/streakSlice';
+import {
+  loadStreak,
+  getLast7DaysStreak,
+  getLast30DaysStreak,
+} from '../store/streakSlice';
 import analytics from '../services/analyticsService';
 
 const SectionHeader = ({ title }) => (
@@ -21,24 +25,29 @@ const SectionHeader = ({ title }) => (
   </View>
 );
 
-const StreakStatItem = ({ icon, title, value, subtitle, color = "#007AFF" }) => (
+const StreakStatItem = ({
+  icon,
+  title,
+  value,
+  subtitle,
+  color = '#007AFF',
+}) => (
   <View style={tw`bg-white px-4 py-4 border-b border-gray-200`}>
     <View style={tw`flex-row items-center`}>
-      <View style={[tw`w-10 h-10 rounded-full items-center justify-center mr-3`, { backgroundColor: `${color}20` }]}>
+      <View
+        style={[
+          tw`w-10 h-10 rounded-full items-center justify-center mr-3`,
+          { backgroundColor: `${color}20` },
+        ]}
+      >
         <Ionicons name={icon} size={20} color={color} />
       </View>
       <View style={tw`flex-1`}>
-        <Text style={tw`text-base font-medium text-black mb-1`}>
-          {title}
-        </Text>
+        <Text style={tw`text-base font-medium text-black mb-1`}>{title}</Text>
         <View style={tw`flex-row items-baseline`}>
-          <Text style={tw`text-2xl font-bold text-black mr-2`}>
-            {value}
-          </Text>
+          <Text style={tw`text-2xl font-bold text-black mr-2`}>{value}</Text>
           {subtitle && (
-            <Text style={tw`text-sm text-gray-500`}>
-              {subtitle}
-            </Text>
+            <Text style={tw`text-sm text-gray-500`}>{subtitle}</Text>
           )}
         </View>
       </View>
@@ -61,22 +70,26 @@ const DayCircle = ({ day, isActive, isToday }) => (
       {isActive ? (
         <Ionicons name="checkmark" size={18} color="white" />
       ) : (
-        <Text style={[
-          tw`text-sm font-medium`,
-          isToday ? tw`text-green-500` : tw`text-gray-400`
-        ]}>
+        <Text
+          style={[
+            tw`text-sm font-medium`,
+            isToday ? tw`text-green-500` : tw`text-gray-400`,
+          ]}
+        >
           {day.dayNumber}
         </Text>
       )}
     </View>
-    <Text style={[
-      tw`text-xs font-medium`,
-      isActive
-        ? tw`text-green-500`
-        : isToday
+    <Text
+      style={[
+        tw`text-xs font-medium`,
+        isActive
           ? tw`text-green-500`
-          : tw`text-gray-400`
-    ]}>
+          : isToday
+            ? tw`text-green-500`
+            : tw`text-gray-400`,
+      ]}
+    >
       {day.dayName}
     </Text>
   </View>
@@ -100,7 +113,9 @@ const CalendarGrid = ({ days }) => (
 );
 
 export default function StreakScreen({ navigation }) {
-  const { streak, readingHistory, totalDaysRead, longestStreak } = useSelector(s => s.streak);
+  const { streak, readingHistory, totalDaysRead, longestStreak } = useSelector(
+    s => s.streak
+  );
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -127,7 +142,7 @@ export default function StreakScreen({ navigation }) {
   return (
     <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
       <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
-      
+
       {/* iOS-Style Navigation Header */}
       <View style={tw`bg-gray-100 border-b border-gray-200`}>
         <View style={tw`flex-row items-center justify-between px-4 py-3`}>
@@ -148,8 +163,8 @@ export default function StreakScreen({ navigation }) {
         </View>
       </View>
 
-      <ScrollView 
-        style={tw`flex-1`} 
+      <ScrollView
+        style={tw`flex-1`}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={tw`pb-6`}
       >
@@ -158,7 +173,9 @@ export default function StreakScreen({ navigation }) {
           <SectionHeader title="Current Progress" />
           <View style={tw`bg-white`}>
             <View style={tw`px-4 py-6 items-center border-b border-gray-200`}>
-              <View style={tw`w-24 h-24 rounded-full bg-orange-100 items-center justify-center mb-4`}>
+              <View
+                style={tw`w-24 h-24 rounded-full bg-orange-100 items-center justify-center mb-4`}
+              >
                 <Ionicons name="flame" size={48} color="#FF8C00" />
               </View>
               <Text style={tw`text-3xl font-bold text-black mb-2`}>
@@ -225,10 +242,12 @@ export default function StreakScreen({ navigation }) {
                   {day.hasRead ? (
                     <Ionicons name="checkmark" size={14} color="white" />
                   ) : (
-                    <Text style={[
-                      tw`text-xs font-medium`,
-                      day.isToday ? tw`text-green-500` : tw`text-gray-400`
-                    ]}>
+                    <Text
+                      style={[
+                        tw`text-xs font-medium`,
+                        day.isToday ? tw`text-green-500` : tw`text-gray-400`,
+                      ]}
+                    >
                       {day.dayNumber}
                     </Text>
                   )}
@@ -237,7 +256,8 @@ export default function StreakScreen({ navigation }) {
             </View>
             <View style={tw`mt-4 pt-4 border-t border-gray-200`}>
               <Text style={tw`text-sm text-gray-500 text-center`}>
-                {last30Days.filter(day => day.hasRead).length} of {last30Days.length} days completed this month
+                {last30Days.filter(day => day.hasRead).length} of{' '}
+                {last30Days.length} days completed this month
               </Text>
             </View>
           </View>
@@ -248,7 +268,9 @@ export default function StreakScreen({ navigation }) {
           <SectionHeader title="How Streaks Work" />
           <View style={tw`bg-white px-4 py-4`}>
             <View style={tw`flex-row items-start mb-3`}>
-              <View style={tw`w-6 h-6 rounded-full bg-green-100 items-center justify-center mr-3 mt-0.5`}>
+              <View
+                style={tw`w-6 h-6 rounded-full bg-green-100 items-center justify-center mr-3 mt-0.5`}
+              >
                 <Ionicons name="book" size={14} color="#34C759" />
               </View>
               <View style={tw`flex-1`}>
@@ -260,9 +282,11 @@ export default function StreakScreen({ navigation }) {
                 </Text>
               </View>
             </View>
-            
+
             <View style={tw`flex-row items-start mb-3`}>
-              <View style={tw`w-6 h-6 rounded-full bg-orange-100 items-center justify-center mr-3 mt-0.5`}>
+              <View
+                style={tw`w-6 h-6 rounded-full bg-orange-100 items-center justify-center mr-3 mt-0.5`}
+              >
                 <Ionicons name="flame" size={14} color="#FF8C00" />
               </View>
               <View style={tw`flex-1`}>
@@ -274,9 +298,11 @@ export default function StreakScreen({ navigation }) {
                 </Text>
               </View>
             </View>
-            
+
             <View style={tw`flex-row items-start`}>
-              <View style={tw`w-6 h-6 rounded-full bg-red-100 items-center justify-center mr-3 mt-0.5`}>
+              <View
+                style={tw`w-6 h-6 rounded-full bg-red-100 items-center justify-center mr-3 mt-0.5`}
+              >
                 <Ionicons name="refresh" size={14} color="#FF3B30" />
               </View>
               <View style={tw`flex-1`}>

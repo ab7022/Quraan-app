@@ -28,7 +28,7 @@ const SettingsItem = ({
   onPress,
   showArrow = true,
   rightContent = null,
-  iconColor = "#007AFF",
+  iconColor = '#007AFF',
   iconBg = null,
 }) => (
   <TouchableOpacity
@@ -41,24 +41,20 @@ const SettingsItem = ({
         <View
           style={[
             tw`w-7 h-7 rounded-lg items-center justify-center mr-3`,
-            { backgroundColor: iconBg || iconColor }
+            { backgroundColor: iconBg || iconColor },
           ]}
         >
-          <Ionicons 
-            name={icon} 
-            size={18} 
-            color={iconBg ? "white" : iconColor} 
+          <Ionicons
+            name={icon}
+            size={18}
+            color={iconBg ? 'white' : iconColor}
           />
         </View>
       )}
       <View style={tw`flex-1`}>
-        <Text style={tw`text-base text-black font-normal`}>
-          {title}
-        </Text>
+        <Text style={tw`text-base text-black font-normal`}>{title}</Text>
         {subtitle && (
-          <Text style={tw`text-sm text-gray-500 mt-0.5`}>
-            {subtitle}
-          </Text>
+          <Text style={tw`text-sm text-gray-500 mt-0.5`}>{subtitle}</Text>
         )}
       </View>
     </View>
@@ -185,8 +181,9 @@ export default function SettingsScreen({ navigation }) {
   };
 
   const handleRateApp = async () => {
-    const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.quranapp.mobile';
-    
+    const playStoreUrl =
+      'https://play.google.com/store/apps/details?id=com.quranapp.mobile';
+
     try {
       const supported = await Linking.canOpenURL(playStoreUrl);
       if (supported) {
@@ -203,7 +200,10 @@ export default function SettingsScreen({ navigation }) {
             {
               text: 'Copy Link',
               onPress: () => {
-                Alert.alert('Link Copied', 'Play Store link copied to your memory!');
+                Alert.alert(
+                  'Link Copied',
+                  'Play Store link copied to your memory!'
+                );
               },
             },
             { text: 'OK' },
@@ -456,7 +456,7 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
         'quran_streak',
         'rate_limit_ask',
         'tafseer_language',
-        
+
         // Additional common keys that might exist
         'user_name',
         'continue_reading',
@@ -473,10 +473,12 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
         'settings',
         'app_preferences',
       ];
-      
+
       // Filter to only include keys that actually exist
-      const existingKeysToDelete = keysToDelete.filter(key => allKeys.includes(key));
-      
+      const existingKeysToDelete = keysToDelete.filter(key =>
+        allKeys.includes(key)
+      );
+
       console.log('Keys to be deleted:', existingKeysToDelete);
       console.log('Total keys to delete:', existingKeysToDelete.length);
 
@@ -524,7 +526,6 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
           },
         ]
       );
-
     } catch (error) {
       console.error('Error during data deletion:', error);
       Alert.alert(
@@ -559,9 +560,7 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
             </View>
           </TouchableOpacity>
 
-          <Text style={tw`text-lg font-semibold text-black`}>
-            Settings
-          </Text>
+          <Text style={tw`text-lg font-semibold text-black`}>Settings</Text>
 
           <View style={tw`w-16`} />
         </View>
@@ -570,13 +569,15 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
       <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false}>
         {/* User Section */}
         <View style={tw`mt-6`}>
-          <TouchableOpacity 
-            onPress={handleEditName} 
+          <TouchableOpacity
+            onPress={handleEditName}
             style={tw`bg-white px-4 py-4 border-b border-gray-200`}
             activeOpacity={0.3}
           >
             <View style={tw`flex-row items-center`}>
-              <View style={tw`w-16 h-16 rounded-full bg-gray-300 items-center justify-center mr-4`}>
+              <View
+                style={tw`w-16 h-16 rounded-full bg-gray-300 items-center justify-center mr-4`}
+              >
                 <Ionicons name="person" size={32} color="#666" />
               </View>
               <View style={tw`flex-1`}>
@@ -584,7 +585,9 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
                   {userName || 'User'}
                 </Text>
                 <Text style={tw`text-base text-gray-500`}>
-                  {lastReadPage ? `Last read: ${lastReadPage.name}` : 'Start your journey today'}
+                  {lastReadPage
+                    ? `Last read: ${lastReadPage.name}`
+                    : 'Start your journey today'}
                 </Text>
                 <Text style={tw`text-sm text-blue-500 mt-1`}>
                   {userName ? 'Tap to edit' : 'Tap to set name'}
@@ -692,14 +695,21 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
           <SafeAreaView style={tw`bg-gray-100`}>
             <View style={tw`px-4 py-2 border-b border-gray-200 bg-gray-100`}>
               <View style={tw`flex-row items-center justify-between`}>
-                <TouchableOpacity onPress={handleCancelNameEdit} style={tw`py-2`}>
+                <TouchableOpacity
+                  onPress={handleCancelNameEdit}
+                  style={tw`py-2`}
+                >
                   <Text style={tw`text-lg text-blue-500`}>Cancel</Text>
                 </TouchableOpacity>
-                
-                <Text style={tw`text-lg font-semibold text-black`}>Edit Name</Text>
-                
+
+                <Text style={tw`text-lg font-semibold text-black`}>
+                  Edit Name
+                </Text>
+
                 <TouchableOpacity onPress={handleSaveName} style={tw`py-2`}>
-                  <Text style={tw`text-lg text-blue-500 font-semibold`}>Save</Text>
+                  <Text style={tw`text-lg text-blue-500 font-semibold`}>
+                    Save
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -710,7 +720,9 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
             <View style={tw`mt-6`}>
               <View style={tw`bg-white px-4 py-4 border-b border-gray-200`}>
                 <View style={tw`flex-row items-center`}>
-                  <View style={tw`w-16 h-16 rounded-full bg-gray-300 items-center justify-center mr-4`}>
+                  <View
+                    style={tw`w-16 h-16 rounded-full bg-gray-300 items-center justify-center mr-4`}
+                  >
                     <Ionicons name="person" size={32} color="#666" />
                   </View>
                   <View style={tw`flex-1`}>
@@ -735,11 +747,13 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
               <SectionHeader title="About Names" />
               <View style={tw`bg-white border-t border-gray-200`}>
                 <View style={tw`px-4 py-3`}>
-                  <Text style={tw`text-base text-black mb-2`}>Your name will be used for:</Text>
+                  <Text style={tw`text-base text-black mb-2`}>
+                    Your name will be used for:
+                  </Text>
                   <Text style={tw`text-sm text-gray-600 leading-relaxed`}>
-                    • Personal greetings throughout the app{'\n'}
-                    • Support messages and communications{'\n'}
-                    • A more personalized reading experience
+                    • Personal greetings throughout the app{'\n'}• Support
+                    messages and communications{'\n'}• A more personalized
+                    reading experience
                   </Text>
                 </View>
               </View>
@@ -760,12 +774,17 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
           <SafeAreaView style={tw`bg-gray-100`}>
             <View style={tw`px-4 py-2 border-b border-gray-200 bg-gray-100`}>
               <View style={tw`flex-row items-center justify-between`}>
-                <TouchableOpacity onPress={() => setShowStreakModal(false)} style={tw`py-2`}>
+                <TouchableOpacity
+                  onPress={() => setShowStreakModal(false)}
+                  style={tw`py-2`}
+                >
                   <Text style={tw`text-lg text-blue-500`}>Done</Text>
                 </TouchableOpacity>
-                
-                <Text style={tw`text-lg font-semibold text-black`}>Statistics</Text>
-                
+
+                <Text style={tw`text-lg font-semibold text-black`}>
+                  Statistics
+                </Text>
+
                 <View style={tw`w-16`} />
               </View>
             </View>
@@ -774,18 +793,21 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
           <ScrollView style={tw`flex-1`}>
             {/* Current Streak Section */}
             <View style={tw`mt-6`}>
-              <View style={tw`bg-white px-4 py-6 border-b border-gray-200 items-center`}>
-                <Text style={tw`text-6xl font-bold ${streak > 0 ? 'text-orange-500' : 'text-blue-500'} mb-2`}>
+              <View
+                style={tw`bg-white px-4 py-6 border-b border-gray-200 items-center`}
+              >
+                <Text
+                  style={tw`text-6xl font-bold ${streak > 0 ? 'text-orange-500' : 'text-blue-500'} mb-2`}
+                >
                   {streak}
                 </Text>
                 <Text style={tw`text-xl font-medium text-black mb-1`}>
                   Day Streak {streak > 0 ? '🔥' : '📖'}
                 </Text>
                 <Text style={tw`text-base text-gray-500 text-center`}>
-                  {streak > 0 
+                  {streak > 0
                     ? 'Keep up the amazing work!'
-                    : 'Start reading today to begin your streak'
-                  }
+                    : 'Start reading today to begin your streak'}
                 </Text>
               </View>
             </View>
@@ -796,21 +818,29 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
               <View style={tw`bg-white border-t border-gray-200`}>
                 <View style={tw`px-4 py-3 border-b border-gray-200`}>
                   <View style={tw`flex-row justify-between items-center`}>
-                    <Text style={tw`text-base text-black`}>Total Days Read</Text>
-                    <Text style={tw`text-base text-gray-500 font-medium`}>{totalDaysRead}</Text>
+                    <Text style={tw`text-base text-black`}>
+                      Total Days Read
+                    </Text>
+                    <Text style={tw`text-base text-gray-500 font-medium`}>
+                      {totalDaysRead}
+                    </Text>
                   </View>
                 </View>
                 <View style={tw`px-4 py-3 border-b border-gray-200`}>
                   <View style={tw`flex-row justify-between items-center`}>
                     <Text style={tw`text-base text-black`}>Best Streak</Text>
-                    <Text style={tw`text-base text-gray-500 font-medium`}>{longestStreak} days</Text>
+                    <Text style={tw`text-base text-gray-500 font-medium`}>
+                      {longestStreak} days
+                    </Text>
                   </View>
                 </View>
                 {lastReadPage && (
                   <View style={tw`px-4 py-3`}>
                     <View style={tw`flex-row justify-between items-center`}>
                       <Text style={tw`text-base text-black`}>Last Read</Text>
-                      <Text style={tw`text-base text-gray-500 font-medium`}>{lastReadPage.name}</Text>
+                      <Text style={tw`text-base text-gray-500 font-medium`}>
+                        {lastReadPage.name}
+                      </Text>
                     </View>
                   </View>
                 )}
@@ -840,8 +870,10 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
                     </View>
                   ))}
                 </View>
-                
-                <View style={tw`flex-row justify-center items-center mt-4 space-x-6`}>
+
+                <View
+                  style={tw`flex-row justify-center items-center mt-4 space-x-6`}
+                >
                   <View style={tw`flex-row items-center`}>
                     <View style={tw`w-3 h-3 bg-green-500 rounded-full mr-2`} />
                     <Text style={tw`text-sm text-gray-600`}>Completed</Text>
@@ -873,12 +905,17 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
           <SafeAreaView style={tw`bg-gray-100`}>
             <View style={tw`px-4 py-2 border-b border-gray-200 bg-gray-100`}>
               <View style={tw`flex-row items-center justify-between`}>
-                <TouchableOpacity onPress={() => setShowSupportModal(false)} style={tw`py-2`}>
+                <TouchableOpacity
+                  onPress={() => setShowSupportModal(false)}
+                  style={tw`py-2`}
+                >
                   <Text style={tw`text-lg text-blue-500`}>Done</Text>
                 </TouchableOpacity>
-                
-                <Text style={tw`text-lg font-semibold text-black`}>Help & Support</Text>
-                
+
+                <Text style={tw`text-lg font-semibold text-black`}>
+                  Help & Support
+                </Text>
+
                 <View style={tw`w-16`} />
               </View>
             </View>
@@ -894,14 +931,18 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
                   style={tw`px-4 py-3 border-b border-gray-200 flex-row items-center`}
                   activeOpacity={0.3}
                 >
-                  <View style={[
-                    tw`w-7 h-7 rounded-lg items-center justify-center mr-3`,
-                    { backgroundColor: '#25D366' }
-                  ]}>
+                  <View
+                    style={[
+                      tw`w-7 h-7 rounded-lg items-center justify-center mr-3`,
+                      { backgroundColor: '#25D366' },
+                    ]}
+                  >
                     <Ionicons name="logo-whatsapp" size={18} color="white" />
                   </View>
                   <View style={tw`flex-1`}>
-                    <Text style={tw`text-base text-black`}>WhatsApp Support</Text>
+                    <Text style={tw`text-base text-black`}>
+                      WhatsApp Support
+                    </Text>
                     <Text style={tw`text-sm text-gray-500 mt-0.5`}>
                       Quick responses • Usually within minutes
                     </Text>
@@ -914,10 +955,12 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
                   style={tw`px-4 py-3 flex-row items-center`}
                   activeOpacity={0.3}
                 >
-                  <View style={[
-                    tw`w-7 h-7 rounded-lg items-center justify-center mr-3`,
-                    { backgroundColor: '#007AFF' }
-                  ]}>
+                  <View
+                    style={[
+                      tw`w-7 h-7 rounded-lg items-center justify-center mr-3`,
+                      { backgroundColor: '#007AFF' },
+                    ]}
+                  >
                     <Ionicons name="mail" size={18} color="white" />
                   </View>
                   <View style={tw`flex-1`}>
@@ -941,7 +984,9 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
                 </View>
                 <View style={tw`px-4 py-3`}>
                   <Text style={tw`text-base text-black mb-1`}>Email</Text>
-                  <Text style={tw`text-sm text-gray-500`}>bayees1@gmail.com</Text>
+                  <Text style={tw`text-sm text-gray-500`}>
+                    bayees1@gmail.com
+                  </Text>
                 </View>
               </View>
             </View>
@@ -951,9 +996,13 @@ https://play.google.com/store/apps/details?id=com.quranapp.mobile`,
               <SectionHeader title="Support Hours" />
               <View style={tw`bg-white border-t border-gray-200`}>
                 <View style={tw`px-4 py-3`}>
-                  <Text style={tw`text-base text-black mb-2`}>We're here to help</Text>
+                  <Text style={tw`text-base text-black mb-2`}>
+                    We're here to help
+                  </Text>
                   <Text style={tw`text-sm text-gray-600 leading-relaxed`}>
-                    Our support team is dedicated to making your Quran reading experience better. We typically respond to WhatsApp messages within minutes and emails within 24 hours.
+                    Our support team is dedicated to making your Quran reading
+                    experience better. We typically respond to WhatsApp messages
+                    within minutes and emails within 24 hours.
                   </Text>
                 </View>
               </View>

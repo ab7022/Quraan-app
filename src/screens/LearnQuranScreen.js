@@ -21,57 +21,66 @@ const SectionHeader = ({ title }) => (
   </View>
 );
 
-const FeatureItem = ({ icon, title, description, onPress, showChevron = true }) => (
+const FeatureItem = ({
+  icon,
+  title,
+  description,
+  onPress,
+  showChevron = true,
+}) => (
   <TouchableOpacity
     onPress={onPress}
     style={tw`bg-white px-4 py-4 border-b border-gray-200`}
     activeOpacity={0.3}
   >
     <View style={tw`flex-row items-center`}>
-      <View style={tw`w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3`}>
+      <View
+        style={tw`w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3`}
+      >
         <Ionicons name={icon} size={20} color="#007AFF" />
       </View>
       <View style={tw`flex-1`}>
-        <Text style={tw`text-base font-medium text-black mb-1`}>
-          {title}
-        </Text>
-        <Text style={tw`text-sm text-gray-500 leading-5`}>
-          {description}
-        </Text>
+        <Text style={tw`text-base font-medium text-black mb-1`}>{title}</Text>
+        <Text style={tw`text-sm text-gray-500 leading-5`}>{description}</Text>
       </View>
-      {showChevron && <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />}
+      {showChevron && (
+        <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+      )}
     </View>
   </TouchableOpacity>
 );
 
-const StatItem = ({ number, label, color = "#007AFF" }) => (
+const StatItem = ({ number, label, color = '#007AFF' }) => (
   <View style={tw`flex-1 items-center`}>
-    <Text style={[tw`text-2xl font-bold mb-1`, { color }]}>
-      {number}
-    </Text>
-    <Text style={tw`text-sm text-gray-500 text-center`}>
-      {label}
-    </Text>
+    <Text style={[tw`text-2xl font-bold mb-1`, { color }]}>{number}</Text>
+    <Text style={tw`text-sm text-gray-500 text-center`}>{label}</Text>
   </View>
 );
 
-const ContactButton = ({ icon, title, subtitle, onPress, color = "#007AFF" }) => (
+const ContactButton = ({
+  icon,
+  title,
+  subtitle,
+  onPress,
+  color = '#007AFF',
+}) => (
   <TouchableOpacity
     onPress={onPress}
     style={tw`bg-white px-4 py-4 border-b border-gray-200`}
     activeOpacity={0.3}
   >
     <View style={tw`flex-row items-center`}>
-      <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-4`, { backgroundColor: `${color}20` }]}>
+      <View
+        style={[
+          tw`w-12 h-12 rounded-xl items-center justify-center mr-4`,
+          { backgroundColor: `${color}20` },
+        ]}
+      >
         <Ionicons name={icon} size={24} color={color} />
       </View>
       <View style={tw`flex-1`}>
-        <Text style={tw`text-lg font-medium text-black mb-1`}>
-          {title}
-        </Text>
-        <Text style={tw`text-base text-gray-500`}>
-          {subtitle}
-        </Text>
+        <Text style={tw`text-lg font-medium text-black mb-1`}>{title}</Text>
+        <Text style={tw`text-base text-gray-500`}>{subtitle}</Text>
       </View>
       <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
     </View>
@@ -80,11 +89,12 @@ const ContactButton = ({ icon, title, subtitle, onPress, color = "#007AFF" }) =>
 
 export default function LearnQuranScreen({ navigation }) {
   const phoneNumber = '8217003676';
-  const customMessage = 'Hi! I am interested in learning Quran. Could you please share more details about the course?';
+  const customMessage =
+    'Hi! I am interested in learning Quran. Could you please share more details about the course?';
 
   const openWhatsApp = () => {
     const url = `whatsapp://send?phone=+91${phoneNumber}&text=${encodeURIComponent(customMessage)}`;
-    
+
     analytics.trackUserAction('contact_whatsapp', {
       source: 'learn_quran_screen',
       timestamp: new Date().toISOString(),
@@ -103,14 +113,15 @@ export default function LearnQuranScreen({ navigation }) {
         console.error('Error opening WhatsApp:', err);
         AlertManager.alert(
           'WhatsApp Not Available',
-          'Please install WhatsApp or contact us directly at: +91 ' + phoneNumber
+          'Please install WhatsApp or contact us directly at: +91 ' +
+            phoneNumber
         );
       });
   };
 
   const makePhoneCall = () => {
     const url = `tel:+91${phoneNumber}`;
-    
+
     analytics.trackUserAction('contact_phone', {
       source: 'learn_quran_screen',
       timestamp: new Date().toISOString(),
@@ -121,7 +132,10 @@ export default function LearnQuranScreen({ navigation }) {
         if (supported) {
           return Linking.openURL(url);
         } else {
-          AlertManager.alert('Phone Not Available', 'Unable to make phone calls on this device');
+          AlertManager.alert(
+            'Phone Not Available',
+            'Unable to make phone calls on this device'
+          );
         }
       })
       .catch(err => {
@@ -138,27 +152,32 @@ export default function LearnQuranScreen({ navigation }) {
     {
       icon: 'book',
       title: 'Perfect Tajweed',
-      description: 'Master the art of beautiful Quranic recitation with expert guidance',
+      description:
+        'Master the art of beautiful Quranic recitation with expert guidance',
     },
     {
       icon: 'mic',
       title: 'Arabic Pronunciation',
-      description: 'Learn authentic Arabic pronunciation from certified teachers',
+      description:
+        'Learn authentic Arabic pronunciation from certified teachers',
     },
     {
       icon: 'musical-notes',
       title: 'Melodious Recitation',
-      description: 'Develop your unique recitation style with personalized feedback',
+      description:
+        'Develop your unique recitation style with personalized feedback',
     },
     {
       icon: 'bulb',
       title: 'Deep Understanding',
-      description: 'Understand meanings and spiritual context of Quranic verses',
+      description:
+        'Understand meanings and spiritual context of Quranic verses',
     },
     {
       icon: 'heart',
       title: 'Spiritual Growth',
-      description: 'Strengthen your connection with Allah through guided learning',
+      description:
+        'Strengthen your connection with Allah through guided learning',
     },
     {
       icon: 'trophy',
@@ -193,7 +212,7 @@ export default function LearnQuranScreen({ navigation }) {
   return (
     <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
       <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
-      
+
       {/* iOS-Style Navigation Header */}
       <View style={tw`bg-gray-100 border-b border-gray-200`}>
         <View style={tw`flex-row items-center justify-between px-4 py-3`}>
@@ -206,16 +225,14 @@ export default function LearnQuranScreen({ navigation }) {
             <Text style={tw`text-lg text-blue-500 ml-1 font-normal`}>Back</Text>
           </TouchableOpacity>
 
-          <Text style={tw`text-lg font-semibold text-black`}>
-            Learn Quran
-          </Text>
+          <Text style={tw`text-lg font-semibold text-black`}>Learn Quran</Text>
 
           <View style={tw`w-16`} />
         </View>
       </View>
 
-      <ScrollView 
-        style={tw`flex-1`} 
+      <ScrollView
+        style={tw`flex-1`}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={tw`pb-6`}
       >
@@ -224,17 +241,20 @@ export default function LearnQuranScreen({ navigation }) {
           <SectionHeader title="Transform Your Journey" />
           <View style={tw`bg-white px-4 py-6`}>
             <View style={tw`items-center mb-6`}>
-              <View style={tw`w-20 h-20 rounded-full bg-green-100 items-center justify-center mb-4`}>
+              <View
+                style={tw`w-20 h-20 rounded-full bg-green-100 items-center justify-center mb-4`}
+              >
                 <Ionicons name="book" size={40} color="#34C759" />
               </View>
               <Text style={tw`text-xl font-bold text-black text-center mb-2`}>
                 Master Beautiful Recitation
               </Text>
               <Text style={tw`text-base text-gray-500 text-center leading-6`}>
-                Learn authentic Quran recitation with world-class teachers and personalized guidance
+                Learn authentic Quran recitation with world-class teachers and
+                personalized guidance
               </Text>
             </View>
-            
+
             {/* Stats */}
             <View style={tw`flex-row border-t border-gray-200 pt-4`}>
               <StatItem number="1000+" label="Students" color="#007AFF" />
@@ -253,7 +273,9 @@ export default function LearnQuranScreen({ navigation }) {
             activeOpacity={0.3}
           >
             <View style={tw`flex-row items-center`}>
-              <View style={tw`w-12 h-12 rounded-xl bg-purple-100 items-center justify-center mr-4`}>
+              <View
+                style={tw`w-12 h-12 rounded-xl bg-purple-100 items-center justify-center mr-4`}
+              >
                 <Ionicons name="gift" size={24} color="#8B5CF6" />
               </View>
               <View style={tw`flex-1`}>
@@ -337,7 +359,9 @@ export default function LearnQuranScreen({ navigation }) {
           <View style={tw`bg-white`}>
             <View style={tw`px-4 py-4 border-b border-gray-200`}>
               <View style={tw`flex-row items-start`}>
-                <View style={tw`w-6 h-6 rounded-full bg-green-100 items-center justify-center mr-3 mt-0.5`}>
+                <View
+                  style={tw`w-6 h-6 rounded-full bg-green-100 items-center justify-center mr-3 mt-0.5`}
+                >
                   <Ionicons name="checkmark" size={14} color="#34C759" />
                 </View>
                 <View style={tw`flex-1`}>
@@ -350,10 +374,12 @@ export default function LearnQuranScreen({ navigation }) {
                 </View>
               </View>
             </View>
-            
+
             <View style={tw`px-4 py-4 border-b border-gray-200`}>
               <View style={tw`flex-row items-start`}>
-                <View style={tw`w-6 h-6 rounded-full bg-blue-100 items-center justify-center mr-3 mt-0.5`}>
+                <View
+                  style={tw`w-6 h-6 rounded-full bg-blue-100 items-center justify-center mr-3 mt-0.5`}
+                >
                   <Ionicons name="time" size={14} color="#007AFF" />
                 </View>
                 <View style={tw`flex-1`}>
@@ -366,10 +392,12 @@ export default function LearnQuranScreen({ navigation }) {
                 </View>
               </View>
             </View>
-            
+
             <View style={tw`px-4 py-4`}>
               <View style={tw`flex-row items-start`}>
-                <View style={tw`w-6 h-6 rounded-full bg-purple-100 items-center justify-center mr-3 mt-0.5`}>
+                <View
+                  style={tw`w-6 h-6 rounded-full bg-purple-100 items-center justify-center mr-3 mt-0.5`}
+                >
                   <Ionicons name="ribbon" size={14} color="#8B5CF6" />
                 </View>
                 <View style={tw`flex-1`}>
@@ -392,10 +420,13 @@ export default function LearnQuranScreen({ navigation }) {
             <Text style={tw`text-lg font-bold text-black text-center mb-2`}>
               Begin Your Quran Journey Today
             </Text>
-            <Text style={tw`text-base text-gray-500 text-center mb-6 leading-6`}>
-              Join thousands of students who transformed their recitation with our expert guidance
+            <Text
+              style={tw`text-base text-gray-500 text-center mb-6 leading-6`}
+            >
+              Join thousands of students who transformed their recitation with
+              our expert guidance
             </Text>
-            
+
             <TouchableOpacity
               onPress={openWhatsApp}
               style={tw`bg-green-500 rounded-xl py-4 px-6 mb-3`}
@@ -408,7 +439,7 @@ export default function LearnQuranScreen({ navigation }) {
                 </Text>
               </View>
             </TouchableOpacity>
-            
+
             <Text style={tw`text-sm text-gray-500 text-center`}>
               No credit card required • 7-day free access
             </Text>
@@ -418,4 +449,3 @@ export default function LearnQuranScreen({ navigation }) {
     </SafeAreaView>
   );
 }
-         

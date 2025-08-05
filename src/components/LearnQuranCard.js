@@ -143,30 +143,32 @@ export default function LearnQuranCard({ navigation }) {
   };
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[
         tw`mb-6`,
         {
           opacity: slideAnim,
-          transform: [{
-            translateY: slideAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [20, 0],
-            })
-          }]
-        }
+          transform: [
+            {
+              translateY: slideAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [20, 0],
+              }),
+            },
+          ],
+        },
       ]}
     >
       <Animated.View
         style={[
-          { 
+          {
             transform: [{ scale: scaleAnim }],
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 8 },
             shadowOpacity: 0.12,
             shadowRadius: 20,
             elevation: 12,
-          }
+          },
         ]}
       >
         <TouchableOpacity
@@ -174,9 +176,7 @@ export default function LearnQuranCard({ navigation }) {
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           activeOpacity={1}
-          style={[
-            tw`rounded-3xl overflow-hidden mx-0`,
-          ]}
+          style={[tw`rounded-3xl overflow-hidden mx-0`]}
         >
           {/* Apple-Style Gradient Background */}
           <LinearGradient
@@ -186,30 +186,36 @@ export default function LearnQuranCard({ navigation }) {
             style={tw`relative`}
           >
             {/* Subtle Pattern Overlay */}
-            <View style={[
-              tw`absolute inset-0 opacity-10`,
-              { backgroundColor: '#ffffff' }
-            ]} />
+            <View
+              style={[
+                tw`absolute inset-0 opacity-10`,
+                { backgroundColor: '#ffffff' },
+              ]}
+            />
 
             {/* Main Content */}
             <View style={tw`p-6`}>
               {/* Header with Badge */}
               <View style={tw`flex-row items-center justify-between mb-4`}>
                 <View style={tw`flex-1`}>
-                  <Text style={[
-                    tw`text-white font-bold mb-1`,
-                    { fontSize: 20, letterSpacing: -0.4 }
-                  ]}>
+                  <Text
+                    style={[
+                      tw`text-white font-bold mb-1`,
+                      { fontSize: 20, letterSpacing: -0.4 },
+                    ]}
+                  >
                     Learn Quran
                   </Text>
-                  <Text style={[
-                    tw`text-blue-100 font-medium`,
-                    { fontSize: 13, letterSpacing: 0.5 }
-                  ]}>
+                  <Text
+                    style={[
+                      tw`text-blue-100 font-medium`,
+                      { fontSize: 13, letterSpacing: 0.5 },
+                    ]}
+                  >
                     1:1 LIVE SESSIONS
                   </Text>
                 </View>
-                
+
                 {/* FREE Badge */}
                 <Animatable.View
                   animation="pulse"
@@ -217,13 +223,15 @@ export default function LearnQuranCard({ navigation }) {
                   duration={2000}
                   style={[
                     tw`px-3 py-1 rounded-2xl`,
-                    { backgroundColor: '#34c759' }
+                    { backgroundColor: '#34c759' },
                   ]}
                 >
-                  <Text style={[
-                    tw`text-white font-bold`,
-                    { fontSize: 12, letterSpacing: 0.8 }
-                  ]}>
+                  <Text
+                    style={[
+                      tw`text-white font-bold`,
+                      { fontSize: 12, letterSpacing: 0.8 },
+                    ]}
+                  >
                     FREE
                   </Text>
                 </Animatable.View>
@@ -232,76 +240,93 @@ export default function LearnQuranCard({ navigation }) {
               {/* Compact Features */}
               <View style={tw`mb-5`}>
                 <View style={tw`flex-row items-center mb-3`}>
-                  <View style={[
-                    tw`w-8 h-8 rounded-2xl items-center justify-center mr-3`,
-                    { backgroundColor: 'rgba(255,255,255,0.2)' }
-                  ]}>
+                  <View
+                    style={[
+                      tw`w-8 h-8 rounded-2xl items-center justify-center mr-3`,
+                      { backgroundColor: 'rgba(255,255,255,0.2)' },
+                    ]}
+                  >
                     <Ionicons name="person" size={16} color="white" />
                   </View>
-                  <Text style={[
-                    tw`text-white font-semibold flex-1`,
-                    { fontSize: 15 }
-                  ]}>
+                  <Text
+                    style={[
+                      tw`text-white font-semibold flex-1`,
+                      { fontSize: 15 },
+                    ]}
+                  >
                     Personal Quran Teacher
                   </Text>
                 </View>
-                
+
                 <View style={tw`flex-row items-center mb-3`}>
-                  <View style={[
-                    tw`w-8 h-8 rounded-2xl items-center justify-center mr-3`,
-                    { backgroundColor: 'rgba(255,255,255,0.2)' }
-                  ]}>
+                  <View
+                    style={[
+                      tw`w-8 h-8 rounded-2xl items-center justify-center mr-3`,
+                      { backgroundColor: 'rgba(255,255,255,0.2)' },
+                    ]}
+                  >
                     <Ionicons name="school" size={16} color="white" />
                   </View>
-                  <Text style={[
-                    tw`text-white font-semibold flex-1`,
-                    { fontSize: 15 }
-                  ]}>
+                  <Text
+                    style={[
+                      tw`text-white font-semibold flex-1`,
+                      { fontSize: 15 },
+                    ]}
+                  >
                     Certified Islamic Scholars
                   </Text>
                 </View>
-                
+
                 <View style={tw`flex-row items-center`}>
-                  <View style={[
-                    tw`w-8 h-8 rounded-2xl items-center justify-center mr-3`,
-                    { backgroundColor: 'rgba(255,255,255,0.2)' }
-                  ]}>
+                  <View
+                    style={[
+                      tw`w-8 h-8 rounded-2xl items-center justify-center mr-3`,
+                      { backgroundColor: 'rgba(255,255,255,0.2)' },
+                    ]}
+                  >
                     <Ionicons name="time" size={16} color="white" />
                   </View>
-                  <Text style={[
-                    tw`text-white font-semibold flex-1`,
-                    { fontSize: 15 }
-                  ]}>
+                  <Text
+                    style={[
+                      tw`text-white font-semibold flex-1`,
+                      { fontSize: 15 },
+                    ]}
+                  >
                     Flexible Schedule
                   </Text>
                 </View>
               </View>
 
               {/* Call to Action */}
-              <View style={[
-                tw`rounded-2xl p-4 flex-row items-center justify-between`,
-                { backgroundColor: 'rgba(255,255,255,0.15)' }
-              ]}>
+              <View
+                style={[
+                  tw`rounded-2xl p-4 flex-row items-center justify-between`,
+                  { backgroundColor: 'rgba(255,255,255,0.15)' },
+                ]}
+              >
                 <View style={tw`flex-1`}>
-                  <Text style={[
-                    tw`text-white font-bold mb-1`,
-                    { fontSize: 16, letterSpacing: -0.2 }
-                  ]}>
+                  <Text
+                    style={[
+                      tw`text-white font-bold mb-1`,
+                      { fontSize: 16, letterSpacing: -0.2 },
+                    ]}
+                  >
                     Start Free Trial
                   </Text>
-                  <Text style={[
-                    tw`text-blue-100 font-medium`,
-                    { fontSize: 12 }
-                  ]}>
+                  <Text
+                    style={[tw`text-blue-100 font-medium`, { fontSize: 12 }]}
+                  >
                     Book your first lesson today
                   </Text>
                 </View>
-                
+
                 <View style={tw`flex-row items-center`}>
-                  <View style={[
-                    tw`w-10 h-10 rounded-full items-center justify-center mr-2`,
-                    { backgroundColor: 'rgba(255,255,255,0.3)' }
-                  ]}>
+                  <View
+                    style={[
+                      tw`w-10 h-10 rounded-full items-center justify-center mr-2`,
+                      { backgroundColor: 'rgba(255,255,255,0.3)' },
+                    ]}
+                  >
                     <Ionicons name="play" size={14} color="white" />
                   </View>
                   <Ionicons name="chevron-forward" size={20} color="white" />
@@ -316,42 +341,42 @@ export default function LearnQuranCard({ navigation }) {
       <View style={tw`mt-4 mx-4`}>
         <View style={tw`flex-row items-center justify-center`}>
           <View style={tw`flex-row items-center mr-6`}>
-            <View style={[
-              tw`w-6 h-6 rounded-full items-center justify-center mr-2`,
-              { backgroundColor: '#f0f9ff' }
-            ]}>
+            <View
+              style={[
+                tw`w-6 h-6 rounded-full items-center justify-center mr-2`,
+                { backgroundColor: '#f0f9ff' },
+              ]}
+            >
               <Ionicons name="people" size={12} color="#0284c7" />
             </View>
-            <Text style={[
-              tw`text-gray-600 font-medium`,
-              { fontSize: 13 }
-            ]}>
+            <Text style={[tw`text-gray-600 font-medium`, { fontSize: 13 }]}>
               1K+ Students
             </Text>
           </View>
-          
+
           <View style={tw`flex-row items-center`}>
-            <View style={[
-              tw`w-6 h-6 rounded-full items-center justify-center mr-2`,
-              { backgroundColor: '#fef3c7' }
-            ]}>
+            <View
+              style={[
+                tw`w-6 h-6 rounded-full items-center justify-center mr-2`,
+                { backgroundColor: '#fef3c7' },
+              ]}
+            >
               <Ionicons name="star" size={12} color="#f59e0b" />
             </View>
-            <Text style={[
-              tw`text-gray-600 font-medium`,
-              { fontSize: 13 }
-            ]}>
+            <Text style={[tw`text-gray-600 font-medium`, { fontSize: 13 }]}>
               4.9 Rating
             </Text>
           </View>
         </View>
-        
+
         <View style={tw`flex-row items-center justify-center mt-2`}>
           <View style={tw`w-1.5 h-1.5 bg-green-400 rounded-full mr-2`} />
-          <Text style={[
-            tw`text-gray-500 font-medium`,
-            { fontSize: 11, letterSpacing: 0.5 }
-          ]}>
+          <Text
+            style={[
+              tw`text-gray-500 font-medium`,
+              { fontSize: 11, letterSpacing: 0.5 },
+            ]}
+          >
             TRUSTED WORLDWIDE
           </Text>
         </View>

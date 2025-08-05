@@ -29,7 +29,9 @@ const SurahItem = ({ item, onPress }) => (
   >
     <View style={tw`flex-row items-center`}>
       {/* Surah Number */}
-      <View style={tw`w-12 h-12 rounded-lg bg-gray-100 items-center justify-center mr-3`}>
+      <View
+        style={tw`w-12 h-12 rounded-lg bg-gray-100 items-center justify-center mr-3`}
+      >
         <Text style={tw`text-lg font-semibold text-gray-700`}>
           {item.number}
         </Text>
@@ -234,7 +236,9 @@ export default function SurahsScreen() {
 
       {/* Search Section */}
       <View style={tw`px-4 py-3 bg-gray-100`}>
-        <View style={tw`bg-white rounded-xl border border-gray-200 px-4 py-3 flex-row items-center`}>
+        <View
+          style={tw`bg-white rounded-xl border border-gray-200 px-4 py-3 flex-row items-center`}
+        >
           <Ionicons name="search" size={18} color="#8E8E93" style={tw`mr-3`} />
           <TextInput
             style={tw`flex-1 text-black text-base`}
@@ -276,10 +280,7 @@ export default function SurahsScreen() {
             data={filteredSurahs}
             keyExtractor={item => item.number.toString()}
             renderItem={({ item }) => (
-              <SurahItem
-                item={item}
-                onPress={() => handleSurahPress(item)}
-              />
+              <SurahItem item={item} onPress={() => handleSurahPress(item)} />
             )}
             style={tw`bg-white border-t border-gray-200`}
             showsVerticalScrollIndicator={false}
@@ -287,7 +288,9 @@ export default function SurahsScreen() {
             ListEmptyComponent={
               searchText.length > 0 ? (
                 <View style={tw`items-center justify-center py-16 px-4`}>
-                  <View style={tw`w-16 h-16 rounded-full bg-gray-100 items-center justify-center mb-4`}>
+                  <View
+                    style={tw`w-16 h-16 rounded-full bg-gray-100 items-center justify-center mb-4`}
+                  >
                     <Ionicons name="search" size={32} color="#8E8E93" />
                   </View>
                   <Text style={tw`text-lg font-semibold text-black mb-2`}>

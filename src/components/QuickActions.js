@@ -1,10 +1,5 @@
 import React, { useRef } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Animated,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import analytics from '../services/analyticsService';
@@ -67,7 +62,9 @@ export default function QuickActions({ navigation }) {
       'StreakScreen',
       'streak_button_tap'
     );
-    analytics.trackUserAction('view_streak', { from_component: 'quick_actions' });
+    analytics.trackUserAction('view_streak', {
+      from_component: 'quick_actions',
+    });
 
     // Navigate to dedicated Streak screen
     navigation.navigate('Streak');

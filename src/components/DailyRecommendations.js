@@ -315,31 +315,37 @@ export default function DailyRecommendations({ navigation }) {
 
   return (
     <Animatable.View animation="fadeInUp" duration={600}>
-      <View style={[
-        tw`rounded-3xl overflow-hidden mb-4 mx-0`,
-        {
-          backgroundColor: '#ffffff',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 12,
-          elevation: 1,
-        }
-      ]}>
-        {/* Apple-Style Header */}
-        <View style={[
-          tw`px-5 py-4`,
+      <View
+        style={[
+          tw`rounded-3xl overflow-hidden mb-4 mx-0`,
           {
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            backgroundColor: recommendations.iconColor || '#007AFF',
-          }
-        ]}>
+            backgroundColor: '#ffffff',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 1,
+          },
+        ]}
+      >
+        {/* Apple-Style Header */}
+        <View
+          style={[
+            tw`px-5 py-4`,
+            {
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              backgroundColor: recommendations.iconColor || '#007AFF',
+            },
+          ]}
+        >
           <View style={tw`flex-row items-center justify-between`}>
             <View style={tw`flex-row items-center flex-1`}>
-              <View style={[
-                tw`w-10 h-10 rounded-2xl items-center justify-center mr-3`,
-                { backgroundColor: 'rgba(255,255,255,0.2)' }
-              ]}>
+              <View
+                style={[
+                  tw`w-10 h-10 rounded-2xl items-center justify-center mr-3`,
+                  { backgroundColor: 'rgba(255,255,255,0.2)' },
+                ]}
+              >
                 <MaterialCommunityIcons
                   name="lightbulb-on"
                   size={22}
@@ -347,43 +353,48 @@ export default function DailyRecommendations({ navigation }) {
                 />
               </View>
               <View style={tw`flex-1`}>
-                <Text style={[
-                  tw`text-white font-bold mb-1`,
-                  { fontSize: 18, letterSpacing: -0.3 }
-                ]}>
+                <Text
+                  style={[
+                    tw`text-white font-bold mb-1`,
+                    { fontSize: 18, letterSpacing: -0.3 },
+                  ]}
+                >
                   {recommendations.title}
                 </Text>
-                <Text style={[
-                  tw`text-white opacity-90 font-medium`,
-                  { fontSize: 13 }
-                ]}>
+                <Text
+                  style={[
+                    tw`text-white opacity-90 font-medium`,
+                    { fontSize: 13 },
+                  ]}
+                >
                   Smart recommendations for you
                 </Text>
               </View>
             </View>
-            
+
             {/* Progress Circle */}
             <View style={tw`items-center`}>
-              <View style={[
-                tw`w-12 h-12 rounded-full items-center justify-center`,
-                { backgroundColor: 'rgba(255,255,255,0.2)' }
-              ]}>
-                <Text style={[
-                  tw`text-white font-bold`,
-                  { fontSize: 14 }
-                ]}>
+              <View
+                style={[
+                  tw`w-12 h-12 rounded-full items-center justify-center`,
+                  { backgroundColor: 'rgba(255,255,255,0.2)' },
+                ]}
+              >
+                <Text style={[tw`text-white font-bold`, { fontSize: 14 }]}>
                   {done}/{total}
                 </Text>
               </View>
               {allDone && (
-                <Animatable.View 
-                  animation="bounceIn" 
+                <Animatable.View
+                  animation="bounceIn"
                   style={tw`absolute -top-1 -right-1`}
                 >
-                  <View style={[
-                    tw`w-6 h-6 rounded-full items-center justify-center`,
-                    { backgroundColor: '#34c759' }
-                  ]}>
+                  <View
+                    style={[
+                      tw`w-6 h-6 rounded-full items-center justify-center`,
+                      { backgroundColor: '#34c759' },
+                    ]}
+                  >
                     <Feather name="check" size={14} color="white" />
                   </View>
                 </Animatable.View>
@@ -393,10 +404,12 @@ export default function DailyRecommendations({ navigation }) {
 
           {/* Progress Bar */}
           <View style={tw`mt-3`}>
-            <View style={[
-              tw`h-1 rounded-full overflow-hidden`,
-              { backgroundColor: 'rgba(255,255,255,0.3)' }
-            ]}>
+            <View
+              style={[
+                tw`h-1 rounded-full overflow-hidden`,
+                { backgroundColor: 'rgba(255,255,255,0.3)' },
+              ]}
+            >
               <Animatable.View
                 animation="slideInLeft"
                 duration={800}
@@ -404,8 +417,10 @@ export default function DailyRecommendations({ navigation }) {
                   tw`h-full rounded-full`,
                   {
                     width: `${(done / total) * 100}%`,
-                    backgroundColor: allDone ? '#34c759' : 'rgba(255,255,255,0.9)',
-                  }
+                    backgroundColor: allDone
+                      ? '#34c759'
+                      : 'rgba(255,255,255,0.9)',
+                  },
                 ]}
               />
             </View>
@@ -416,15 +431,14 @@ export default function DailyRecommendations({ navigation }) {
         {allDone && (
           <Animatable.View
             animation="fadeInDown"
-            style={[
-              tw`px-5 py-3 items-center`,
-              { backgroundColor: '#f0fdf4' }
-            ]}
+            style={[tw`px-5 py-3 items-center`, { backgroundColor: '#f0fdf4' }]}
           >
-            <Text style={[
-              tw`text-green-700 font-semibold text-center`,
-              { fontSize: 15, letterSpacing: -0.2 }
-            ]}>
+            <Text
+              style={[
+                tw`text-green-700 font-semibold text-center`,
+                { fontSize: 15, letterSpacing: -0.2 },
+              ]}
+            >
               🎉 All completed! Great job today
             </Text>
           </Animatable.View>
@@ -440,7 +454,7 @@ export default function DailyRecommendations({ navigation }) {
             }
             const isExpanded = expandedCard.includes(originalIndex);
             const isDone = completed.includes(originalIndex);
-            
+
             return (
               <Animatable.View
                 key={item.name}
@@ -467,20 +481,26 @@ export default function DailyRecommendations({ navigation }) {
                       shadowOpacity: 0.05,
                       shadowRadius: 2,
                       elevation: 1,
-                    }
+                    },
                   ]}
                   activeOpacity={0.7}
                 >
                   <View style={tw`p-4`}>
                     <View style={tw`flex-row items-center`}>
                       {/* Apple-Style Icon */}
-                      <View style={[
-                        tw`w-11 h-11 rounded-2xl items-center justify-center mr-4`,
-                        {
-                          backgroundColor: item.type === 'surah' ? '#007AFF' : 
-                                         item.type === 'dhikr' ? '#34c759' : '#ff9500'
-                        }
-                      ]}>
+                      <View
+                        style={[
+                          tw`w-11 h-11 rounded-2xl items-center justify-center mr-4`,
+                          {
+                            backgroundColor:
+                              item.type === 'surah'
+                                ? '#007AFF'
+                                : item.type === 'dhikr'
+                                  ? '#34c759'
+                                  : '#ff9500',
+                          },
+                        ]}
+                      >
                         <MaterialCommunityIcons
                           name={item.icon}
                           size={20}
@@ -490,58 +510,75 @@ export default function DailyRecommendations({ navigation }) {
 
                       {/* Content */}
                       <View style={tw`flex-1`}>
-                        <View style={tw`flex-row items-center justify-between mb-1`}>
-                          <Text style={[
-                            tw`text-gray-900 font-semibold`,
-                            { fontSize: 16, letterSpacing: -0.2 }
-                          ]}>
+                        <View
+                          style={tw`flex-row items-center justify-between mb-1`}
+                        >
+                          <Text
+                            style={[
+                              tw`text-gray-900 font-semibold`,
+                              { fontSize: 16, letterSpacing: -0.2 },
+                            ]}
+                          >
                             {item.name}
                           </Text>
-                          
+
                           {/* Status Indicators */}
                           <View style={tw`flex-row items-center`}>
                             {(item.type === 'dhikr' || item.type === 'dua') &&
                               item.content &&
                               item.content.length > 0 && (
-                                <View style={[
-                                  tw`px-2 py-1 rounded-lg mr-2`,
-                                  { backgroundColor: '#f0f9ff' }
-                                ]}>
-                                  <Text style={[
-                                    tw`font-semibold`,
-                                    { fontSize: 12, color: '#0284c7' }
-                                  ]}>
+                                <View
+                                  style={[
+                                    tw`px-2 py-1 rounded-lg mr-2`,
+                                    { backgroundColor: '#f0f9ff' },
+                                  ]}
+                                >
+                                  <Text
+                                    style={[
+                                      tw`font-semibold`,
+                                      { fontSize: 12, color: '#0284c7' },
+                                    ]}
+                                  >
                                     {item.content.length}
                                   </Text>
                                 </View>
                               )}
-                            
+
                             {isDone && (
-                              <View style={[
-                                tw`w-6 h-6 rounded-full items-center justify-center mr-2`,
-                                { backgroundColor: '#22c55e' }
-                              ]}>
+                              <View
+                                style={[
+                                  tw`w-6 h-6 rounded-full items-center justify-center mr-2`,
+                                  { backgroundColor: '#22c55e' },
+                                ]}
+                              >
                                 <Feather name="check" size={12} color="white" />
                               </View>
                             )}
                           </View>
                         </View>
-                        
-                        <Text style={[
-                          tw`text-gray-500 font-medium mb-2`,
-                          { fontSize: 13 }
-                        ]}>
+
+                        <Text
+                          style={[
+                            tw`text-gray-500 font-medium mb-2`,
+                            { fontSize: 13 },
+                          ]}
+                        >
                           {item.description}
                         </Text>
 
                         {/* Action Hint */}
-                        {!isExpanded && (item.type === 'dhikr' || item.type === 'dua') &&
-                          item.content && item.content.length > 0 && (
-                            <Text style={[
-                              tw`text-blue-600 font-medium`,
-                              { fontSize: 12 }
-                            ]}>
-                              Tap to view {item.type === 'dhikr' ? 'adhkar' : 'duas'}
+                        {!isExpanded &&
+                          (item.type === 'dhikr' || item.type === 'dua') &&
+                          item.content &&
+                          item.content.length > 0 && (
+                            <Text
+                              style={[
+                                tw`text-blue-600 font-medium`,
+                                { fontSize: 12 },
+                              ]}
+                            >
+                              Tap to view{' '}
+                              {item.type === 'dhikr' ? 'adhkar' : 'duas'}
                             </Text>
                           )}
                       </View>
@@ -549,19 +586,20 @@ export default function DailyRecommendations({ navigation }) {
                       {/* Chevron */}
                       <View style={tw`ml-2`}>
                         {(item.type === 'dhikr' || item.type === 'dua') &&
-                          item.content && item.content.length > 0 ? (
-                            <Ionicons
-                              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                              size={18}
-                              color="#c7c7cc"
-                            />
-                          ) : (
-                            <Ionicons
-                              name="chevron-forward"
-                              size={18}
-                              color="#c7c7cc"
-                            />
-                          )}
+                        item.content &&
+                        item.content.length > 0 ? (
+                          <Ionicons
+                            name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                            size={18}
+                            color="#c7c7cc"
+                          />
+                        ) : (
+                          <Ionicons
+                            name="chevron-forward"
+                            size={18}
+                            color="#c7c7cc"
+                          />
+                        )}
                       </View>
                     </View>
 
@@ -575,7 +613,11 @@ export default function DailyRecommendations({ navigation }) {
                           duration={300}
                           style={[
                             tw`mt-4 rounded-2xl p-4`,
-                            { backgroundColor: 'white', borderWidth: 1, borderColor: '#e5e7eb' }
+                            {
+                              backgroundColor: 'white',
+                              borderWidth: 1,
+                              borderColor: '#e5e7eb',
+                            },
                           ]}
                         >
                           <ScrollView
@@ -591,28 +633,32 @@ export default function DailyRecommendations({ navigation }) {
                                   idx < item.content.length - 1 && {
                                     paddingBottom: 16,
                                     borderBottomWidth: 1,
-                                    borderBottomColor: '#f3f4f6'
-                                  }
+                                    borderBottomColor: '#f3f4f6',
+                                  },
                                 ]}
                               >
                                 <Text
                                   style={[
                                     tw`text-gray-800 text-right mb-3 leading-7`,
-                                    { fontSize: 16, fontFamily: 'System' }
+                                    { fontSize: 16, fontFamily: 'System' },
                                   ]}
                                   dir="rtl"
                                 >
                                   {contentItem.text}
                                 </Text>
                                 {contentItem.count && (
-                                  <View style={[
-                                    tw`px-3 py-1 rounded-xl self-start`,
-                                    { backgroundColor: '#fef3c7' }
-                                  ]}>
-                                    <Text style={[
-                                      tw`font-semibold`,
-                                      { fontSize: 12, color: '#d97706' }
-                                    ]}>
+                                  <View
+                                    style={[
+                                      tw`px-3 py-1 rounded-xl self-start`,
+                                      { backgroundColor: '#fef3c7' },
+                                    ]}
+                                  >
+                                    <Text
+                                      style={[
+                                        tw`font-semibold`,
+                                        { fontSize: 12, color: '#d97706' },
+                                      ]}
+                                    >
                                       {contentItem.count}×
                                     </Text>
                                   </View>

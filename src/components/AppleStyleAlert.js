@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  Animated,
-} from 'react-native';
+import { Modal, View, Text, TouchableOpacity, Animated } from 'react-native';
 import tw from 'twrnc';
 
 // Custom Apple-style alert component with glassmorphism
@@ -50,7 +44,7 @@ const AppleStyleAlert = ({
     }
   }, [visible]);
 
-  const handleButtonPress = (button) => {
+  const handleButtonPress = button => {
     if (button.onPress) {
       button.onPress();
     }
@@ -62,7 +56,8 @@ const AppleStyleAlert = ({
   if (!visible) return null;
 
   // Default buttons if none provided
-  const alertButtons = buttons.length > 0 ? buttons : [{ text: 'OK', style: 'default' }];
+  const alertButtons =
+    buttons.length > 0 ? buttons : [{ text: 'OK', style: 'default' }];
 
   return (
     <Modal
@@ -71,49 +66,55 @@ const AppleStyleAlert = ({
       animationType="none"
       onRequestClose={onDismiss}
     >
-      <Animated.View 
+      <Animated.View
         style={[
           tw`flex-1 justify-center items-center px-4`,
-          { 
+          {
             opacity: fadeAnim,
             backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          }
+          },
         ]}
       >
         {/* Simple Modal Card */}
-        <Animated.View style={[
-          tw`w-full max-w-sm mx-4 bg-white rounded-2xl overflow-hidden`,
-          {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 10,
-            elevation: 10,
-            transform: [{ scale: scaleAnim }],
-          }
-        ]}>
+        <Animated.View
+          style={[
+            tw`w-full max-w-sm mx-4 bg-white rounded-2xl overflow-hidden`,
+            {
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 10,
+              elevation: 10,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
           {/* Modal Header */}
           <View style={tw`px-6 pt-6 pb-4`}>
             {title && (
-              <Text style={[
-                tw`text-center text-black mb-2`,
-                { 
-                  fontSize: 17, 
-                  fontWeight: '600', 
-                  letterSpacing: -0.4,
-                }
-              ]}>
+              <Text
+                style={[
+                  tw`text-center text-black mb-2`,
+                  {
+                    fontSize: 17,
+                    fontWeight: '600',
+                    letterSpacing: -0.4,
+                  },
+                ]}
+              >
                 {title}
               </Text>
             )}
             {message && (
-              <Text style={[
-                tw`text-center leading-5 text-gray-600`,
-                { 
-                  fontSize: 13, 
-                  letterSpacing: -0.2,
-                }
-              ]}>
+              <Text
+                style={[
+                  tw`text-center leading-5 text-gray-600`,
+                  {
+                    fontSize: 13,
+                    letterSpacing: -0.2,
+                  },
+                ]}
+              >
                 {message}
               </Text>
             )}
@@ -125,37 +126,37 @@ const AppleStyleAlert = ({
               const isLast = index === alertButtons.length - 1;
               const isDestructive = button.style === 'destructive';
               const isCancel = button.style === 'cancel';
-              const isPrimary = button.style === 'default' || (!isDestructive && !isCancel);
-              
+              const isPrimary =
+                button.style === 'default' || (!isDestructive && !isCancel);
+
               return (
                 <TouchableOpacity
                   key={index}
                   onPress={() => handleButtonPress(button)}
-                  style={[
-                    tw`py-4`,
-                    !isLast && tw`border-b border-gray-200`,
-                  ]}
+                  style={[tw`py-4`, !isLast && tw`border-b border-gray-200`]}
                   activeOpacity={0.4}
                 >
-                  <Text style={[
-                    tw`text-center`,
-                    { 
-                      fontSize: 17, 
-                      letterSpacing: -0.4,
-                    },
-                    isPrimary && {
-                      fontWeight: '600',
-                      color: '#007AFF',
-                    },
-                    isDestructive && {
-                      fontWeight: '400',
-                      color: '#FF3B30',
-                    },
-                    isCancel && {
-                      fontWeight: '400',
-                      color: '#8E8E93',
-                    },
-                  ]}>
+                  <Text
+                    style={[
+                      tw`text-center`,
+                      {
+                        fontSize: 17,
+                        letterSpacing: -0.4,
+                      },
+                      isPrimary && {
+                        fontWeight: '600',
+                        color: '#007AFF',
+                      },
+                      isDestructive && {
+                        fontWeight: '400',
+                        color: '#FF3B30',
+                      },
+                      isCancel && {
+                        fontWeight: '400',
+                        color: '#8E8E93',
+                      },
+                    ]}
+                  >
                     {button.text}
                   </Text>
                 </TouchableOpacity>
@@ -173,9 +174,11 @@ let currentAlert = null;
 
 const AlertManager = {
   alert: (title, message, buttons, options) => {
-    return new Promise((resolve) => {
-      const alertButtons = buttons || [{ text: 'OK', onPress: () => resolve() }];
-      
+    return new Promise(resolve => {
+      const alertButtons = buttons || [
+        { text: 'OK', onPress: () => resolve() },
+      ];
+
       // Add resolve to button callbacks
       const processedButtons = alertButtons.map(button => ({
         ...button,
@@ -184,7 +187,7 @@ const AlertManager = {
             button.onPress();
           }
           resolve();
-        }
+        },
       }));
 
       currentAlert = {
@@ -195,7 +198,7 @@ const AlertManager = {
         onDismiss: () => {
           currentAlert = null;
           resolve();
-        }
+        },
       };
 
       // Force re-render
@@ -206,7 +209,7 @@ const AlertManager = {
   },
 
   getCurrentAlert: () => currentAlert,
-  
+
   dismissAlert: () => {
     if (currentAlert) {
       currentAlert = null;
@@ -214,7 +217,7 @@ const AlertManager = {
         global.alertUpdate();
       }
     }
-  }
+  },
 };
 
 // Provider component to manage alerts globally

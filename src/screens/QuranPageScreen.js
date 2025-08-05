@@ -16,10 +16,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { PanGestureHandler, PinchGestureHandler, TapGestureHandler, State } from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  PinchGestureHandler,
+  TapGestureHandler,
+  State,
+} from 'react-native-gesture-handler';
 import tw from 'twrnc';
 import PageNavigationModal from '../components/PageNavigationModal';
-import { IOSLoader, IOSProgressLoader, IOSErrorView } from '../components/IOSLoader';
+import {
+  IOSLoader,
+  IOSProgressLoader,
+  IOSErrorView,
+} from '../components/IOSLoader';
 import { useDispatch } from 'react-redux';
 import { updateStreak, saveLastReadPage } from '../store/streakSlice';
 import Markdown from 'react-native-markdown-display';
@@ -27,7 +36,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '../services/analyticsService';
 import rateLimitService from '../services/rateLimitService';
 import RateLimitStatus from '../components/RateLimitStatus';
-import { getMushafStyle, getMushafImageUrl, getTotalPages } from '../services/mushafService';
+import {
+  getMushafStyle,
+  getMushafImageUrl,
+  getTotalPages,
+} from '../services/mushafService';
 import { AlertManager } from '../components/AppleStyleAlert';
 
 const { width, height } = Dimensions.get('window');
@@ -77,17 +90,17 @@ export default function QuranPageScreen({ route }) {
     { useNativeDriver: false }
   );
 
-  const onPinchHandlerStateChange = (event) => {
+  const onPinchHandlerStateChange = event => {
     if (event.nativeEvent.oldState === State.ACTIVE) {
       const { scale: gestureScale } = event.nativeEvent;
       const newScale = Math.max(1, Math.min(3, scale * gestureScale));
-      
+
       setScale(newScale);
       setIsZoomed(newScale > 1);
-      
+
       // Reset scale animation value
       scaleAnim.setValue(newScale);
-      
+
       // If scale is back to 1, reset translations
       if (newScale === 1) {
         setTranslateX(0);
@@ -126,12 +139,15 @@ export default function QuranPageScreen({ route }) {
   const onGestureEvent = event => {
     // Don't handle swipe gestures when zoomed in
     if (isZoomed) return;
-    
+
     const { translationX, velocityX } = event.nativeEvent;
     const minSwipeDistance = width * 0.2;
     const minVelocity = 300;
 
-    if (Math.abs(translationX) > minSwipeDistance || Math.abs(velocityX) > minVelocity) {
+    if (
+      Math.abs(translationX) > minSwipeDistance ||
+      Math.abs(velocityX) > minVelocity
+    ) {
       if (translationX > 0 && velocityX >= 0) {
         analytics.trackUserAction('page_navigation', {
           direction: 'next',
@@ -155,7 +171,7 @@ export default function QuranPageScreen({ route }) {
   const onHandlerStateChange = event => {
     // Don't handle swipe gestures when zoomed in
     if (isZoomed) return;
-    
+
     if (event.nativeEvent.state === State.END) {
       onGestureEvent(event);
     }
@@ -285,25 +301,33 @@ export default function QuranPageScreen({ route }) {
     });
 
     // Handle hardware back button and gesture navigation
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      console.log('[QURAN SCREEN] Hardware back button pressed');
-      handleBackPress();
-      return true; // Prevent default back behavior
-    });
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        console.log('[QURAN SCREEN] Hardware back button pressed');
+        handleBackPress();
+        return true; // Prevent default back behavior
+      }
+    );
 
     // Add beforeRemove listener to intercept navigation away from screen
-    const unsubscribeBeforeRemove = navigation.addListener('beforeRemove', (e) => {
-      // If we're already showing the modal, allow navigation
-      if (showBackConfirmModal) {
-        return;
+    const unsubscribeBeforeRemove = navigation.addListener(
+      'beforeRemove',
+      e => {
+        // If we're already showing the modal, allow navigation
+        if (showBackConfirmModal) {
+          return;
+        }
+
+        // Prevent default behavior of leaving the screen
+        e.preventDefault();
+
+        console.log(
+          '[QURAN SCREEN] Navigation intercepted, showing confirmation'
+        );
+        handleBackPress();
       }
-
-      // Prevent default behavior of leaving the screen
-      e.preventDefault();
-
-      console.log('[QURAN SCREEN] Navigation intercepted, showing confirmation');
-      handleBackPress();
-    });
+    );
 
     return () => {
       console.log('[QURAN SCREEN] Component unmounting');
@@ -318,31 +342,38 @@ export default function QuranPageScreen({ route }) {
       console.log('[QURAN SCREEN] Loading mushaf style...');
       const style = await getMushafStyle();
       console.log('[QURAN SCREEN] Loaded mushaf style:', style);
-      
+
       // Check if style has changed
       if (style !== mushafStyle) {
-        console.log('[QURAN SCREEN] Mushaf style changed from', mushafStyle, 'to', style);
+        console.log(
+          '[QURAN SCREEN] Mushaf style changed from',
+          mushafStyle,
+          'to',
+          style
+        );
         setMushafStyle(style);
-        
+
         // Update total pages based on style
         const pages = getTotalPages(style);
         setTotalPages(pages);
         console.log('[QURAN SCREEN] Total pages set to:', pages);
-        
+
         // Force image reload by triggering loading state
         setLoading(true);
         setImageError(false);
-        
+
         // Clear preloaded pages cache since URLs have changed
-        console.log('[QURAN SCREEN] Clearing preloaded pages cache due to style change');
+        console.log(
+          '[QURAN SCREEN] Clearing preloaded pages cache due to style change'
+        );
         setPreloadedPages(new Set());
-        
+
         // Preload adjacent pages with new style after a short delay
         setTimeout(() => {
           console.log('[QURAN SCREEN] Starting preload with new mushaf style');
           preloadAdjacentPages(currentPage);
         }, 500);
-        
+
         console.log('[QURAN SCREEN] mushafStyle state set to:', style);
       }
     } catch (error) {
@@ -404,7 +435,14 @@ export default function QuranPageScreen({ route }) {
   // Generate SearchTruth.com image URL using preferred style
   const getPageImageUrl = pageNumber => {
     const url = getMushafImageUrl(pageNumber, mushafStyle);
-    console.log('[QURAN SCREEN] Generated URL for page', pageNumber, 'style', mushafStyle, ':', url);
+    console.log(
+      '[QURAN SCREEN] Generated URL for page',
+      pageNumber,
+      'style',
+      mushafStyle,
+      ':',
+      url
+    );
     return url;
   };
 
@@ -496,7 +534,10 @@ export default function QuranPageScreen({ route }) {
   };
 
   const handleImageLoad = () => {
-    console.log('[QURAN SCREEN] Image loaded successfully for page:', currentPage);
+    console.log(
+      '[QURAN SCREEN] Image loaded successfully for page:',
+      currentPage
+    );
     setLoading(false);
     setPreloadedPages(prev => new Set([...prev, currentPage]));
   };
@@ -578,7 +619,7 @@ export default function QuranPageScreen({ route }) {
 
       let currentStepIndex = 0;
       let simulationTimeouts = [];
-      
+
       const runNextStep = () => {
         // If API response is ready, immediately stop simulation and show response
         if (apiResponseReady) {
@@ -595,8 +636,11 @@ export default function QuranPageScreen({ route }) {
         if (currentStepIndex < steps.length) {
           setAnalysisStep(currentStepIndex + 1);
           currentStepIndex++;
-          
-          const timeout = setTimeout(runNextStep, steps[currentStepIndex - 1]?.delay || 1000);
+
+          const timeout = setTimeout(
+            runNextStep,
+            steps[currentStepIndex - 1]?.delay || 1000
+          );
           simulationTimeouts.push(timeout);
         } else {
           // Animation complete - wait for API response if not ready yet
@@ -680,14 +724,16 @@ export default function QuranPageScreen({ route }) {
         // Mark API response as ready
         apiResponseReady = true;
         apiResponseData = data.tafseer;
-        
-        console.log('[QURAN SCREEN] API response received, stopping simulation');
+
+        console.log(
+          '[QURAN SCREEN] API response received, stopping simulation'
+        );
       } else {
         throw new Error(data.error || 'Failed to get tafseer');
       }
     } catch (error) {
       console.error('Error getting AI explanation:', error);
-      
+
       // Clear all timeouts and reset state
       timeouts.forEach(timeout => clearTimeout(timeout));
       setAiLoading(false);
@@ -787,7 +833,12 @@ export default function QuranPageScreen({ route }) {
             activeOpacity={0.4}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="book-outline" size={20} color="#007AFF" style={tw`mr-1`} />
+            <Ionicons
+              name="book-outline"
+              size={20}
+              color="#007AFF"
+              style={tw`mr-1`}
+            />
             <Text
               style={[
                 tw`text-blue-500`,
@@ -831,7 +882,7 @@ export default function QuranPageScreen({ route }) {
                 />
               ) : (
                 <TapGestureHandler
-                  onHandlerStateChange={(event) => {
+                  onHandlerStateChange={event => {
                     if (event.nativeEvent.state === State.ACTIVE) {
                       handleDoubleTap();
                     }
@@ -846,9 +897,9 @@ export default function QuranPageScreen({ route }) {
                         transform: [
                           { scale: scaleAnim },
                           { translateX: translateXAnim },
-                          { translateY: translateYAnim }
-                        ]
-                      }
+                          { translateY: translateYAnim },
+                        ],
+                      },
                     ]}
                   >
                     <Image
@@ -867,13 +918,15 @@ export default function QuranPageScreen({ route }) {
             </Animated.View>
           </PanGestureHandler>
         </PinchGestureHandler>
-        
+
         {/* Zoom Controls Overlay */}
         {isZoomed && (
-          <View style={[
-            tw`absolute top-4 right-4 bg-black/80 rounded-2xl p-2 flex-row`,
-            { zIndex: 100 }
-          ]}>
+          <View
+            style={[
+              tw`absolute top-4 right-4 bg-black/80 rounded-2xl p-2 flex-row`,
+              { zIndex: 100 },
+            ]}
+          >
             <TouchableOpacity
               onPress={() => {
                 const newScale = Math.max(1, scale - 0.5);
@@ -891,9 +944,9 @@ export default function QuranPageScreen({ route }) {
             >
               <Ionicons name="remove" size={20} color="white" />
             </TouchableOpacity>
-            
+
             <View style={tw`w-px bg-white/30 mx-1`} />
-            
+
             <TouchableOpacity
               onPress={() => {
                 const newScale = Math.min(3, scale + 0.5);
@@ -905,13 +958,10 @@ export default function QuranPageScreen({ route }) {
             >
               <Ionicons name="add" size={20} color="white" />
             </TouchableOpacity>
-            
+
             <View style={tw`w-px bg-white/30 mx-1`} />
-            
-            <TouchableOpacity
-              onPress={resetZoom}
-              style={tw`p-2`}
-            >
+
+            <TouchableOpacity onPress={resetZoom} style={tw`p-2`}>
               <Ionicons name="contract-outline" size={20} color="white" />
             </TouchableOpacity>
           </View>
@@ -1246,41 +1296,50 @@ export default function QuranPageScreen({ route }) {
         animationType="fade"
         onRequestClose={() => setShowBackConfirmModal(false)}
       >
-        <View style={[
-          tw`flex-1 justify-center items-center px-4`,
-          { backgroundColor: 'rgba(0, 0, 0, 0.4)' }
-        ]}>
+        <View
+          style={[
+            tw`flex-1 justify-center items-center px-4`,
+            { backgroundColor: 'rgba(0, 0, 0, 0.4)' },
+          ]}
+        >
           {/* Simple Modal Card */}
-          <View style={[
-            tw`w-full max-w-sm mx-4 bg-white rounded-2xl overflow-hidden`,
-            {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 10,
-              elevation: 10,
-            }
-          ]}>
+          <View
+            style={[
+              tw`w-full max-w-sm mx-4 bg-white rounded-2xl overflow-hidden`,
+              {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
+                elevation: 10,
+              },
+            ]}
+          >
             {/* Modal Header */}
             <View style={tw`px-6 pt-6 pb-4`}>
-              <Text style={[
-                tw`text-center text-black mb-2`,
-                { 
-                  fontSize: 17, 
-                  fontWeight: '600', 
-                  letterSpacing: -0.4,
-                }
-              ]}>
-                🌟 Amazing Progress! 
+              <Text
+                style={[
+                  tw`text-center text-black mb-2`,
+                  {
+                    fontSize: 17,
+                    fontWeight: '600',
+                    letterSpacing: -0.4,
+                  },
+                ]}
+              >
+                🌟 Amazing Progress!
               </Text>
-              <Text style={[
-                tw`text-center leading-5 text-gray-600`,
-                { 
-                  fontSize: 13, 
-                  letterSpacing: -0.2,
-                }
-              ]}>
-                MashAllah! You're building such a beautiful habit. How about blessing yourself with just one more page? 📖✨
+              <Text
+                style={[
+                  tw`text-center leading-5 text-gray-600`,
+                  {
+                    fontSize: 13,
+                    letterSpacing: -0.2,
+                  },
+                ]}
+              >
+                MashAllah! You're building such a beautiful habit. How about
+                blessing yourself with just one more page? 📖✨
               </Text>
             </View>
 
@@ -1288,7 +1347,9 @@ export default function QuranPageScreen({ route }) {
             <View style={tw`border-t border-gray-200`}>
               <TouchableOpacity
                 onPress={() => {
-                  console.log('[QURAN SCREEN] User chose to read one more page');
+                  console.log(
+                    '[QURAN SCREEN] User chose to read one more page'
+                  );
                   analytics.trackUserAction('encouraged_reading', {
                     from_page: currentPage,
                     to_page: currentPage + 1,
@@ -1299,15 +1360,17 @@ export default function QuranPageScreen({ route }) {
                 style={tw`py-4 border-b border-gray-200`}
                 activeOpacity={0.4}
               >
-                <Text style={[
-                  tw`text-center`,
-                  { 
-                    fontSize: 17, 
-                    fontWeight: '600', 
-                    letterSpacing: -0.4,
-                    color: '#007AFF',
-                  }
-                ]}>
+                <Text
+                  style={[
+                    tw`text-center`,
+                    {
+                      fontSize: 17,
+                      fontWeight: '600',
+                      letterSpacing: -0.4,
+                      color: '#007AFF',
+                    },
+                  ]}
+                >
                   Yes! Read 1 More Page 🤲
                 </Text>
               </TouchableOpacity>
@@ -1318,8 +1381,8 @@ export default function QuranPageScreen({ route }) {
                   setShowBackConfirmModal(false);
                   // Use reset to properly navigate back and allow the navigation
                   navigation.dispatch(
-                    navigation.getState().index > 0 
-                      ? navigation.goBack() 
+                    navigation.getState().index > 0
+                      ? navigation.goBack()
                       : navigation.navigate('Quran', {
                           screen: 'QuranTabs',
                           params: { screen: 'JuzList' },
@@ -1329,15 +1392,17 @@ export default function QuranPageScreen({ route }) {
                 style={tw`py-4`}
                 activeOpacity={0.4}
               >
-                <Text style={[
-                  tw`text-center`,
-                  { 
-                    fontSize: 17, 
-                    fontWeight: '400', 
-                    letterSpacing: -0.4,
-                    color: '#007AFF',
-                  }
-                ]}>
+                <Text
+                  style={[
+                    tw`text-center`,
+                    {
+                      fontSize: 17,
+                      fontWeight: '400',
+                      letterSpacing: -0.4,
+                      color: '#007AFF',
+                    },
+                  ]}
+                >
                   Maybe Later 😊
                 </Text>
               </TouchableOpacity>

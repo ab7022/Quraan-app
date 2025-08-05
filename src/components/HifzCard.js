@@ -12,7 +12,7 @@ const DAILY_TARGET_STORAGE_KEY = 'daily_target_data';
 export default function HifzCard({ navigation }) {
   const [targetData, setTargetData] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Get current reading progress from Redux store
   const lastReadPage = useSelector(state => state.streak.lastReadPage);
   const currentPage = lastReadPage?.pageNumber || 1;
@@ -113,19 +113,24 @@ export default function HifzCard({ navigation }) {
     const totalPages = 604;
     const todayProgress = getTodayProgress();
     const pagesCompleted = todayProgress.completed;
-    const progressPercentage = Math.min((pagesCompleted / totalPages) * 100, 100);
+    const progressPercentage = Math.min(
+      (pagesCompleted / totalPages) * 100,
+      100
+    );
     return {
       currentPage: pagesCompleted,
       totalPages,
       percentage: progressPercentage,
       pagesRead: pagesCompleted,
-      pagesRemaining: totalPages - pagesCompleted
+      pagesRemaining: totalPages - pagesCompleted,
     };
   };
 
   if (loading) {
     return (
-      <View style={tw`bg-white rounded-2xl p-6 border border-gray-200 shadow-sm`}>
+      <View
+        style={tw`bg-white rounded-2xl p-6 border border-gray-200 shadow-sm`}
+      >
         <IOSInlineLoader text="Loading Hifz progress..." />
       </View>
     );
@@ -195,9 +200,6 @@ export default function HifzCard({ navigation }) {
           </View>
           <Ionicons name="chevron-forward" size={20} color="white" />
         </View>
-
-      
-   
 
         {/* Overall Quran Progress */}
         <View style={tw`mb-3`}>

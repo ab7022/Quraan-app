@@ -14,7 +14,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import tw from 'twrnc';
-import { getMushafStyle, saveMushafStyle, getMushafImageUrl, getStyleName } from '../services/mushafService';
+import {
+  getMushafStyle,
+  saveMushafStyle,
+  getMushafImageUrl,
+  getStyleName,
+} from '../services/mushafService';
 import analytics from '../services/analyticsService';
 import { IOSLoader, IOSInlineLoader } from '../components/IOSLoader';
 import { AlertManager } from '../components/AppleStyleAlert';
@@ -40,7 +45,7 @@ const StyleCard = ({
   onImageError,
 }) => {
   const cardWidth = (width - 48) / 2; // 48 = padding (16*2) + gap (16)
-  
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -54,15 +59,19 @@ const StyleCard = ({
           shadowOpacity: 0.1,
           shadowRadius: 8,
           elevation: 3,
-        }
+        },
       ]}
       activeOpacity={0.95}
     >
       {/* Style Preview Image - Much Larger */}
       <View style={tw`relative`}>
-        <View style={[tw`bg-gray-50 items-center justify-center`, { height: 180 }]}>
+        <View
+          style={[tw`bg-gray-50 items-center justify-center`, { height: 180 }]}
+        >
           {isLoading && (
-            <View style={tw`absolute inset-0 bg-gray-50 items-center justify-center z-10`}>
+            <View
+              style={tw`absolute inset-0 bg-gray-50 items-center justify-center z-10`}
+            >
               <ActivityIndicator size="small" color="#007AFF" />
             </View>
           )}
@@ -75,20 +84,16 @@ const StyleCard = ({
             onError={onImageError}
           />
         </View>
-        
+
         {/* Checkmark - Filled when selected, outline when not */}
         <View style={tw`absolute top-3 right-3`}>
           {isSelected ? (
-            <Ionicons 
-              name="checkmark-circle" 
-              size={28} 
-              color="#3c69e4ff" 
-            />
+            <Ionicons name="checkmark-circle" size={28} color="#3c69e4ff" />
           ) : (
-            <Ionicons 
-              name="checkmark-circle-outline" 
-              size={28} 
-              color="#38393bff" 
+            <Ionicons
+              name="checkmark-circle-outline"
+              size={28}
+              color="#38393bff"
             />
           )}
         </View>
@@ -96,7 +101,10 @@ const StyleCard = ({
 
       {/* Compact Card Content */}
       <View style={tw`px-3 py-2.5`}>
-        <Text style={tw`text-sm font-semibold text-gray-900 text-center mb-0.5`} numberOfLines={1}>
+        <Text
+          style={tw`text-sm font-semibold text-gray-900 text-center mb-0.5`}
+          numberOfLines={1}
+        >
           {styleName}
         </Text>
         <Text style={tw`text-xs text-gray-500 text-center`}>
@@ -134,33 +142,41 @@ export default function MushafStyleScreen() {
     }
   };
 
-  const saveMushafPreference = async (styleNumber) => {
+  const saveMushafPreference = async styleNumber => {
     try {
-      console.log('[MUSHAF STYLE SCREEN] Saving mushaf preference:', styleNumber);
+      console.log(
+        '[MUSHAF STYLE SCREEN] Saving mushaf preference:',
+        styleNumber
+      );
       const success = await saveMushafStyle(styleNumber);
       console.log('[MUSHAF STYLE SCREEN] Save result:', success);
-      
+
       if (success) {
         analytics.trackUserAction('mushaf_style_changed', {
           old_style: selectedStyle,
           new_style: styleNumber,
         });
-        
+
         AlertManager.alert(
           'Style Updated',
           `${getStyleName(styleNumber)} has been selected as your Mushaf style.`,
-          [{ 
-            text: 'OK',
-            onPress: () => {
-              navigation.goBack();
-            }
-          }]
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                navigation.goBack();
+              },
+            },
+          ]
         );
       } else {
         throw new Error('Failed to save');
       }
     } catch (error) {
-      console.error('[MUSHAF STYLE SCREEN] Error saving mushaf preference:', error);
+      console.error(
+        '[MUSHAF STYLE SCREEN] Error saving mushaf preference:',
+        error
+      );
       AlertManager.alert(
         'Error',
         'Failed to save your preference. Please try again.'
@@ -168,37 +184,37 @@ export default function MushafStyleScreen() {
     }
   };
 
-  const handleStyleSelect = (styleNumber) => {
+  const handleStyleSelect = styleNumber => {
     if (selectedStyle === styleNumber) return; // Already selected
-    
+
     console.log('[MUSHAF STYLE SCREEN] Style selected:', styleNumber);
     setSelectedStyle(styleNumber);
     saveMushafPreference(styleNumber);
   };
 
-  const handleImageLoadStart = (styleNumber) => {
+  const handleImageLoadStart = styleNumber => {
     setImageLoadingStates(prev => ({
       ...prev,
-      [styleNumber]: true
+      [styleNumber]: true,
     }));
   };
 
-  const handleImageLoadEnd = (styleNumber) => {
+  const handleImageLoadEnd = styleNumber => {
     setImageLoadingStates(prev => ({
       ...prev,
-      [styleNumber]: false
+      [styleNumber]: false,
     }));
   };
 
-  const handleImageError = (styleNumber) => {
+  const handleImageError = styleNumber => {
     console.warn(`Failed to load image for style ${styleNumber}`);
     setImageLoadingStates(prev => ({
       ...prev,
-      [styleNumber]: false
+      [styleNumber]: false,
     }));
   };
 
-  const getStyleName = (styleNumber) => {
+  const getStyleName = styleNumber => {
     const styleNames = {
       1: 'Classic',
       2: 'Modern',
@@ -218,13 +234,13 @@ export default function MushafStyleScreen() {
   const handleHafiziSelect = async () => {
     try {
       setLoading(true);
-      
+
       // Save the Hafizi mushaf style
       await saveMushafStyle('hafizi');
-      
+
       // Update local state
       setSelectedStyle('hafizi');
-      
+
       // Show success feedback
       AlertManager.alert(
         'Mushaf Updated',
@@ -237,12 +253,12 @@ export default function MushafStyleScreen() {
                 screen: 'QuranPage',
                 params: {
                   initialPage: 1,
-                  mushafStyle: 'hafizi'
-                }
+                  mushafStyle: 'hafizi',
+                },
               });
-            }
+            },
           },
-          { text: 'OK' }
+          { text: 'OK' },
         ]
       );
     } catch (error) {
@@ -274,7 +290,7 @@ export default function MushafStyleScreen() {
     return (
       <SafeAreaView style={tw`flex-1 bg-gray-100`}>
         <StatusBar backgroundColor="#f3f4f6" barStyle="dark-content" />
-        <IOSLoader 
+        <IOSLoader
           title="Loading Styles"
           subtitle="Please wait while we load Mushaf styles"
           overlay={false}
@@ -299,9 +315,7 @@ export default function MushafStyleScreen() {
             </View>
           </TouchableOpacity>
 
-          <Text style={tw`text-lg font-semibold text-black`}>
-            Mushaf Style
-          </Text>
+          <Text style={tw`text-lg font-semibold text-black`}>Mushaf Style</Text>
 
           <View style={tw`w-20`} />
         </View>
@@ -314,48 +328,72 @@ export default function MushafStyleScreen() {
             <View style={tw`mt-6`}>
               <SectionHeader title="Current Selection" />
               <View style={tw`px-4 py-4 bg-white`}>
-                <View style={[
-                  tw`bg-white rounded-2xl overflow-hidden`,
-                  {
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.12,
-                    shadowRadius: 12,
-                    elevation: 5,
-                  }
-                ]}>
+                <View
+                  style={[
+                    tw`bg-white rounded-2xl overflow-hidden`,
+                    {
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.12,
+                      shadowRadius: 12,
+                      elevation: 5,
+                    },
+                  ]}
+                >
                   {/* Style Preview Image */}
                   <View style={tw`relative`}>
-                    <View style={[tw`bg-gray-50 items-center justify-center`, { height: 200 }]}>
+                    <View
+                      style={[
+                        tw`bg-gray-50 items-center justify-center`,
+                        { height: 200 },
+                      ]}
+                    >
                       <Image
-                        source={{ 
-                          uri: selectedStyle === 'hafizi' 
-                            ? 'https://assets.devlop.app/page1_img1.png'
-                            : getMushafImageUrl(22, selectedStyle)
+                        source={{
+                          uri:
+                            selectedStyle === 'hafizi'
+                              ? 'https://assets.devlop.app/page1_img1.png'
+                              : getMushafImageUrl(22, selectedStyle),
                         }}
                         style={{ width: '100%', height: '100%' }}
                         resizeMode="cover"
                       />
                     </View>
-                    
+
                     {/* Active Badge */}
-                    <View style={tw`absolute top-4 right-4 bg-green-500 rounded-full px-3 py-1.5 flex-row items-center`}>
-                      <Ionicons name="checkmark-circle" size={14} color="white" />
-                      <Text style={tw`text-white text-xs font-medium ml-1`}>Active</Text>
+                    <View
+                      style={tw`absolute top-4 right-4 bg-green-500 rounded-full px-3 py-1.5 flex-row items-center`}
+                    >
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={14}
+                        color="white"
+                      />
+                      <Text style={tw`text-white text-xs font-medium ml-1`}>
+                        Active
+                      </Text>
                     </View>
                   </View>
 
                   {/* Compact Card Content */}
                   <View style={tw`px-4 py-4`}>
-                    <Text style={tw`text-lg font-semibold text-gray-900 text-center mb-1`}>
+                    <Text
+                      style={tw`text-lg font-semibold text-gray-900 text-center mb-1`}
+                    >
                       {getStyleName(selectedStyle)}
                     </Text>
                     <Text style={tw`text-sm text-gray-500 text-center mb-3`}>
                       Style {selectedStyle}
                     </Text>
-                    
-                    <View style={tw`bg-green-50 rounded-xl p-3 flex-row items-center justify-center`}>
-                      <Ionicons name="checkmark-circle" size={16} color="#22C55E" />
+
+                    <View
+                      style={tw`bg-green-50 rounded-xl p-3 flex-row items-center justify-center`}
+                    >
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={16}
+                        color="#22C55E"
+                      />
                       <Text style={tw`text-green-700 font-medium text-sm ml-2`}>
                         Currently Active
                       </Text>
@@ -376,14 +414,16 @@ export default function MushafStyleScreen() {
               onPress={() => handleHafiziSelect()}
               style={[
                 tw`bg-white rounded-2xl p-4 mb-4 border-2`,
-                selectedStyle === 'hafizi' ? tw`border-blue-500` : tw`border-gray-200`,
+                selectedStyle === 'hafizi'
+                  ? tw`border-blue-500`
+                  : tw`border-gray-200`,
                 {
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.1,
                   shadowRadius: 4,
                   elevation: 3,
-                }
+                },
               ]}
             >
               <View style={tw`flex-row items-center justify-between`}>
@@ -394,13 +434,17 @@ export default function MushafStyleScreen() {
                   <Text style={tw`text-sm text-gray-600 mb-2`}>
                     IndoPak Mushaf • 612 pages • Clear typography
                   </Text>
-                  <View style={tw`bg-green-100 rounded-lg px-3 py-1.5 self-start`}>
+                  <View
+                    style={tw`bg-green-100 rounded-lg px-3 py-1.5 self-start`}
+                  >
                     <Text style={tw`text-green-700 text-xs font-medium`}>
                       Image Format
                     </Text>
                   </View>
                   {selectedStyle === 'hafizi' && (
-                    <View style={tw`bg-blue-50 rounded-lg px-3 py-1.5 mt-2 self-start`}>
+                    <View
+                      style={tw`bg-blue-50 rounded-lg px-3 py-1.5 mt-2 self-start`}
+                    >
                       <Text style={tw`text-blue-700 text-xs font-medium`}>
                         ✓ Currently Active
                       </Text>
@@ -410,18 +454,10 @@ export default function MushafStyleScreen() {
                 <View style={tw`ml-4`}>
                   {selectedStyle === 'hafizi' ? (
                     <View style={tw`bg-blue-500 rounded-full p-2`}>
-                      <Ionicons 
-                        name="checkmark" 
-                        size={20} 
-                        color="white" 
-                      />
+                      <Ionicons name="checkmark" size={20} color="white" />
                     </View>
                   ) : (
-                    <Ionicons 
-                      name="image-outline" 
-                      size={24} 
-                      color="#007AFF" 
-                    />
+                    <Ionicons name="image-outline" size={24} color="#007AFF" />
                   )}
                 </View>
               </View>
@@ -433,25 +469,29 @@ export default function MushafStyleScreen() {
         <View style={tw`mt-8`}>
           <SectionHeader title="Available Styles" />
           <View style={tw`px-4 py-6 bg-white`}>
-            {chunkArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 2).map((pair, rowIndex) => (
-              <View key={rowIndex} style={tw`flex-row justify-between mb-5`}>
-                {pair.map((styleNumber) => (
-                  <StyleCard
-                    key={styleNumber}
-                    styleNumber={styleNumber}
-                    styleName={getStyleName(styleNumber)}
-                    isSelected={selectedStyle === styleNumber}
-                    isLoading={imageLoadingStates[styleNumber]}
-                    onPress={() => handleStyleSelect(styleNumber)}
-                    onImageLoadStart={() => handleImageLoadStart(styleNumber)}
-                    onImageLoadEnd={() => handleImageLoadEnd(styleNumber)}
-                    onImageError={() => handleImageError(styleNumber)}
-                  />
-                ))}
-                {/* Fill empty space if odd number of items in last row */}
-                {pair.length === 1 && <View style={{ width: (width - 48) / 2 }} />}
-              </View>
-            ))}
+            {chunkArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 2).map(
+              (pair, rowIndex) => (
+                <View key={rowIndex} style={tw`flex-row justify-between mb-5`}>
+                  {pair.map(styleNumber => (
+                    <StyleCard
+                      key={styleNumber}
+                      styleNumber={styleNumber}
+                      styleName={getStyleName(styleNumber)}
+                      isSelected={selectedStyle === styleNumber}
+                      isLoading={imageLoadingStates[styleNumber]}
+                      onPress={() => handleStyleSelect(styleNumber)}
+                      onImageLoadStart={() => handleImageLoadStart(styleNumber)}
+                      onImageLoadEnd={() => handleImageLoadEnd(styleNumber)}
+                      onImageError={() => handleImageError(styleNumber)}
+                    />
+                  ))}
+                  {/* Fill empty space if odd number of items in last row */}
+                  {pair.length === 1 && (
+                    <View style={{ width: (width - 48) / 2 }} />
+                  )}
+                </View>
+              )
+            )}
           </View>
         </View>
 
@@ -464,7 +504,10 @@ export default function MushafStyleScreen() {
                 Choose Your Reading Experience
               </Text>
               <Text style={tw`text-sm text-gray-600 leading-relaxed`}>
-                Each Mushaf style provides a unique layout and design for your Quran reading experience. The style you select will be applied to all your reading sessions. You can change this setting anytime.
+                Each Mushaf style provides a unique layout and design for your
+                Quran reading experience. The style you select will be applied
+                to all your reading sessions. You can change this setting
+                anytime.
               </Text>
             </View>
           </View>

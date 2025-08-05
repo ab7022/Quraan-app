@@ -144,9 +144,9 @@ function getTabBarDisplay(route) {
   if (routeName === 'LearnQuran') {
     return 'none';
   }
-    if (routeName === 'AskDoubtMain') {
-      return 'none';
-    }
+  if (routeName === 'AskDoubtMain') {
+    return 'none';
+  }
 
   return 'flex'; // Show tab bar on all other screens
 }
@@ -183,19 +183,19 @@ function AskDoubtNavigator() {
 const tabIcons = {
   Home: {
     focused: 'home',
-    unfocused: 'home-outline'
+    unfocused: 'home-outline',
   },
   Quran: {
     focused: 'book',
-    unfocused: 'book-outline'
+    unfocused: 'book-outline',
   },
   AskDoubt: {
     focused: 'help-circle',
-    unfocused: 'help-circle-outline'
+    unfocused: 'help-circle-outline',
   },
   Settings: {
     focused: 'settings',
-    unfocused: 'settings-outline'
+    unfocused: 'settings-outline',
   },
 };
 
@@ -233,10 +233,10 @@ export default function MainNavigator() {
         headerShown: false,
         tabBarHideOnKeyboard: true,
         tabBarIcon: ({ color, size, focused }) => {
-          const iconName = focused 
-            ? tabIcons[route.name]?.focused 
+          const iconName = focused
+            ? tabIcons[route.name]?.focused
             : tabIcons[route.name]?.unfocused;
-          
+
           return (
             <Ionicons
               name={iconName}

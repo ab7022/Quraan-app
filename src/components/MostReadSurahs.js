@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import tw from 'twrnc';
 import analytics from '../services/analyticsService';
 
@@ -18,15 +14,24 @@ export default function MostReadSurahs({ navigation }) {
     { name: 'As-Sajdah', page: 415, color: '#BE185D' },
   ];
 
-  const handleSurahPress = (surah) => {
-    console.log('[MOST READ] Navigating to surah:', surah.name, 'page:', surah.page);
+  const handleSurahPress = surah => {
+    console.log(
+      '[MOST READ] Navigating to surah:',
+      surah.name,
+      'page:',
+      surah.page
+    );
 
     // Track navigation event
-    analytics.trackNavigationEvent('HomeScreen', 'QuranPageScreen', 'most_read_surah');
-    analytics.trackUserAction('read_popular_surah', { 
+    analytics.trackNavigationEvent(
+      'HomeScreen',
+      'QuranPageScreen',
+      'most_read_surah'
+    );
+    analytics.trackUserAction('read_popular_surah', {
       surah_name: surah.name,
       page_number: surah.page,
-      from_component: 'most_read'
+      from_component: 'most_read',
     });
 
     navigation.navigate('Quran', {
@@ -37,9 +42,7 @@ export default function MostReadSurahs({ navigation }) {
 
   return (
     <View style={tw`px-6 mb-6`}>
-      <Text style={tw`text-lg font-bold text-gray-900 mb-3`}>
-        Most Read
-      </Text>
+      <Text style={tw`text-lg font-bold text-gray-900 mb-3`}>Most Read</Text>
       <View
         style={tw`bg-white rounded-2xl p-3 shadow-sm border border-gray-100`}
       >
@@ -54,9 +57,7 @@ export default function MostReadSurahs({ navigation }) {
               ]}
               activeOpacity={0.7}
             >
-              <Text
-                style={[tw`text-xs font-semibold`, { color: surah.color }]}
-              >
+              <Text style={[tw`text-xs font-semibold`, { color: surah.color }]}>
                 {surah.name}
               </Text>
             </TouchableOpacity>

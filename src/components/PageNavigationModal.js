@@ -21,43 +21,43 @@ const SectionHeader = ({ title }) => (
   </View>
 );
 
-const SettingsItem = ({ 
-  title, 
-  subtitle, 
-  onPress, 
-  rightElement, 
+const SettingsItem = ({
+  title,
+  subtitle,
+  onPress,
+  rightElement,
   isSelected = false,
-  showChevron = true 
+  showChevron = true,
 }) => (
   <TouchableOpacity
     onPress={onPress}
     style={[
       tw`bg-white px-4 py-3 border-b border-gray-200`,
-      isSelected && tw`bg-blue-50`
+      isSelected && tw`bg-blue-50`,
     ]}
     activeOpacity={0.3}
   >
     <View style={tw`flex-row items-center justify-between`}>
       <View style={tw`flex-1`}>
-        <Text style={[
-          tw`text-base text-black`,
-          isSelected && tw`text-blue-500 font-medium`
-        ]}>
+        <Text
+          style={[
+            tw`text-base text-black`,
+            isSelected && tw`text-blue-500 font-medium`,
+          ]}
+        >
           {title}
         </Text>
         {subtitle && (
-          <Text style={tw`text-sm text-gray-500 mt-0.5`}>
-            {subtitle}
-          </Text>
+          <Text style={tw`text-sm text-gray-500 mt-0.5`}>{subtitle}</Text>
         )}
       </View>
       <View style={tw`flex-row items-center`}>
         {rightElement}
         {showChevron && (
-          <Ionicons 
-            name="chevron-forward" 
-            size={16} 
-            color="#C7C7CC" 
+          <Ionicons
+            name="chevron-forward"
+            size={16}
+            color="#C7C7CC"
             style={tw`ml-2`}
           />
         )}
@@ -119,7 +119,7 @@ export default function PageNavigationModal({
     }
   };
 
-  const handlePageSelect = (page) => {
+  const handlePageSelect = page => {
     onPageSelect(page);
     onClose();
   };
@@ -133,7 +133,7 @@ export default function PageNavigationModal({
     >
       <SafeAreaView style={tw`flex-1 bg-gray-100`} edges={['top']}>
         <StatusBar backgroundColor="#F2F2F7" barStyle="dark-content" />
-        
+
         {/* iOS-Style Navigation Header */}
         <View style={tw`bg-gray-100 border-b border-gray-200`}>
           <View style={tw`flex-row items-center justify-between px-4 py-3`}>
@@ -145,18 +145,13 @@ export default function PageNavigationModal({
               <Text style={tw`text-lg text-blue-500`}>Done</Text>
             </TouchableOpacity>
 
-            <Text style={tw`text-lg font-semibold text-black`}>
-              Go to Page
-            </Text>
+            <Text style={tw`text-lg font-semibold text-black`}>Go to Page</Text>
 
             <View style={tw`w-12`} />
           </View>
         </View>
 
-        <ScrollView 
-          style={tw`flex-1`}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false}>
           {/* Direct Page Input Section */}
           <SectionHeader title="Jump to Page" />
           <View style={tw`bg-white`}>
@@ -197,18 +192,14 @@ export default function PageNavigationModal({
                     onPress={() => handlePageSelect(page)}
                     style={[
                       tw`px-3 py-2 rounded-xl`,
-                      currentPage === page 
-                        ? tw`bg-blue-500` 
-                        : tw`bg-gray-100`
+                      currentPage === page ? tw`bg-blue-500` : tw`bg-gray-100`,
                     ]}
                     activeOpacity={0.7}
                   >
                     <Text
                       style={[
                         tw`text-sm font-medium`,
-                        currentPage === page 
-                          ? tw`text-white` 
-                          : tw`text-black`
+                        currentPage === page ? tw`text-white` : tw`text-black`,
                       ]}
                     >
                       {page}
@@ -223,7 +214,9 @@ export default function PageNavigationModal({
           <SectionHeader title="Search Surah" />
           <View style={tw`bg-white`}>
             <View style={tw`px-4 py-3 border-b border-gray-200`}>
-              <View style={tw`flex-row items-center bg-gray-100 rounded-xl px-3 py-2`}>
+              <View
+                style={tw`flex-row items-center bg-gray-100 rounded-xl px-3 py-2`}
+              >
                 <Ionicons
                   name="search"
                   size={16}
@@ -254,10 +247,14 @@ export default function PageNavigationModal({
                 isSelected={currentPage === item.page}
                 rightElement={
                   <View style={tw`items-end`}>
-                    <Text style={[
-                      tw`text-base font-semibold`,
-                      currentPage === item.page ? tw`text-blue-500` : tw`text-gray-500`
-                    ]}>
+                    <Text
+                      style={[
+                        tw`text-base font-semibold`,
+                        currentPage === item.page
+                          ? tw`text-blue-500`
+                          : tw`text-gray-500`,
+                      ]}
+                    >
                       Page {item.page}
                     </Text>
                     {currentPage === item.page && (
