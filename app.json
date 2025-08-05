@@ -47,12 +47,6 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "plugins": [
-      "expo-tracking-transparency",
-      "expo-firebase-core",
-      {
-        "googleServicesFile": "./google-services.json"
-      }
-    ]
+    "plugins": ["expo-tracking-transparency"]
   }
 }
