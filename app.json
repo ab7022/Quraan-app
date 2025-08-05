@@ -29,7 +29,8 @@
         "backgroundColor": "#FAF3E7"
       },
       "package": "com.quranapp.mobile",
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "googleServicesFile": "./android/app/google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"

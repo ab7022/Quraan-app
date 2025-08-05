@@ -1,18 +1,20 @@
+// analyticsService.js
+
+import * as Analytics from 'expo-firebase-analytics';
 import * as Application from 'expo-application';
 import * as Device from 'expo-device';
-import Constants from 'expo-constants';
 
 class AnalyticsService {
   constructor() {
     this.sessionId = this.generateSessionId();
     this.userId = null;
     this.isEnabled = true;
+    this.deviceInfo = null;
     this.initialize();
   }
 
   async initialize() {
     try {
-      // Get device info for analytics
       this.deviceInfo = {
         platform: Device.osName,
         platformVersion: Device.osVersion,
@@ -23,9 +25,9 @@ class AnalyticsService {
         bundleId: Application.applicationId,
       };
 
-      console.log('📊 Analytics Service initialized:', this.deviceInfo);
+      console.log('📊 Analytics initialized:', this.deviceInfo);
     } catch (error) {
-      console.error('Analytics initialization error:', error);
+      console.error('Analytics init error:', error);
     }
   }
 
@@ -33,34 +35,28 @@ class AnalyticsService {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  // Core tracking methods
   async trackEvent(eventName, properties = {}) {
     if (!this.isEnabled) return;
 
     try {
-      const eventData = {
-        event: eventName,
-        properties: {
-          ...properties,
-          sessionId: this.sessionId,
-          userId: this.userId,
-          timestamp: new Date().toISOString(),
-          platform: this.deviceInfo?.platform,
-          appVersion: this.deviceInfo?.appVersion,
-        },
+      const enrichedProps = {
+        ...properties,
+        session_id: this.sessionId,
+        user_id: this.userId,
+        platform: this.deviceInfo?.platform,
+        app_version: this.deviceInfo?.appVersion,
       };
 
-      // Log to console for development
-      console.log('📊 Analytics Event:', eventData);
+      await Analytics.logEvent(eventName, enrichedProps);
 
-      // Here you could send to your analytics backend
-      // await this.sendToBackend(eventData);
+      console.log('📊 Firebase Event Logged:', eventName, enrichedProps);
     } catch (error) {
-      console.error('Error tracking event:', error);
+      console.error('Error logging Firebase event:', error);
     }
   }
 
   async trackScreenView(screenName, properties = {}) {
+    await Analytics.setCurrentScreen(screenName);
     await this.trackEvent('screen_view', {
       screen_name: screenName,
       ...properties,
@@ -68,13 +64,9 @@ class AnalyticsService {
   }
 
   async trackUserAction(action, properties = {}) {
-    await this.trackEvent('user_action', {
-      action,
-      ...properties,
-    });
+    await this.trackEvent('user_action', { action, ...properties });
   }
 
-  // Quran-specific tracking methods
   async trackQuranReading(pageNumber, duration = null) {
     await this.trackEvent('quran_page_read', {
       page_number: pageNumber,
@@ -111,7 +103,7 @@ class AnalyticsService {
   async trackAITafseer(pageNumber, language, responseTime = null) {
     await this.trackEvent('ai_tafseer_requested', {
       page_number: pageNumber,
-      language: language,
+      language,
       response_time: responseTime,
       category: 'ai_features',
     });
@@ -119,7 +111,7 @@ class AnalyticsService {
 
   async trackLanguageSelection(language, isFirstTime = false) {
     await this.trackEvent('language_selected', {
-      language: language,
+      language,
       is_first_time: isFirstTime,
       category: 'user_preferences',
     });
@@ -154,12 +146,12 @@ class AnalyticsService {
     await this.trackEvent('performance_metric', {
       metric_name: metricName,
       metric_value: value,
-      unit: unit,
+      unit,
       category: 'performance',
     });
   }
 
-  // Session management
+  // Session
   startNewSession() {
     this.sessionId = this.generateSessionId();
     this.trackEvent('session_start');
@@ -169,13 +161,14 @@ class AnalyticsService {
     this.trackEvent('session_end');
   }
 
-  // User management
-  setUserId(userId) {
+  // User
+  async setUserId(userId) {
     this.userId = userId;
+    await Analytics.setUserId(userId);
     this.trackEvent('user_identified', { user_id: userId });
   }
 
-  // Privacy controls
+  // Privacy
   enableAnalytics() {
     this.isEnabled = true;
     console.log('📊 Analytics enabled');
@@ -185,33 +178,11 @@ class AnalyticsService {
     this.isEnabled = false;
     console.log('📊 Analytics disabled');
   }
-
-  // Optional: Send data to your backend
-  async sendToBackend(eventData) {
-    try {
-      // Replace with your analytics endpoint
-      const response = await fetch('YOUR_ANALYTICS_ENDPOINT', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(eventData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Analytics request failed: ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Failed to send analytics data:', error);
-    }
-  }
 }
 
-// Create and export singleton instance
 const analytics = new AnalyticsService();
 export default analytics;
 
-// Export specific tracking functions for convenience
 export const {
   trackEvent,
   trackScreenView,
