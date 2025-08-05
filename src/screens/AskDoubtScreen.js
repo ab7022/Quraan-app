@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Clipboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
@@ -461,6 +462,21 @@ export default function AskDoubtScreen() {
     },
   };
 
+  const copyToClipboard = async (text) => {
+    try {
+      await Clipboard.setString(text);
+      AlertManager.alert(
+        'Copied!',
+        'Message copied to clipboard.',
+        [{ text: 'OK' }],
+        { type: 'success' }
+      );
+    } catch (error) {
+      console.error('Failed to copy text:', error);
+      AlertManager.alert('Error', 'Failed to copy text to clipboard');
+    }
+  };
+
   const renderMessage = ({ item }) => (
     <View style={tw`mb-4 px-4`}>
       <View
@@ -479,18 +495,35 @@ export default function AskDoubtScreen() {
                 : tw`bg-gray-100 border border-gray-200`,
           ]}
         >
-          {!item.isUser && (
-            <Text style={tw`text-xs font-medium text-gray-500 mb-2`}>
-              {item.sender || 'Islamic Scholar'}
-            </Text>
-          )}
-          {item.isUser ? (
-            <Text style={tw`text-base leading-5 text-white`}>
-              {item.text}
-            </Text>
-          ) : (
-            <Markdown style={markdownStyles}>{item.text}</Markdown>
-          )}
+          <View style={tw`flex-row justify-between items-start`}>
+            <View style={tw`flex-1`}>
+              {!item.isUser && (
+                <Text style={tw`text-xs font-medium text-gray-500 mb-2`}>
+                  {item.sender || 'Islamic Scholar'}
+                </Text>
+              )}
+              {item.isUser ? (
+                <Text style={tw`text-base leading-5 text-white`}>
+                  {item.text}
+                </Text>
+              ) : (
+                <Markdown style={markdownStyles}>{item.text}</Markdown>
+              )}
+            </View>
+            {!item.isUser && (
+              <TouchableOpacity
+                onPress={() => copyToClipboard(item.text)}
+                style={tw`ml-2 p-2`}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons 
+                  name="copy-outline" 
+                  size={18} 
+                  color={item.isError ? '#DC2626' : '#6B7280'} 
+                />
+              </TouchableOpacity>
+            )}
+          </View>
           <Text
             style={[
               tw`text-xs mt-2`,

@@ -489,12 +489,16 @@ export default function QuranPageScreen({ route }) {
     // Start the step-by-step animation simulation
     const simulateAnalysis = () => {
       const steps = [
-        { step: 1, text: 'Analyzing Quranic text...', delay: 1200 },
-        { step: 2, text: 'Processing Arabic semantics...', delay: 1200 },
-        { step: 3, text: 'Consulting classical commentaries...', delay: 1200 },
-        { step: 4, text: 'Extracting linguistic insights...', delay: 1200 },
-        { step: 5, text: 'Generating comprehensive explanation...', delay: 1200 },
-        { step: 6, text: 'Finalizing Tafseer...', delay: 1200 },
+        { step: 1, text: 'Analyzing Quranic text...', delay: 2000 },
+        { step: 2, text: 'Processing Arabic semantics...', delay: 2000 },
+        { step: 3, text: 'Consulting classical commentaries...', delay: 2000 },
+        { step: 4, text: 'Extracting linguistic insights...', delay: 2000 },
+        {
+          step: 5,
+          text: 'Generating comprehensive explanation...',
+          delay: 2000,
+        },
+        { step: 6, text: 'Finalizing Tafseer...', delay: 2000 },
       ];
 
       let currentStepIndex = 0;
