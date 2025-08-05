@@ -11,18 +11,24 @@ export const getMushafStyle = async () => {
     console.log('[MUSHAF SERVICE] Raw saved style from AsyncStorage:', savedStyle);
     
     if (savedStyle) {
+      // Handle string styles (hafizi, indo-pak)
+      if (savedStyle === 'hafizi' || savedStyle === 'indo-pak') {
+        console.log('[MUSHAF SERVICE] Special mushaf style:', savedStyle);
+        return savedStyle;
+      }
+      
       const styleNumber = parseInt(savedStyle);
       console.log('[MUSHAF SERVICE] Parsed style number:', styleNumber);
-      const validStyle = styleNumber >= 1 && styleNumber <= 11 ? styleNumber : 9;
+      const validStyle = styleNumber >= 1 && styleNumber <= 11 ? styleNumber : 'hafizi';
       console.log('[MUSHAF SERVICE] Final validated style:', validStyle);
       return validStyle;
     }
     
-    console.log('[MUSHAF SERVICE] No saved style found, returning default: 9');
-    return 9; // Default to style 9
+    console.log('[MUSHAF SERVICE] No saved style found, returning default: hafizi');
+    return 'hafizi'; // Default to hafizi style
   } catch (error) {
     console.error('[MUSHAF SERVICE] Error loading mushaf style:', error);
-    return 9; // Default to style 9
+    return 'hafizi'; // Default to hafizi style
   }
 };
 
@@ -34,9 +40,11 @@ export const getMushafStyle = async () => {
 export const saveMushafStyle = async (styleNumber) => {
   try {
     console.log('[MUSHAF SERVICE] Attempting to save mushaf style:', styleNumber);
-    console.log('[MUSHAF SERVICE] Style number type:', typeof styleNumber);
+    console.log('[MUSHAF SERVICE] Style type:', typeof styleNumber);
     
-    await AsyncStorage.setItem('mushaf_style', styleNumber.toString());
+    // Handle both string and number styles
+    const styleValue = typeof styleNumber === 'string' ? styleNumber : styleNumber.toString();
+    await AsyncStorage.setItem('mushaf_style', styleValue);
     
     // Verify the save by reading it back
     const verification = await AsyncStorage.getItem('mushaf_style');
@@ -56,8 +64,18 @@ export const saveMushafStyle = async (styleNumber) => {
  * @param {number} styleNumber - The style number (1-11)
  * @returns {string} The complete image URL
  */
-export const getMushafImageUrl = (pageNumber, styleNumber = 9) => {
+export const getMushafImageUrl = (pageNumber, styleNumber = 'hafizi') => {
   console.log(`Generating URL for page ${pageNumber}, style ${styleNumber}`);
+  
+  // Handle special mushaf styles
+  if (styleNumber === 'hafizi') {
+    return `https://assets.devlop.app/page${pageNumber}_img1.png`;
+  }
+  
+  if (styleNumber === 'indo-pak') {
+    // This would be handled by the PDF viewer
+    return null;
+  }
   
   // Format page number based on style requirements
   const formatPageNumber = (page, style) => {
@@ -115,4 +133,43 @@ export const getMushafImageUrl = (pageNumber, styleNumber = 9) => {
   } else {
     return `https://www.searchtruth.com/quran/images/images${styleNumber}/${formattedPage}.${extension}`;
   }
+};
+
+/**
+ * Get the display name for a mushaf style
+ * @param {number|string} style - The style number or string
+ * @returns {string} The display name
+ */
+export const getStyleName = (style) => {
+  const styleNames = {
+    1: 'Madani',
+    2: 'Traditional',
+    3: 'Modern',
+    4: 'Classic',
+    5: 'Elegant',
+    6: 'Simple',
+    7: 'Bold',
+    8: 'Refined',
+    9: 'Premium',
+    10: 'Heritage',
+    11: 'Contemporary',
+    'hafizi': 'Hafizi',
+    'indo-pak': 'Indo-Pak'
+  };
+  return styleNames[style] || `Style ${style}`;
+};
+
+/**
+ * Get the total pages for a mushaf style
+ * @param {number|string} mushafStyle - The mushaf style
+ * @returns {number} Total pages
+ */
+export const getTotalPages = (mushafStyle) => {
+  if (mushafStyle === 'indo-pak') {
+    return 612;
+  }
+  if (mushafStyle === 'hafizi') {
+    return 604; // Assuming Hafizi has 604 pages like standard mushaf
+  }
+  return 604; // Standard mushaf pages
 };

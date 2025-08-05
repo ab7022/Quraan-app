@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import tw from 'twrnc';
-import { getMushafStyle, saveMushafStyle, getMushafImageUrl } from '../services/mushafService';
+import { getMushafStyle, saveMushafStyle, getMushafImageUrl, getStyleName } from '../services/mushafService';
 import analytics from '../services/analyticsService';
 import { IOSLoader, IOSInlineLoader } from '../components/IOSLoader';
 import { AlertManager } from '../components/AppleStyleAlert';
@@ -128,7 +128,7 @@ export default function MushafStyleScreen() {
       setSelectedStyle(style);
     } catch (error) {
       console.error('Error loading mushaf preference:', error);
-      setSelectedStyle(9); // Default to style 9
+      setSelectedStyle('hafizi'); // Default to hafizi style
     } finally {
       setLoading(false);
     }
@@ -215,6 +215,48 @@ export default function MushafStyleScreen() {
     return styleNames[styleNumber] || `Style ${styleNumber}`;
   };
 
+  const handleHafiziSelect = async () => {
+    try {
+      setLoading(true);
+      
+      // Save the Hafizi mushaf style
+      await saveMushafStyle('hafizi');
+      
+      // Update local state
+      setSelectedStyle('hafizi');
+      
+      // Show success feedback
+      AlertManager.alert(
+        'Mushaf Updated',
+        'Hafizi Mushaf has been selected successfully.',
+        [
+          {
+            text: 'Continue Reading',
+            onPress: () => {
+              navigation.navigate('Quran', {
+                screen: 'QuranPage',
+                params: {
+                  initialPage: 1,
+                  mushafStyle: 'hafizi'
+                }
+              });
+            }
+          },
+          { text: 'OK' }
+        ]
+      );
+    } catch (error) {
+      console.error('Error selecting Hafizi mushaf:', error);
+      AlertManager.alert(
+        'Error',
+        'Failed to select Hafizi mushaf. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Helper function to chunk array into pairs
   const chunkArray = (array, size) => {
     const chunks = [];
@@ -286,7 +328,11 @@ export default function MushafStyleScreen() {
                   <View style={tw`relative`}>
                     <View style={[tw`bg-gray-50 items-center justify-center`, { height: 200 }]}>
                       <Image
-                        source={{ uri: getMushafImageUrl(22, selectedStyle) }}
+                        source={{ 
+                          uri: selectedStyle === 'hafizi' 
+                            ? 'https://assets.devlop.app/page1_img1.png'
+                            : getMushafImageUrl(22, selectedStyle)
+                        }}
                         style={{ width: '100%', height: '100%' }}
                         resizeMode="cover"
                       />
@@ -322,6 +368,68 @@ export default function MushafStyleScreen() {
         )}
 
         {/* Available Styles Section */}
+        <View style={tw`mt-8`}>
+          <SectionHeader title="Special Formats" />
+          <View style={tw`px-4 py-6 bg-white`}>
+            {/* Hafizi Mushaf */}
+            <TouchableOpacity
+              onPress={() => handleHafiziSelect()}
+              style={[
+                tw`bg-white rounded-2xl p-4 mb-4 border-2`,
+                selectedStyle === 'hafizi' ? tw`border-blue-500` : tw`border-gray-200`,
+                {
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 3,
+                }
+              ]}
+            >
+              <View style={tw`flex-row items-center justify-between`}>
+                <View style={tw`flex-1`}>
+                  <Text style={tw`text-lg font-semibold text-gray-900 mb-1`}>
+                    Hafizi Mushaf
+                  </Text>
+                  <Text style={tw`text-sm text-gray-600 mb-2`}>
+                    IndoPak Mushaf • 612 pages • Clear typography
+                  </Text>
+                  <View style={tw`bg-green-100 rounded-lg px-3 py-1.5 self-start`}>
+                    <Text style={tw`text-green-700 text-xs font-medium`}>
+                      Image Format
+                    </Text>
+                  </View>
+                  {selectedStyle === 'hafizi' && (
+                    <View style={tw`bg-blue-50 rounded-lg px-3 py-1.5 mt-2 self-start`}>
+                      <Text style={tw`text-blue-700 text-xs font-medium`}>
+                        ✓ Currently Active
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <View style={tw`ml-4`}>
+                  {selectedStyle === 'hafizi' ? (
+                    <View style={tw`bg-blue-500 rounded-full p-2`}>
+                      <Ionicons 
+                        name="checkmark" 
+                        size={20} 
+                        color="white" 
+                      />
+                    </View>
+                  ) : (
+                    <Ionicons 
+                      name="image-outline" 
+                      size={24} 
+                      color="#007AFF" 
+                    />
+                  )}
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Regular Styles Section */}
         <View style={tw`mt-8`}>
           <SectionHeader title="Available Styles" />
           <View style={tw`px-4 py-6 bg-white`}>

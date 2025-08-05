@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { PanGestureHandler, PinchGestureHandler, TapGestureHandler, State } from 'react-native-gesture-handler';
 import tw from 'twrnc';
 import PageNavigationModal from '../components/PageNavigationModal';
 import { IOSLoader, IOSProgressLoader, IOSErrorView } from '../components/IOSLoader';
@@ -27,7 +27,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '../services/analyticsService';
 import rateLimitService from '../services/rateLimitService';
 import RateLimitStatus from '../components/RateLimitStatus';
-import { getMushafStyle, getMushafImageUrl } from '../services/mushafService';
+import { getMushafStyle, getMushafImageUrl, getTotalPages } from '../services/mushafService';
 import { AlertManager } from '../components/AppleStyleAlert';
 
 const { width, height } = Dimensions.get('window');
@@ -52,18 +52,81 @@ export default function QuranPageScreen({ route }) {
   const [analysisStep, setAnalysisStep] = useState(0);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('english');
-  const [totalPages] = useState(604); // Standard Mushaf has 604 pages
+  const [totalPages, setTotalPages] = useState(604); // Dynamic based on mushaf style
   const [preloadedPages, setPreloadedPages] = useState(new Set()); // Track preloaded pages
   const [isTransitioning, setIsTransitioning] = useState(false); // Prevent multiple transitions
-  const [mushafStyle, setMushafStyle] = useState(9); // Default to style 9
+  const [mushafStyle, setMushafStyle] = useState('hafizi'); // Default to hafizi style
   const [showBackConfirmModal, setShowBackConfirmModal] = useState(false); // Apple-style back confirmation
 
   // Animation references
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
+  // Zoom functionality
+  const [scale, setScale] = useState(1);
+  const [translateX, setTranslateX] = useState(0);
+  const [translateY, setTranslateY] = useState(0);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const translateXAnim = useRef(new Animated.Value(0)).current;
+  const translateYAnim = useRef(new Animated.Value(0)).current;
+  const [isZoomed, setIsZoomed] = useState(false);
+
+  // Zoom gesture handlers
+  const onPinchGestureEvent = Animated.event(
+    [{ nativeEvent: { scale: scaleAnim } }],
+    { useNativeDriver: false }
+  );
+
+  const onPinchHandlerStateChange = (event) => {
+    if (event.nativeEvent.oldState === State.ACTIVE) {
+      const { scale: gestureScale } = event.nativeEvent;
+      const newScale = Math.max(1, Math.min(3, scale * gestureScale));
+      
+      setScale(newScale);
+      setIsZoomed(newScale > 1);
+      
+      // Reset scale animation value
+      scaleAnim.setValue(newScale);
+      
+      // If scale is back to 1, reset translations
+      if (newScale === 1) {
+        setTranslateX(0);
+        setTranslateY(0);
+        translateXAnim.setValue(0);
+        translateYAnim.setValue(0);
+      }
+    }
+  };
+
+  // Double tap to zoom
+  const handleDoubleTap = () => {
+    if (scale === 1) {
+      // Zoom in to 2x
+      setScale(2);
+      setIsZoomed(true);
+      scaleAnim.setValue(2);
+    } else {
+      // Reset zoom
+      resetZoom();
+    }
+  };
+
+  // Reset zoom when page changes
+  const resetZoom = () => {
+    setScale(1);
+    setTranslateX(0);
+    setTranslateY(0);
+    setIsZoomed(false);
+    scaleAnim.setValue(1);
+    translateXAnim.setValue(0);
+    translateYAnim.setValue(0);
+  };
+
   // Swipe gesture handling
   const onGestureEvent = event => {
+    // Don't handle swipe gestures when zoomed in
+    if (isZoomed) return;
+    
     const { translationX, velocityX } = event.nativeEvent;
     const minSwipeDistance = width * 0.2;
     const minVelocity = 300;
@@ -90,6 +153,9 @@ export default function QuranPageScreen({ route }) {
   };
 
   const onHandlerStateChange = event => {
+    // Don't handle swipe gestures when zoomed in
+    if (isZoomed) return;
+    
     if (event.nativeEvent.state === State.END) {
       onGestureEvent(event);
     }
@@ -258,6 +324,11 @@ export default function QuranPageScreen({ route }) {
         console.log('[QURAN SCREEN] Mushaf style changed from', mushafStyle, 'to', style);
         setMushafStyle(style);
         
+        // Update total pages based on style
+        const pages = getTotalPages(style);
+        setTotalPages(pages);
+        console.log('[QURAN SCREEN] Total pages set to:', pages);
+        
         // Force image reload by triggering loading state
         setLoading(true);
         setImageError(false);
@@ -276,7 +347,8 @@ export default function QuranPageScreen({ route }) {
       }
     } catch (error) {
       console.error('[QURAN SCREEN] Error loading mushaf style:', error);
-      setMushafStyle(9); // Default to style 9
+      setMushafStyle('hafizi'); // Default to hafizi style
+      setTotalPages(604); // Default pages
     }
   };
 
@@ -294,6 +366,9 @@ export default function QuranPageScreen({ route }) {
 
   useEffect(() => {
     console.log('[QURAN SCREEN] Page changed to:', currentPage);
+
+    // Reset zoom when page changes
+    resetZoom();
 
     // Track Quran page reading
     analytics.trackQuranReading(currentPage);
@@ -686,6 +761,16 @@ export default function QuranPageScreen({ route }) {
               >
                 Page {currentPage}
               </Text>
+              {isZoomed && (
+                <Text
+                  style={[
+                    tw`text-blue-500 ml-2`,
+                    { fontSize: 14, fontWeight: '500' },
+                  ]}
+                >
+                  {Math.round(scale * 100)}%
+                </Text>
+              )}
               <Ionicons
                 name="chevron-down"
                 size={14}
@@ -717,42 +802,120 @@ export default function QuranPageScreen({ route }) {
 
       {/* Mushaf Page Display */}
       <View style={tw`flex-1 bg-white`}>
-        <PanGestureHandler
-          onHandlerStateChange={onHandlerStateChange}
-          minDist={30}
+        <PinchGestureHandler
+          onGestureEvent={onPinchGestureEvent}
+          onHandlerStateChange={onPinchHandlerStateChange}
         >
-          <View style={tw`flex-1 justify-center items-center`}>
-            {loading && !isTransitioning && (
-              <IOSLoader
-                title="Loading Page"
-                subtitle="Please wait while we load the Quran page"
-                overlay={true}
-              />
-            )}
+          <PanGestureHandler
+            onHandlerStateChange={onHandlerStateChange}
+            minDist={30}
+            enabled={!isZoomed}
+          >
+            <Animated.View style={tw`flex-1 justify-center items-center`}>
+              {loading && !isTransitioning && (
+                <IOSLoader
+                  title="Loading Page"
+                  subtitle="Please wait while we load the Quran page"
+                  overlay={true}
+                />
+              )}
 
-            {imageError ? (
-              <IOSErrorView
-                title="Unable to Load Page"
-                subtitle="Please check your internet connection and try again."
-                onRetry={() => {
-                  setImageError(false);
-                  setLoading(true);
-                }}
-              />
-            ) : (
-              <Image
-                source={{ uri: getPageImageUrl(currentPage) }}
-                style={{
-                  width: width,
-                  height: height * 0.76,
-                }}
-                resizeMode="stretch"
-                onLoad={handleImageLoad}
-                onError={handleImageError}
-              />
-            )}
+              {imageError ? (
+                <IOSErrorView
+                  title="Unable to Load Page"
+                  subtitle="Please check your internet connection and try again."
+                  onRetry={() => {
+                    setImageError(false);
+                    setLoading(true);
+                  }}
+                />
+              ) : (
+                <TapGestureHandler
+                  onHandlerStateChange={(event) => {
+                    if (event.nativeEvent.state === State.ACTIVE) {
+                      handleDoubleTap();
+                    }
+                  }}
+                  numberOfTaps={2}
+                >
+                  <Animated.View
+                    style={[
+                      {
+                        width: width,
+                        height: height * 0.76,
+                        transform: [
+                          { scale: scaleAnim },
+                          { translateX: translateXAnim },
+                          { translateY: translateYAnim }
+                        ]
+                      }
+                    ]}
+                  >
+                    <Image
+                      source={{ uri: getPageImageUrl(currentPage) }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                      }}
+                      resizeMode="contain"
+                      onLoad={handleImageLoad}
+                      onError={handleImageError}
+                    />
+                  </Animated.View>
+                </TapGestureHandler>
+              )}
+            </Animated.View>
+          </PanGestureHandler>
+        </PinchGestureHandler>
+        
+        {/* Zoom Controls Overlay */}
+        {isZoomed && (
+          <View style={[
+            tw`absolute top-4 right-4 bg-black/80 rounded-2xl p-2 flex-row`,
+            { zIndex: 100 }
+          ]}>
+            <TouchableOpacity
+              onPress={() => {
+                const newScale = Math.max(1, scale - 0.5);
+                setScale(newScale);
+                setIsZoomed(newScale > 1);
+                scaleAnim.setValue(newScale);
+                if (newScale === 1) {
+                  setTranslateX(0);
+                  setTranslateY(0);
+                  translateXAnim.setValue(0);
+                  translateYAnim.setValue(0);
+                }
+              }}
+              style={tw`p-2`}
+            >
+              <Ionicons name="remove" size={20} color="white" />
+            </TouchableOpacity>
+            
+            <View style={tw`w-px bg-white/30 mx-1`} />
+            
+            <TouchableOpacity
+              onPress={() => {
+                const newScale = Math.min(3, scale + 0.5);
+                setScale(newScale);
+                setIsZoomed(newScale > 1);
+                scaleAnim.setValue(newScale);
+              }}
+              style={tw`p-2`}
+            >
+              <Ionicons name="add" size={20} color="white" />
+            </TouchableOpacity>
+            
+            <View style={tw`w-px bg-white/30 mx-1`} />
+            
+            <TouchableOpacity
+              onPress={resetZoom}
+              style={tw`p-2`}
+            >
+              <Ionicons name="contract-outline" size={20} color="white" />
+            </TouchableOpacity>
           </View>
-        </PanGestureHandler>
+        )}
       </View>
 
       {/* iOS-Style Bottom Controls */}
@@ -764,7 +927,7 @@ export default function QuranPageScreen({ route }) {
             disabled={currentPage >= totalPages}
             style={[
               tw`flex-row items-center px-4 py-3 rounded-xl `,
-              currentPage >= totalPages ? tw`opacity-50` : tw`bg-gray-50`,
+              currentPage >= totalPages ? tw`opacity-50` : tw`bg-gray-100`,
             ]}
             activeOpacity={0.3}
           >
@@ -799,7 +962,7 @@ export default function QuranPageScreen({ route }) {
             disabled={currentPage <= 1}
             style={[
               tw`flex-row items-center px-4 py-3 rounded-xl`,
-              currentPage <= 1 ? tw`opacity-50` : tw`bg-gray-50`,
+              currentPage <= 1 ? tw`opacity-50` : tw`bg-gray-100`,
             ]}
             activeOpacity={0.3}
           >
